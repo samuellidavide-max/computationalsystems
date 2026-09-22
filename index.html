@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Studio — Raccolta fogli di calcolo</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--pr:#1a3a5c;--ac:#e8612c;--ac2:#2b8a6e;--sf:#f4f2ed;--cd:#faf9f7;--bd:#d4cfc7;--tx:#1c1a17;--mu:#7a7570;--dg:#c0392b;--ok:#27ae60;}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--sf);color:var(--tx);font-size:14px;min-height:100vh;}
+.wrap{max-width:960px;margin:0 auto;padding:32px 16px 60px;}
+.top{display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid var(--pr);padding-bottom:16px;margin-bottom:8px;flex-wrap:wrap;gap:10px;}
+.top h1{color:var(--pr);font-size:20px;font-weight:600;letter-spacing:-.2px;}
+.top .sub{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--mu);}
+.intro{color:var(--mu);font-size:13px;margin:14px 0 26px;max-width:620px;line-height:1.6;}
+.sec-label{font-size:11px;font-weight:500;color:var(--mu);text-transform:uppercase;letter-spacing:.9px;margin:26px 0 12px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+.tool{display:block;text-decoration:none;color:inherit;background:var(--cd);border:1px solid var(--bd);border-radius:8px;padding:18px;transition:border-color .15s,transform .15s,box-shadow .15s;position:relative;overflow:hidden;}
+.tool:hover{border-color:var(--pr);transform:translateY(-2px);box-shadow:0 8px 22px rgba(26,58,92,.10);}
+.tool .accent{position:absolute;left:0;top:0;bottom:0;width:4px;}
+.tool .ico{font-size:22px;margin-bottom:10px;}
+.tool h3{font-size:15px;font-weight:600;color:var(--pr);margin-bottom:4px;}
+.tool .norm{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--mu);margin-bottom:8px;}
+.tool p{font-size:12.5px;color:var(--tx);line-height:1.55;opacity:.85;}
+.tool .go{margin-top:12px;font-size:12px;font-weight:500;color:var(--ac);}
+.tool.soon{opacity:.6;pointer-events:none;}
+.tool.soon .go{color:var(--mu);}
+.badge{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 7px;border-radius:3px;background:#e6eef5;color:var(--pr);margin-left:6px;vertical-align:middle;}
+.badge.wip{background:#fff3cd;color:#856404;}
+.foot{margin-top:40px;padding-top:16px;border-top:1px solid var(--bd);font-size:11px;color:var(--mu);line-height:1.7;}
+.logout{background:none;border:1px solid var(--bd);border-radius:4px;padding:5px 10px;font-size:11px;color:var(--mu);cursor:pointer;font-family:'IBM Plex Sans',sans-serif;}
+.logout:hover{border-color:var(--dg);color:var(--dg);}
+/* LOCK */
+#lock{position:fixed;inset:0;background:linear-gradient(135deg,#12283f,#1a3a5c);z-index:10000;display:flex;align-items:center;justify-content:center;}
+#lock .box{background:var(--cd);border-radius:10px;padding:32px 30px;width:340px;box-shadow:0 20px 60px rgba(0,0,0,.4);text-align:center;}
+#lock h2{color:var(--pr);font-size:16px;font-weight:500;margin-bottom:6px;}
+#lock p{font-size:12px;color:var(--mu);margin-bottom:18px;}
+#lock input{width:100%;padding:9px 10px;border:1px solid var(--bd);border-radius:4px;font-family:'IBM Plex Mono',monospace;background:#fff;color:var(--tx);outline:none;text-align:center;font-size:15px;letter-spacing:2px;margin-bottom:12px;}
+#lock input:focus{border-color:var(--pr);}
+#lock .err{color:var(--dg);font-size:12px;height:16px;margin-bottom:6px;}
+#lock .lk{font-size:34px;margin-bottom:10px;}
+#lock .btn{width:100%;padding:9px 16px;border:none;border-radius:4px;font-size:13px;cursor:pointer;background:var(--pr);color:#fff;font-family:'IBM Plex Sans',sans-serif;}
+#lock .btn:hover{background:#1e4a72;}
+</style>
+</head>
+<body>
+
+<div id="lock">
+  <div class="box">
+    <div class="lk">🔒</div>
+    <h2>Accesso riservato</h2>
+    <p>Inserire la password per accedere alla raccolta.</p>
+    <input type="password" id="lock-pwd" placeholder="Password" onkeydown="if(event.key==='Enter')sblocca()" autofocus>
+    <div class="err" id="lock-err"></div>
+    <button class="btn" onclick="sblocca()">Sblocca</button>
+  </div>
+</div>
+
+<div class="wrap" id="appwrap" style="display:none;">
+  <div class="top">
+    <h1>Fogli di calcolo tecnici</h1>
+    <span class="sub">Studio di ingegneria · uso interno</span>
+  </div>
+  <div class="intro">
+    Raccolta degli strumenti di calcolo dello studio. Ogni scheda apre un foglio autonomo con salvataggio del progetto ed esportazione in Excel. L'accesso è protetto da password.
+    <button class="logout" style="margin-left:10px;" onclick="esci()">Esci</button>
+  </div>
+
+  <div class="sec-label">Impianti meccanici</div>
+  <div class="grid">
+
+    <a class="tool" href="canali-aria.html">
+      <div class="accent" style="background:var(--pr);"></div>
+      <div class="ico">≋</div>
+      <h3>Canali d'aria — reti aerauliche <span class="badge">v1</span></h3>
+      <div class="norm">UNI 10339 · UNI EN 16798 · ASHRAE</div>
+      <p>Perdite di carico di canali circolari e rettangolari. Dimensionamento automatico, percorso critico, selezione ventilatore.</p>
+      <div class="go">Apri →</div>
+    </a>
+
+    <a class="tool" href="tubazioni.html">
+      <div class="accent" style="background:var(--ac2);"></div>
+      <div class="ico">◉</div>
+      <h3>Tubazioni idriche — impianti idronici <span class="badge">v1.2</span></h3>
+      <div class="norm">UNI EN 12831 · UNI 9182 · UNI EN 806</div>
+      <p>Perdite di carico delle reti idroniche. Circuiti in parallelo, circuito critico, selezione del circolatore.</p>
+      <div class="go">Apri →</div>
+    </a>
+
+    <a class="tool" href="trattamento-acque.html">
+      <div class="accent" style="background:var(--ac2);"></div>
+      <div class="ico">💧</div>
+      <h3>Trattamento acque — addolcimento &amp; osmosi <span class="badge">v1</span></h3>
+      <div class="norm">D.Lgs 18/2023 · UNI 8065:2019 · DM 25/2012</div>
+      <p>Dimensionamento di addolcitori e impianti a osmosi inversa. Durezza, portate, capacità ciclica e verifiche di conformità.</p>
+      <div class="go">Apri →</div>
+    </a>
+
+    <!-- MODELLO PER FUTURI STRUMENTI: copia questo blocco, togli la classe "soon",
+         imposta href, icona, titolo e descrizione. -->
+    <div class="tool soon">
+      <div class="accent" style="background:var(--bd);"></div>
+      <div class="ico">＋</div>
+      <h3>Nuovo strumento <span class="badge wip">in arrivo</span></h3>
+      <div class="norm">—</div>
+      <p>Spazio per il prossimo foglio di calcolo (es. dispersioni termiche, scarichi, dimensionamento elettrico...).</p>
+      <div class="go">Presto</div>
+    </div>
+
+  </div>
+
+  <div class="sec-label">Impianti elettrici</div>
+  <div class="grid">
+
+    <a class="tool" href="fotovoltaico.html">
+      <div class="accent" style="background:var(--ac);"></div>
+      <div class="ico">☀</div>
+      <h3>Fotovoltaico — impianti PV <span class="badge">v1</span></h3>
+      <div class="norm">CEI 0-21 · CEI 0-16 · CEI 82-25 · CEI 64-8</div>
+      <p>Dimensionamento dell'impianto fotovoltaico e relazione tecnica. Producibilità, stringhe, inverter e verifiche di connessione.</p>
+      <div class="go">Apri →</div>
+    </a>
+
+    <!-- MODELLO PER FUTURI STRUMENTI ELETTRICI: copia questo blocco, togli la classe "soon",
+         imposta href, icona, titolo e descrizione. -->
+    <div class="tool soon">
+      <div class="accent" style="background:var(--bd);"></div>
+      <div class="ico">＋</div>
+      <h3>Nuovo strumento <span class="badge wip">in arrivo</span></h3>
+      <div class="norm">—</div>
+      <p>Spazio per il prossimo foglio di calcolo elettrico (es. dimensionamento cavi, cabina MT/BT, illuminotecnica...).</p>
+      <div class="go">Presto</div>
+    </div>
+
+  </div>
+
+  <div class="foot">
+    Raccolta interna dello studio. Gli strumenti condividono la stessa protezione: inserita la password una volta, resta attiva per tutta la sessione del browser.<br>
+    Per protezione robusta a livello di sito valutare la <b>password protection nativa di Netlify</b> (impostazioni sito → Access control).
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   PASSWORD condivisa con tutta la raccolta (chiave 'studio_ok').
+   Cambiare qui e negli altri file per aggiornare la password.
+   ============================================================ */
+const PASSWORD='system1';
+function sblocca(){
+  var v=document.getElementById('lock-pwd').value;
+  if(v===PASSWORD){
+    try{localStorage.setItem('studio_ok','1');}catch(e){}
+    document.getElementById('lock').style.display='none';
+    document.getElementById('appwrap').style.display='block';
+  }else{
+    document.getElementById('lock-err').textContent='Password errata.';
+    document.getElementById('lock-pwd').value='';
+    document.getElementById('lock-pwd').focus();
+  }
+}
+function esci(){try{localStorage.removeItem('studio_ok');}catch(e){}location.reload();}
+(function(){try{if(localStorage.getItem('studio_ok')==='1'){document.getElementById('lock').style.display='none';document.getElementById('appwrap').style.display='block';}}catch(e){}})();
+</script>
+</body>
+</html>

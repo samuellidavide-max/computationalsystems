@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dimensionamento tubazioni — Impianti idronici</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--pr:#1a3a5c;--ac:#e8612c;--ac2:#2b8a6e;--sf:#f4f2ed;--cd:#faf9f7;--bd:#d4cfc7;--tx:#1c1a17;--mu:#7a7570;--dg:#c0392b;--ok:#27ae60;}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--sf);color:var(--tx);font-size:14px;}
+.app{max-width:1140px;margin:0 auto;padding:16px;}
+.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid var(--pr);flex-wrap:wrap;gap:10px;}
+.hdr-left{display:flex;align-items:baseline;gap:12px;}
+.hdr h1{font-size:17px;font-weight:500;color:var(--pr);}
+.hdr .sub{font-size:11px;color:var(--mu);font-family:'IBM Plex Mono',monospace;}
+.hdr-right{display:flex;align-items:center;gap:8px;}
+.prj-badge{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--mu);background:#ece9e3;border-radius:3px;padding:3px 8px;max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tabs{display:flex;border-bottom:1.5px solid var(--bd);margin-bottom:20px;}
+.tab{padding:8px 18px;font-size:13px;border:none;background:none;cursor:pointer;color:var(--mu);border-bottom:2px solid transparent;margin-bottom:-1.5px;transition:all .15s;}
+.tab.active{color:var(--ac);border-bottom-color:var(--ac);font-weight:500;}
+.tab:hover:not(.active){color:var(--tx);}
+.panel{display:none;}.panel.active{display:block;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.card{background:var(--cd);border:1px solid var(--bd);border-radius:6px;padding:16px;}
+.ct{font-size:11px;font-weight:500;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;}
+label{font-size:12px;color:var(--mu);display:block;margin-bottom:4px;margin-top:10px;}
+label:first-child{margin-top:0;}
+input[type=text],input[type=number],input[type=date],select,textarea{width:100%;padding:7px 10px;border:1px solid var(--bd);border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:13px;background:#fff;color:var(--tx);outline:none;transition:border .15s;}
+textarea{font-family:'IBM Plex Sans',sans-serif;font-size:12px;resize:vertical;}
+input:focus,select:focus,textarea:focus{border-color:var(--pr);}
+.btn{padding:8px 16px;border:none;border-radius:4px;font-size:13px;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;transition:all .15s;font-weight:400;}
+.bp{background:var(--pr);color:#fff;}.bp:hover{background:#1e4a72;}
+.ba{background:var(--ac);color:#fff;}.ba:hover{background:#d4541f;}
+.bg{background:#217346;color:#fff;}.bg:hover{background:#1a5c38;}
+.bd2{background:#fff;color:var(--dg);border:1px solid #e0b0ae;}.bd2:hover{background:#fdf0ef;}
+.bsave{background:#5b4a9e;color:#fff;}.bsave:hover{background:#4a3a8a;}
+.bopen{background:#fff;color:var(--pr);border:1px solid var(--pr);}.bopen:hover{background:#eef3f8;}
+.bsm{padding:5px 10px;font-size:12px;}
+.PALETTE0-hdr{background:#1a3a5c;} .PALETTE1-hdr{background:#6b3a8a;} .PALETTE2-hdr{background:#2b6e5a;} .PALETTE3-hdr{background:#8a4a1a;} .PALETTE4-hdr{background:#1a5c7a;} .PALETTE5-hdr{background:#5c1a4a;}
+.circ-block{border-radius:6px;margin-bottom:16px;overflow:hidden;}
+.circ-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;color:#fff;font-size:13px;font-weight:500;}
+.circ-nome{display:flex;align-items:center;gap:10px;}
+.circ-actions{display:flex;gap:6px;}
+.el-row{background:#fff;border:1px solid var(--bd);border-radius:5px;padding:12px;margin-bottom:8px;}
+.el-row.tipo-oggetto{border-left:4px solid var(--ac2);}
+.el-row.tipo-tubo{border-left:4px solid var(--pr);}
+.el-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.el-tag{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.7px;padding:2px 7px;border-radius:3px;}
+.tag-tubo{background:#e6eef5;color:var(--pr);}.tag-ogg{background:#e6f2ee;color:var(--ac2);}
+.el-name{font-size:13px;font-weight:500;font-family:'IBM Plex Mono',monospace;color:var(--tx);}
+.fg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;}
+.fi{display:flex;align-items:center;gap:6px;font-size:12px;}
+.fi input{width:44px;padding:3px 5px;font-size:12px;}
+.metric{background:#fff;border:1px solid var(--bd);border-radius:4px;padding:10px 12px;}
+.mv{font-size:18px;font-family:'IBM Plex Mono',monospace;font-weight:500;color:var(--pr);}
+.ml{font-size:11px;color:var(--mu);margin-top:2px;}
+.badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:11px;font-family:'IBM Plex Mono',monospace;}
+.bok{background:#d4edda;color:#155724;}.bwn{background:#fff3cd;color:#856404;}.ber{background:#f8d7da;color:#721c24;}
+.ibox{background:#e8f4f8;border-left:3px solid #2980b9;padding:10px 12px;border-radius:0 4px 4px 0;font-size:12px;color:#1a4a6b;margin-top:12px;line-height:1.6;}
+.wbox{background:#fef9e7;border-left:3px solid #f39c12;padding:10px 12px;border-radius:0 4px 4px 0;font-size:12px;color:#7e5a00;margin-top:8px;}
+.sbox{background:#f0eaf8;border-left:3px solid #7c5cbf;padding:10px 12px;border-radius:0 4px 4px 0;font-size:12px;color:#4a3070;margin-top:8px;}
+.vbar{height:6px;border-radius:3px;background:var(--bd);margin-top:4px;}
+.vfill{height:6px;border-radius:3px;}
+.rtable{width:100%;border-collapse:collapse;font-size:12px;}
+.rtable th{background:var(--pr);color:#fff;padding:7px 10px;text-align:left;font-weight:500;font-size:11px;}
+.rtable td{padding:7px 10px;border-bottom:1px solid var(--bd);font-family:'IBM Plex Mono',monospace;}
+.rtable tr:hover td{background:#f0ede8;}
+.circ-result{border-radius:8px;margin-bottom:16px;overflow:hidden;}
+.circ-result-hdr{padding:12px 16px;color:#fff;display:flex;justify-content:space-between;align-items:center;}
+.critico-banner{background:#f1c40f;color:#5a4000;font-size:12px;font-weight:500;padding:5px 16px;text-align:center;letter-spacing:.3px;}
+.sumbox-final{background:var(--pr);color:#fff;border-radius:8px;padding:20px;margin-top:16px;}
+.sr{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.1);font-size:13px;}
+.sr:last-child{border-bottom:none;font-size:15px;font-weight:500;margin-top:8px;padding-top:10px;border-top:1px solid rgba(255,255,255,.3);}
+.sv{font-family:'IBM Plex Mono',monospace;}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--pr);color:#fff;padding:10px 18px;border-radius:5px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;font-family:'IBM Plex Mono',monospace;}
+.toast.show{opacity:1;}.toast.ok{background:var(--ok);}.toast.err{background:var(--dg);}
+.path-row{display:flex;gap:8px;align-items:center;margin-top:4px;}
+.path-row input{flex:1;}
+.path-info{font-size:11px;color:var(--mu);margin-top:4px;}
+/* LOCK SCREEN */
+#lock{position:fixed;inset:0;background:linear-gradient(135deg,#12283f,#1a3a5c);z-index:10000;display:flex;align-items:center;justify-content:center;}
+#lock .box{background:var(--cd);border-radius:10px;padding:32px 30px;width:340px;box-shadow:0 20px 60px rgba(0,0,0,.4);text-align:center;}
+#lock h2{color:var(--pr);font-size:16px;font-weight:500;margin-bottom:6px;}
+#lock p{font-size:12px;color:var(--mu);margin-bottom:18px;}
+#lock input{width:100%;padding:9px 10px;border:1px solid var(--bd);border-radius:4px;font-family:'IBM Plex Mono',monospace;background:#fff;color:var(--tx);outline:none;text-align:center;font-size:15px;letter-spacing:2px;margin-bottom:12px;}
+#lock input:focus{border-color:var(--pr);}
+#lock .err{color:var(--dg);font-size:12px;height:16px;margin-bottom:6px;}
+#lock .lk{font-size:34px;margin-bottom:10px;}
+</style>
+
+<!-- ============================================================
+     LUCCHETTO CONDIVISO STUDIO (autonomo, nessun redirect)
+     Password condivisa con la raccolta, chiave localStorage 'studio_ok'.
+     Sbloccato una volta in questo browser, resta valido per tutte le
+     pagine finche' non si chiude / si preme "Esci" nel portale.
+     ============================================================ -->
+<div id="studiolock" style="position:fixed;inset:0;z-index:100000;background:linear-gradient(135deg,#12283f,#1a3a5c);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Sans',sans-serif;">
+  <div style="background:#faf9f7;border-radius:10px;padding:32px 30px;width:340px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.4);text-align:center;">
+    <div style="font-size:34px;margin-bottom:10px;">&#128274;</div>
+    <h2 style="color:#1a3a5c;font-size:16px;font-weight:500;margin:0 0 6px;">Accesso riservato</h2>
+    <p style="font-size:12px;color:#7a7570;margin:0 0 18px;">Inserire la password per accedere al foglio.</p>
+    <input type="password" id="studiolock-pwd" placeholder="Password" autocomplete="current-password"
+      style="width:100%;padding:9px 10px;border:1px solid #d4cfc7;border-radius:4px;font-family:'IBM Plex Mono',monospace;background:#fff;color:#1c1a17;outline:none;text-align:center;font-size:15px;letter-spacing:2px;margin-bottom:12px;box-sizing:border-box;"
+      onkeydown="if(event.key==='Enter')studioSblocca()" autofocus>
+    <div id="studiolock-err" style="color:#c0392b;font-size:12px;height:16px;margin-bottom:6px;"></div>
+    <button type="button" onclick="studioSblocca()"
+      style="width:100%;padding:9px 16px;border:none;border-radius:4px;font-size:13px;cursor:pointer;background:#1a3a5c;color:#fff;font-family:'IBM Plex Sans',sans-serif;">Sblocca</button>
+    <div style="margin-top:14px;"><a href="index.html" style="font-size:11px;color:#7a7570;text-decoration:none;">&#8592; Torna al portale</a></div>
+  </div>
+</div>
+<script>
+(function(){
+  var PASSWORD='system1';
+  function hide(){
+    var l=document.getElementById('studiolock'); if(l) l.style.display='none';
+    var a=document.getElementById('appwrap');    if(a) a.style.display='block';
+  }
+  window.studioSblocca=function(){
+    var i=document.getElementById('studiolock-pwd');
+    if(i && i.value===PASSWORD){ try{localStorage.setItem('studio_ok','1');}catch(e){} hide(); }
+    else{ var e=document.getElementById('studiolock-err'); if(e) e.textContent='Password errata.'; if(i){ i.value=''; i.focus(); } }
+  };
+  try{ if(localStorage.getItem('studio_ok')==='1'){ hide(); } }catch(e){}
+})();
+</script>
+
+
+<!-- L'accesso è gestito dal portale index.html: se non sbloccato, questo foglio rimanda al portale. -->
+<div class="app" id="appwrap">
+<div class="hdr">
+  <div class="hdr-left">
+    <h1>Dimensionamento tubazioni — Impianti idronici</h1>
+    <span class="sub">UNI EN 12831 · UNI 9182 · UNI EN 806</span>
+  </div>
+  <div class="hdr-right">
+    <span class="prj-badge" id="prj-badge">Nessun progetto</span>
+    <button class="btn bopen bsm" onclick="apriProgetto()">📂 Apri</button>
+    <button class="btn bsave bsm" onclick="salvaProgetto()">💾 Salva</button>
+  </div>
+</div>
+<div class="tabs">
+  <button class="tab active" onclick="showTab('commessa',this)">Commessa</button>
+  <button class="tab" onclick="showTab('config',this)">Configurazione</button>
+  <button class="tab" onclick="showTab('tratti',this)">Elementi circuito</button>
+  <button class="tab" onclick="showTab('risultati',this)">Risultati &amp; sommario</button>
+</div>
+
+<!-- COMMESSA -->
+<div id="panel-commessa" class="panel active">
+  <div class="g2">
+    <div class="card">
+      <div class="ct">Dati commessa</div>
+      <label>Numero commessa</label><input type="text" id="c-numero" placeholder="es. 2024-0042" oninput="updateBadge()">
+      <label>Riferimento progetto</label><input type="text" id="c-progetto" placeholder="es. Villetta Rossi — Impianto riscaldamento" oninput="updateBadge()">
+      <label>Cliente / Committente</label><input type="text" id="c-cliente" placeholder="Nome cliente">
+      <label>Indirizzo cantiere</label><input type="text" id="c-indirizzo" placeholder="Via, Comune">
+    </div>
+    <div class="card">
+      <div class="ct">Dati elaborato</div>
+      <label>Progettista</label><input type="text" id="c-progettista" placeholder="Nome e cognome / studio">
+      <label>Data elaborazione</label><input type="date" id="c-data">
+      <label>Revisione</label><input type="text" id="c-revisione" value="Rev. 0">
+      <label>Note / descrizione</label><textarea id="c-note" rows="3" placeholder="Note libere..."></textarea>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px;">
+    <div class="ct">Gestione file di progetto</div>
+    <div class="g2">
+      <div>
+        <label>File progetto corrente</label>
+        <div class="path-row">
+          <input type="text" id="path-display" readonly placeholder="Nessun file aperto" style="background:#f4f2ed;color:var(--mu);">
+          <button class="btn bopen bsm" onclick="apriProgetto()">📂 Apri</button>
+        </div>
+        <div class="path-info" id="path-info">Apri un file .hyd esistente o salva il progetto corrente.</div>
+      </div>
+      <div>
+        <label>Azioni</label>
+        <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">
+          <button class="btn bsave" onclick="salvaProgetto()">💾 Salva</button>
+          <button class="btn bp bsm" onclick="salvaComeProgetto()">💾 Salva come...</button>
+          <button class="btn bd2 bsm" onclick="nuovoProgetto()">✦ Nuovo</button>
+        </div>
+        <div class="sbox" style="margin-top:10px;">File <b>.hyd</b>: contiene tutti i parametri, i circuiti e gli elementi. Riapribile in qualsiasi momento.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIG -->
+<div id="panel-config" class="panel">
+  <div class="g2">
+    <div class="card">
+      <div class="ct">Tipologia impianto</div>
+      <label>Tipo impianto</label>
+      <select id="imp-tipo" onchange="updateFluidProps()">
+        <option value="riscaldamento">Riscaldamento</option>
+        <option value="raffrescamento">Raffrescamento</option>
+        <option value="acs">Acqua Calda Sanitaria (ACS)</option>
+      </select>
+      <label>Temperatura mandata (°C)</label>
+      <input type="number" id="temp-mandata" value="70" step="1" onchange="updateFluidProps()">
+      <label>Temperatura ritorno (°C)</label>
+      <input type="number" id="temp-ritorno" value="55" step="1" onchange="updateFluidProps()">
+      <div id="fluid-info" class="ibox"></div>
+    </div>
+    <div class="card">
+      <div class="ct">Materiale tubazione</div>
+      <label>Materiale</label>
+      <select id="mat-tipo" onchange="updateMaterial()">
+        <option value="multistrato">Multistrato (PE-AL-PE / PEX-AL-PEX)</option>
+        <option value="rame">Rame (Cu) — EN 1057</option>
+        <option value="acciaiOnero">Acciaio nero (Fe) — UNI EN 10255</option>
+        <option value="acciaiInox">Acciaio inox AISI 316L — EN 10312</option>
+        <option value="pprc">Polipropilene PP-R (SDR11)</option>
+        <option value="pex">PEX-a / PEX-b (SDR6)</option>
+      </select>
+      <div id="mat-info" class="ibox"></div>
+      <label style="margin-top:12px;">Rugosità assoluta ε (mm)</label>
+      <input type="number" id="rugosita" value="0.007" step="0.001">
+      <label>Limiti velocità raccomandati</label>
+      <div class="g2" style="margin-top:4px;">
+        <div><label style="margin:0;font-size:11px;">Min (m/s)</label><input type="number" id="vel-min" value="0.3" step="0.05"></div>
+        <div><label style="margin:0;font-size:11px;">Max (m/s)</label><input type="number" id="vel-max" value="1.5" step="0.05"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px;">
+    <div class="ct">Parametri di calcolo</div>
+    <div class="g3">
+      <div><label>Perdita di carico specifica target (Pa/m)</label><input type="number" id="pdc-target" value="100" step="5"></div>
+      <div><label>Coefficiente perdite localizzate globale ξ</label><input type="number" id="coeff-loc" value="1.5" step="0.1"><div style="font-size:11px;color:var(--mu);margin-top:4px;">Attivo solo con metodo "globale"</div></div>
+      <div><label>Metodo perdite localizzate</label>
+        <select id="metodo-loc">
+          <option value="dettaglio">Raccordi dettagliati per tratto</option>
+          <option value="globale">Coefficiente globale ξ</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ELEMENTI CIRCUITO -->
+<div id="panel-tratti" class="panel">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+    <div style="font-size:13px;color:var(--mu);">Gestisci i circuiti idraulici in parallelo e i relativi elementi</div>
+    <button class="btn bp" onclick="addCircuito()">+ Aggiungi circuito</button>
+  </div>
+  <div id="circuiti-container"></div>
+  <div id="no-circ" style="text-align:center;padding:48px;color:var(--mu);font-size:13px;">Nessun circuito. Clicca "+ Aggiungi circuito" per iniziare.</div>
+</div>
+
+<!-- RISULTATI -->
+<div id="panel-risultati" class="panel">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+    <div style="font-size:13px;color:var(--mu);">Calcolo separato per circuito — identificazione del circuito critico</div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn ba" onclick="calcola()">Calcola tutto</button>
+      <button class="btn bg bsm" onclick="esportaExcel()" id="btn-excel" style="display:none;">↓ Esporta Excel</button>
+    </div>
+  </div>
+  <div id="risultati-content"><div style="text-align:center;padding:48px;color:var(--mu);font-size:13px;">Configura i circuiti e premi "Calcola tutto"</div></div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+<input type="file" id="file-input" accept=".hyd,.json" style="display:none" onchange="leggiFileInput(this)">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const MAT={
+  multistrato:{nome:'Multistrato PE-AL-PE',rug:0.007,dn:[12,14,16,18,20,25,32,40,50,63,75],di:[8.4,10,11.6,13.6,15.4,20.4,26,33.4,42,53,63.6],note:'Idoneo max 95°C, PN10-16. Giunzioni a pressare.',maxT:95},
+  rame:{nome:'Rame (Cu) — EN 1057',rug:0.0015,dn:[10,12,15,18,22,28,35,42,54,67,76.1,88.9,108],di:[8,10,13,16,20,26,33,40,52,65,74.1,87,106],note:'Idoneo ACS. Brasatura/pressare. Max 110°C.',maxT:110},
+  acciaiOnero:{nome:'Acciaio nero — UNI EN 10255',rug:0.046,dn:[6,8,10,15,20,25,32,40,50,65,80,100,125,150],di:[6.4,9.1,12.5,16.1,21.7,27.3,36,41.8,53.1,68.7,80.9,105.3,129.7,156.3],note:'Solo riscaldamento/raffrescamento. Non idoneo ACS.',maxT:130},
+  acciaiInox:{nome:'Acciaio inox AISI 316L — EN 10312',rug:0.015,dn:[12,15,18,22,28,35,42,54,76.1,88.9,108],di:[10,13,16,20,26,33,40,52,74.1,87,106],note:'Idoneo tutti gli impianti incluso ACS. Pressare.',maxT:120},
+  pprc:{nome:'Polipropilene PP-R (SDR11)',rug:0.007,dn:[16,20,25,32,40,50,63,75,90,110],di:[10.8,13.6,17,21.8,27.2,34,43,51.4,61.6,75.2],note:'Max 70°C continuo. Termofusione.',maxT:70},
+  pex:{nome:'PEX-a / PEX-b (SDR6)',rug:0.007,dn:[16,18,20,25,32,40,50,63],di:[10.7,12,13.3,16.7,21.3,26.7,33.4,42],note:'Flessibile, pannelli radianti. Max 95°C.',maxT:95}
+};
+const RACC=[
+  {id:'c90',l:'Curva 90°',k:0.9},{id:'c45',l:'Curva 45°',k:0.4},
+  {id:'tp',l:'T passante',k:0.3},{id:'td',l:'T deviante',k:1.5},
+  {id:'vs',l:'Valvola sfera',k:0.15},{id:'vr',l:'Val. ritegno',k:3.0},
+  {id:'fi',l:'Filtro a Y',k:2.0},{id:'ri',l:'Riduttore/allarg.',k:0.5},
+  {id:'vt',l:'Valv. termostat.',k:5.0},{id:'iu',l:'Ingresso/Uscita',k:1.0},
+  {id:'co',l:'Compensatore',k:1.2},{id:'al',l:'Altro (ξ=1)',k:1.0}
+];
+const PALETTE=[
+  {hdr:'#1a3a5c',brd:'#b3cde0',bg:'#f0f4f8'},
+  {hdr:'#6b3a8a',brd:'#c9a5e0',bg:'#f7f0fd'},
+  {hdr:'#2b6e5a',brd:'#8ecfb8',bg:'#f0faf6'},
+  {hdr:'#8a4a1a',brd:'#e0a870',bg:'#fdf5ee'},
+  {hdr:'#1a5c7a',brd:'#7ac8e0',bg:'#edf7fb'},
+  {hdr:'#5c1a4a',brd:'#d88abd',bg:'#fceef7'}
+];
+
+let circuiti=[], ccnt=0, ecnt=0, ultimoCalc=null, fileHandle=null;
+
+// ===== TOAST =====
+function toast(msg,tipo,dur){tipo=tipo||'ok';dur=dur||2800;var t=document.getElementById('toast');t.textContent=msg;t.className='toast '+tipo+' show';setTimeout(function(){t.className='toast';},dur);}
+
+// ===== BADGE =====
+function updateBadge(){
+  var num=document.getElementById('c-numero').value.trim(),prj=document.getElementById('c-progetto').value.trim();
+  document.getElementById('prj-badge').textContent=(num||prj)?((num?num+' — ':'')+prj)||'Progetto senza nome':'Nessun progetto';
+}
+
+// ===== FLUIDO — FUNZIONI CORRETTE =====
+function densita(T){
+  var tb=[[0,999.8],[10,999.7],[20,998.2],[30,995.7],[40,992.2],[50,988.1],[60,983.2],[70,977.8],[80,971.8],[90,965.3],[100,958.4]];
+  if(T<=0)return tb[0][1]; if(T>=100)return tb[tb.length-1][1];
+  for(var i=0;i<tb.length-1;i++){if(T>=tb[i][0]&&T<=tb[i+1][0]){var t=(T-tb[i][0])/(tb[i+1][0]-tb[i][0]);return tb[i][1]+(tb[i+1][1]-tb[i][1])*t;}}
+  return 998;
+}
+function viscosita(T){
+  // mPa·s → Pa·s. BUG CORRETTO: usato 'tb' ovunque, eliminato 'tab' errato
+  var tb=[[0,1.787],[10,1.307],[20,1.002],[30,0.7975],[40,0.6529],[50,0.5469],[60,0.4665],[70,0.4042],[80,0.3547],[90,0.3147],[100,0.2818]];
+  if(T<=0)return tb[0][1]/1000; if(T>=100)return tb[tb.length-1][1]/1000;
+  for(var i=0;i<tb.length-1;i++){
+    if(T>=tb[i][0]&&T<=tb[i+1][0]){
+      var t=(T-tb[i][0])/(tb[i+1][0]-tb[i][0]);
+      return(tb[i][1]+(tb[i+1][1]-tb[i][1])*t)/1000;
+    }
+  }
+  return 0.001;
+}
+function flProps(){
+  var tm=parseFloat(document.getElementById('temp-mandata').value)||70;
+  var tr=parseFloat(document.getElementById('temp-ritorno').value)||55;
+  var tmedia=(tm+tr)/2;
+  return{tmedia:tmedia, rho:densita(tmedia), mu:viscosita(tmedia)};
+}
+function toMca(Pa,rho){return Pa/(rho*9.81);}
+
+// ===== UPDATE INFO-BOX (RIPRISTINATI) =====
+function updateFluidProps(){
+  var tipo=document.getElementById('imp-tipo').value;
+  var fl=flProps();
+  var nomi={riscaldamento:'Riscaldamento',raffrescamento:'Raffrescamento',acs:'Acqua Calda Sanitaria'};
+  document.getElementById('fluid-info').innerHTML=
+    '<b>'+nomi[tipo]+'</b><br>'+
+    'T media: <b>'+fl.tmedia.toFixed(1)+'°C</b> &nbsp;·&nbsp; '+
+    'ρ: <b>'+fl.rho.toFixed(1)+' kg/m³</b> &nbsp;·&nbsp; '+
+    'μ: <b>'+(fl.mu*1000).toFixed(4)+' mPa·s</b>';
+  updateMaterial();
+}
+function updateMaterial(){
+  var mk=document.getElementById('mat-tipo').value;
+  var m=MAT[mk];
+  var tipo=document.getElementById('imp-tipo').value;
+  document.getElementById('rugosita').value=m.rug;
+  var warn=(tipo==='acs'&&mk==='acciaiOnero')?'<br><b style="color:var(--dg)">⚠ Acciaio nero non idoneo per ACS</b>':'';
+  document.getElementById('mat-info').innerHTML=
+    m.note+warn+'<br>DN disponibili: <b>'+m.dn.join(', ')+' mm</b>';
+}
+
+// ===== CIRCUITI =====
+function addCircuito(){
+  ccnt++;
+  circuiti.push({id:ccnt, nome:'Circuito '+ccnt, elementi:[]});
+  renderCircuiti();
+}
+function removeCircuito(cid){
+  if(!confirm('Eliminare il circuito e tutti i suoi elementi?'))return;
+  circuiti=circuiti.filter(function(c){return c.id!==cid;});
+  renderCircuiti();
+}
+function addElementoA(cid,tipo){
+  var circ=circuiti.find(function(c){return c.id===cid;});
+  if(!circ)return;
+  ecnt++;
+  if(tipo==='tubo'){
+    var e={id:ecnt,tipo:'tubo',nome:'Tratto '+ecnt,portata:'',lunghezza:'',dislivello:0,dnScelto:'',dnSuggerito:'',racc:{}};
+    RACC.forEach(function(r){e.racc[r.id]=0;});
+    circ.elementi.push(e);
+  } else {
+    circ.elementi.push({id:ecnt,tipo:'oggetto',nome:'Oggetto '+ecnt,descrizione:'',pdcPa:''});
+  }
+  renderCircuiti();
+}
+function removeElementoDa(cid,eid){
+  var circ=circuiti.find(function(c){return c.id===cid;});
+  if(!circ)return;
+  circ.elementi=circ.elementi.filter(function(e){return e.id!==eid;});
+  renderCircuiti();
+}
+
+function renderCircuiti(){
+  var cont=document.getElementById('circuiti-container');
+  var no=document.getElementById('no-circ');
+  if(!circuiti.length){cont.innerHTML='';no.style.display='block';return;}
+  no.style.display='none';
+  var mat=MAT[document.getElementById('mat-tipo').value];
+  cont.innerHTML=circuiti.map(function(c,ci){
+    var pal=PALETTE[ci%PALETTE.length];
+    var elemHTML=c.elementi.map(function(e){
+      return e.tipo==='tubo'?renderTubo(c.id,e,mat,pal):renderOggetto(c.id,e);
+    }).join('');
+    return '<div class="circ-block" style="border:2px solid '+pal.brd+';">'+
+      '<div class="circ-header" style="background:'+pal.hdr+';">'+
+        '<div class="circ-nome">'+
+          '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:14px;">⬡</span>'+
+          '<input type="text" value="'+escH(c.nome)+'" style="background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.4);color:#fff;font-family:\'IBM Plex Mono\',monospace;font-size:13px;font-weight:500;width:180px;outline:none;padding:2px 4px;" '+
+            'onchange="circuiti.find(function(x){return x.id==='+c.id+'}).nome=this.value">'+
+          '<span style="font-size:11px;opacity:.65;">'+c.elementi.length+' elemento'+(c.elementi.length!==1?'i':'')+'</span>'+
+        '</div>'+
+        '<div class="circ-actions">'+
+          '<button class="btn bsm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);" onclick="addElementoA('+c.id+',\'tubo\')">+ Tubazione</button>'+
+          '<button class="btn bsm" style="background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.25);" onclick="addElementoA('+c.id+',\'oggetto\')">⬡ Oggetto</button>'+
+          '<button class="btn bsm" style="background:rgba(200,50,50,.35);color:#fff;border:1px solid rgba(255,100,100,.4);" onclick="removeCircuito('+c.id+')">✕</button>'+
+        '</div>'+
+      '</div>'+
+      '<div style="background:'+pal.bg+';padding:12px;">'+
+        (elemHTML||'<div style="text-align:center;padding:20px;color:'+pal.hdr+';opacity:.5;font-size:13px;">Nessun elemento — aggiungi una tubazione o un oggetto</div>')+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function renderTubo(cid,e,mat,pal){
+  var dnOpts=mat.dn.map(function(d,i){
+    return '<option value="'+i+'"'+(e.dnScelto==i?' selected':'')+'>'+mat.nome.split('(')[0].trim()+' DN'+d+' (di='+mat.di[i]+' mm)</option>';
+  }).join('');
+  var raccHTML=RACC.map(function(r){
+    return '<div class="fi"><input type="number" min="0" step="1" value="'+(e.racc[r.id]||0)+'" style="width:44px;padding:3px 5px;font-size:12px;" '+
+      'onchange="(function(){var c=circuiti.find(function(x){return x.id==='+cid+'});if(c){var el=c.elementi.find(function(x){return x.id==='+e.id+'});if(el)el.racc[\''+r.id+'\']=parseInt(this.value)||0;}}).call(this)">'+
+      '<span style="flex:1;font-size:12px;">'+r.l+' <span style="color:var(--mu)">ξ='+r.k+'</span></span></div>';
+  }).join('');
+  var dnSuggVal=e.dnSuggerito?'DN'+e.dnSuggerito:'—';
+  return '<div class="el-row tipo-tubo" id="er-'+e.id+'" style="border-left-color:'+pal.hdr+';">'+
+    '<div class="el-hdr">'+
+      '<div style="display:flex;align-items:center;gap:8px;">'+
+        '<span class="el-tag" style="background:'+pal.brd+'30;color:'+pal.hdr+';">▰ Tubazione</span>'+
+        '<span class="el-name" id="en-'+e.id+'">'+escH(e.nome)+'</span>'+
+      '</div>'+
+      '<div style="display:flex;gap:6px;">'+
+        '<button class="btn bsm" style="color:var(--ac2);border:1px solid var(--ac2);" onclick="calcolaSingoloDa('+cid+','+e.id+')">↗ Calcola</button>'+
+        '<button class="btn bd2 bsm" onclick="removeElementoDa('+cid+','+e.id+')">✕</button>'+
+      '</div>'+
+    '</div>'+
+    '<div class="g3">'+
+      '<div><label>Nome tratto</label><input type="text" value="'+escH(e.nome)+'" '+
+        'onchange="(function(){var c=circuiti.find(function(x){return x.id==='+cid+'});if(c){var el=c.elementi.find(function(x){return x.id==='+e.id+'});if(el){el.nome=this.value;var sp=document.getElementById(\'en-'+e.id+'\');if(sp)sp.textContent=this.value;}}}).call(this)"></div>'+
+      '<div><label>Portata (l/h)</label><input type="number" value="'+e.portata+'" placeholder="es. 450" '+
+        'onchange="(function(){var c=circuiti.find(function(x){return x.id==='+cid+'});if(c){var el=c.elementi.find(function(x){return x.id==='+e.id+'});if(el)el.portata=this.value;}}).call(this)"></div>'+
+      '<div><label>Lunghezza reale (m)</label><input type="number" value="'+e.lunghezza+'" placeholder="es. 12" step="0.5" '+
+        'onchange="(function(){var c=circuiti.find(function(x){return x.id==='+cid+'});if(c){var el=c.elementi.find(function(x){return x.id==='+e.id+'});if(el)el.lunghezza=this.value;}}).call(this)"></div>'+
+      '<div><label>Dislivello A→B (m) <span style="font-size:10px;color:var(--mu)">(+ se B è più alto)</span></label>'+
+        '<input type="number" value="'+e.dislivello+'" placeholder="0" step="0.1" '+
+        'onchange="(function(){var c=circuiti.find(function(x){return x.id==='+cid+'});if(c){var el=c.elementi.find(function(x){return x.id==='+e.id+'});if(el)el.dislivello=this.value;}}).call(this)"></div>'+
+      '<div><label>DN suggerito (automatico)</label>'+
+        '<input type="text" id="dns-'+e.id+'" value="'+dnSuggVal+'" readonly style="background:#f0ede8;color:var(--pr);font-weight:500;"></div>'+
+      '<div><label>DN da adottare (scelta utente)</label>'+
+        '<select id="dns2-'+e.id+'" onchange="(function(){var c=circuiti.find(function(x){return x.id==='+cid+'});if(c){var el=c.elementi.find(function(x){return x.id==='+e.id+'});if(el)el.dnScelto=this.value;}}).call(this)">'+
+          '<option value="">— auto (usa suggerito) —</option>'+dnOpts+
+        '</select>'+
+      '</div>'+
+    '</div>'+
+    '<details style="margin-top:10px;"><summary style="font-size:12px;color:var(--mu);cursor:pointer;user-select:none;">▸ Raccordi e perdite localizzate</summary>'+
+      '<div class="fg" style="margin-top:8px;">'+raccHTML+'</div></details>'+
+    '<div id="ri-'+e.id+'" style="margin-top:10px;"></div>'+
+  '</div>';
+}
+
+function renderOggetto(cid,e){
+  var fl=flProps();
+  var pdcNum=parseFloat(e.pdcPa)||0;
+  var convTxt=pdcNum>0?
+    'ΔP = <b>'+pdcNum.toFixed(0)+' Pa</b> = <b>'+(pdcNum/1000).toFixed(4)+' kPa</b> = <b>'+toMca(pdcNum,fl.rho).toFixed(4)+' m c.a.</b>':
+    'Inserire la perdita di carico dal datasheet del componente.';
+  return '<div class="el-row tipo-oggetto" id="er-'+e.id+'">'+
+    '<div class="el-hdr">'+
+      '<div style="display:flex;align-items:center;gap:8px;">'+
+        '<span class="el-tag tag-ogg">⬡ Oggetto</span>'+
+        '<span class="el-name" id="en-'+e.id+'">'+escH(e.nome)+'</span>'+
+      '</div>'+
+      '<button class="btn bd2 bsm" onclick="removeElementoDa('+cid+','+e.id+')">✕</button>'+
+    '</div>'+
+    '<div class="g3">'+
+      '<div><label>Nome oggetto</label><input type="text" value="'+escH(e.nome)+'" placeholder="es. Collettore, Scambiatore..." '+
+        'onchange="(function(){var c=circuiti.find(function(x){return x.id==='+cid+'});if(c){var el=c.elementi.find(function(x){return x.id==='+e.id+'});if(el){el.nome=this.value;var sp=document.getElementById(\'en-'+e.id+'\');if(sp)sp.textContent=this.value;}}}).call(this)"></div>'+
+      '<div><label>Descrizione / modello</label><input type="text" value="'+escH(e.descrizione||'')+'" placeholder="rif. datasheet" '+
+        'onchange="(function(){var c=circuiti.find(function(x){return x.id==='+cid+'});if(c){var el=c.elementi.find(function(x){return x.id==='+e.id+'});if(el)el.descrizione=this.value;}}).call(this)"></div>'+
+      '<div><label>Perdita di carico (Pa) <span style="font-size:10px;color:var(--mu)">da datasheet</span></label>'+
+        '<input type="number" value="'+(e.pdcPa||'')+'" placeholder="es. 3500" min="0" step="1" '+
+        'onchange="(function(){var c=circuiti.find(function(x){return x.id==='+cid+'});if(c){var el=c.elementi.find(function(x){return x.id==='+e.id+'});if(el)el.pdcPa=parseFloat(this.value)||0;}}).call(this)"></div>'+
+    '</div>'+
+    '<div style="font-size:11px;color:var(--mu);margin-top:8px;background:#f7f3ef;border-radius:4px;padding:6px 10px;">'+convTxt+'</div>'+
+  '</div>';
+}
+
+// ===== CALCOLO =====
+function frDW(Re,rr){
+  if(Re<2300)return 64/Re;
+  var f=0.02;
+  for(var i=0;i<60;i++){var fn=1/Math.pow(-2*Math.log10(rr/3.71+2.51/(Re*Math.sqrt(f))),2);if(Math.abs(fn-f)<1e-9)break;f=fn;}
+  return Math.max(0.008,f);
+}
+
+function calcTubo(e){
+  var mk=document.getElementById('mat-tipo').value, m=MAT[mk], fl=flProps();
+  var rug=parseFloat(document.getElementById('rugosita').value)||0.007;
+  var vmin=parseFloat(document.getElementById('vel-min').value)||0.3;
+  var vmax=parseFloat(document.getElementById('vel-max').value)||1.5;
+  var pdcT=parseFloat(document.getElementById('pdc-target').value)||100;
+  var metodo=document.getElementById('metodo-loc').value;
+  var cLoc=parseFloat(document.getElementById('coeff-loc').value)||1.5;
+  var Qlh=parseFloat(e.portata), L=parseFloat(e.lunghezza)||0, dz=parseFloat(e.dislivello)||0;
+  if(!Qlh||Qlh<=0)return{err:'Portata non valida'};
+  var Q=Qlh/3600/1000, rho=fl.rho, mu=fl.mu, g=9.81;
+  var best=m.di.length-1;
+  for(var i=0;i<m.di.length;i++){
+    var di=m.di[i]/1000, A=Math.PI*di*di/4, v=Q/A, Re=rho*v*di/mu;
+    var j=frDW(Re,rug/1000/di)*(1/di)*(rho*v*v/2);
+    if(v<vmin||v>vmax)continue;
+    if(j<=pdcT){best=i;break;}
+    best=i;
+  }
+  var ui=(e.dnScelto!==''&&e.dnScelto!==undefined&&e.dnScelto!==null)?parseInt(e.dnScelto):best;
+  var di2=m.di[ui]/1000, A2=Math.PI*di2*di2/4, v2=Q/A2, Re2=rho*v2*di2/mu, f2=frDW(Re2,rug/1000/di2);
+  var pdist=f2*(L/di2)*(rho*v2*v2/2);
+  var xi=0;
+  if(metodo==='dettaglio'){RACC.forEach(function(r){xi+=(e.racc[r.id]||0)*r.k;});}else{xi=cLoc;}
+  var ploc=xi*(rho*v2*v2/2), pstat=rho*g*dz, ptot=pdist+ploc+pstat;
+  var jspec=L>0?pdist/L:0;
+  var stato='ok'; if(v2<vmin)stato='bassa'; else if(v2>vmax)stato='alta';
+  return{dnSugg:m.dn[best],dnAdott:m.dn[ui],diAdott:m.di[ui],v:v2,Re:Re2,f:f2,
+    pdist:pdist,ploc:ploc,pstat:pstat,ptot:ptot,jspec:jspec,xi:xi,
+    stato:stato,vmin:vmin,vmax:vmax,Qlh:Qlh,L:L,dz:dz,rho:rho};
+}
+
+function calcolaSingoloDa(cid,eid){
+  var circ=circuiti.find(function(c){return c.id===cid;});
+  if(!circ)return;
+  var e=circ.elementi.find(function(x){return x.id===eid;});
+  if(!e||e.tipo!=='tubo')return;
+  var r=calcTubo(e);
+  var riEl=document.getElementById('ri-'+eid);
+  if(r.err){if(riEl)riEl.innerHTML='<div class="wbox">'+r.err+'</div>';return;}
+  // Aggiorna DN suggerito
+  e.dnSuggerito=r.dnSugg;
+  var dnsEl=document.getElementById('dns-'+eid);
+  if(dnsEl)dnsEl.value='DN'+r.dnSugg;
+  var col=r.stato==='ok'?'var(--ok)':r.stato==='bassa'?'#e67e22':'var(--dg)';
+  var stTxt=r.stato==='ok'?'✓ Velocità OK':r.stato==='bassa'?'⚠ Velocità bassa':'⚠ Velocità elevata';
+  var vp=Math.min(100,(r.v/r.vmax)*100);
+  var mca=toMca(r.ptot,r.rho);
+  var statStr=r.dz!=0?' (Δz='+(r.dz>=0?'+':'')+r.dz+'m → '+r.pstat.toFixed(0)+' Pa)':'';
+  if(riEl)riEl.innerHTML=
+    '<div style="background:#f0f7f4;border:1px solid #b2d8c8;border-radius:4px;padding:10px;">'+
+      '<div class="g3" style="gap:8px;">'+
+        '<div class="metric"><div class="mv" style="color:'+col+'">'+r.v.toFixed(3)+' <span style="font-size:12px;color:var(--mu)">m/s</span></div>'+
+          '<div class="ml">'+stTxt+' · Re '+Math.round(r.Re)+'</div>'+
+          '<div class="vbar"><div class="vfill" style="width:'+vp.toFixed(1)+'%;background:'+col+';"></div></div></div>'+
+        '<div class="metric"><div class="mv">'+r.jspec.toFixed(1)+' <span style="font-size:12px;color:var(--mu)">Pa/m</span></div>'+
+          '<div class="ml">Perdita specifica · f='+r.f.toFixed(5)+'</div></div>'+
+        '<div class="metric"><div class="mv" style="color:var(--ac)">'+(r.ptot/1000).toFixed(4)+' <span style="font-size:12px;color:var(--mu)">kPa</span></div>'+
+          '<div class="ml">= '+mca.toFixed(4)+' m c.a.'+statStr+'</div></div>'+
+      '</div>'+
+      '<div style="font-size:11px;color:var(--mu);margin-top:8px;display:flex;gap:14px;flex-wrap:wrap;">'+
+        '<span>Distribuite: <b>'+r.pdist.toFixed(0)+' Pa</b></span>'+
+        '<span>Localizzate ξ='+r.xi.toFixed(1)+': <b>'+r.ploc.toFixed(0)+' Pa</b></span>'+
+        '<span>Statica: <b>'+r.pstat.toFixed(0)+' Pa'+statStr+'</b></span>'+
+        '<span>DN adottato: <b>DN'+r.dnAdott+' (dᵢ='+r.diAdott+' mm)</b>'+(r.dnAdott!==r.dnSugg?' <span style="color:var(--ac);font-size:10px;">[sug. DN'+r.dnSugg+']</span>':'')+' </span>'+
+      '</div>'+
+    '</div>';
+}
+
+function calcola(){
+  if(!circuiti.length){document.getElementById('risultati-content').innerHTML='<div class="wbox">Nessun circuito definito.</div>';return;}
+  var mk=document.getElementById('mat-tipo').value, m=MAT[mk];
+  var imp=document.getElementById('imp-tipo').value;
+  var impN={riscaldamento:'Riscaldamento',raffrescamento:'Raffrescamento',acs:'ACS'};
+  var fl=flProps();
+  var risCircuiti=[];
+
+  circuiti.forEach(function(circ,ci){
+    var pal=PALETTE[ci%PALETTE.length];
+    var pdcTot=0, rows='', warns=[], recs=[];
+    circ.elementi.forEach(function(e,idx){
+      if(e.tipo==='tubo'){
+        var r=calcTubo(e);
+        if(r.err){rows+='<tr><td colspan="11" style="color:var(--dg);">'+escH(e.nome)+': '+r.err+'</td></tr>';return;}
+        pdcTot+=r.ptot;
+        var mca=toMca(r.ptot,r.rho);
+        var bcl=r.stato==='ok'?'bok':r.stato==='bassa'?'bwn':'ber';
+        var btx=r.stato==='ok'?'OK':r.stato==='bassa'?'V bassa':'V alta';
+        if(r.stato!=='ok')warns.push(escH(e.nome)+': v='+r.v.toFixed(3)+' m/s');
+        var dzNote=r.dz!=0?' Δz='+r.dz+'m':'';
+        var dnNote=r.dnAdott!==r.dnSugg?' ⚡':'';
+        rows+='<tr>'+
+          '<td><span class="badge" style="background:'+pal.brd+'30;color:'+pal.hdr+';font-size:10px;">▰</span></td>'+
+          '<td style="font-weight:500;">'+escH(e.nome)+'</td>'+
+          '<td>'+r.Qlh.toFixed(0)+'</td><td>'+r.L.toFixed(1)+'</td>'+
+          '<td>DN'+r.dnAdott+'<br><span style="font-size:10px;color:var(--mu)">dᵢ='+r.diAdott+'mm'+dnNote+dzNote+'</span></td>'+
+          '<td>'+r.v.toFixed(3)+'</td><td>'+Math.round(r.Re)+'</td><td>'+r.jspec.toFixed(1)+'</td>'+
+          '<td>'+(r.ptot/1000).toFixed(4)+'</td><td>'+mca.toFixed(4)+'</td>'+
+          '<td><span class="badge '+bcl+'">'+btx+'</span></td>'+
+        '</tr>';
+        recs.push({idx:idx+1,tipo:'Tubazione',nome:e.nome,portata:r.Qlh,lunghezza:r.L,dislivello:r.dz,
+          dnSugg:'DN'+r.dnSugg,dnAdott:'DN'+r.dnAdott,diInt:r.diAdott,
+          v:r.v,Re:Math.round(r.Re),f:r.f,jspec:r.jspec,
+          pdist:r.pdist,ploc:r.ploc,pstat:r.pstat,pogg:0,
+          ptotKpa:r.ptot/1000,ptotMca:mca,stato:btx});
+      } else {
+        var pdcPa=parseFloat(e.pdcPa)||0; pdcTot+=pdcPa;
+        var mcaO=toMca(pdcPa,fl.rho);
+        rows+='<tr style="background:#f9f9f6;">'+
+          '<td><span class="badge" style="background:#e6f2ee;color:var(--ac2);font-size:10px;">⬡</span></td>'+
+          '<td style="font-weight:500;">'+escH(e.nome)+'</td>'+
+          '<td colspan="6" style="color:var(--mu);font-size:12px;">'+(e.descrizione||'—')+'</td>'+
+          '<td>'+(pdcPa/1000).toFixed(4)+'</td><td>'+mcaO.toFixed(4)+'</td>'+
+          '<td><span class="badge" style="background:#e6f2ee;color:var(--ac2);">Oggetto</span></td>'+
+        '</tr>';
+        recs.push({idx:idx+1,tipo:'Oggetto generico',nome:e.nome,portata:'—',lunghezza:'—',dislivello:'—',
+          dnSugg:'—',dnAdott:'—',diInt:'—',v:'—',Re:'—',f:'—',jspec:'—',
+          pdist:0,ploc:0,pstat:0,pogg:pdcPa,ptotKpa:pdcPa/1000,ptotMca:mcaO,stato:'Oggetto'});
+      }
+    });
+    var pdcKPa=pdcTot/1000, pdcMca=toMca(pdcTot,fl.rho), pdcBar=pdcTot/100000;
+    risCircuiti.push({circ:circ,ci:ci,pal:pal,rows:rows,warns:warns,recs:recs,pdcKPa:pdcKPa,pdcMca:pdcMca,pdcBar:pdcBar,rho:fl.rho});
+  });
+
+  var maxPdc=Math.max.apply(null,risCircuiti.map(function(r){return r.pdcKPa;}));
+  var html='';
+
+  risCircuiti.forEach(function(rc){
+    var isCrit=circuiti.length>1&&Math.abs(rc.pdcKPa-maxPdc)<0.0001;
+    var critBanner=isCrit?'<div class="critico-banner">⭐ CIRCUITO CRITICO — perdita di carico massima → usare questo per la selezione del circolatore</div>':'';
+    var outlineStyle=isCrit?'outline:3px solid #f1c40f;outline-offset:-3px;':'';
+    var pbarW=maxPdc>0?(rc.pdcKPa/maxPdc*100):100;
+    html+='<div class="circ-result" style="border:2px solid '+rc.pal.brd+';">'+
+      critBanner+
+      '<div class="circ-result-hdr" style="background:'+rc.pal.hdr+';'+outlineStyle+'">'+
+        '<div style="display:flex;align-items:center;gap:12px;">'+
+          '<span style="font-family:\'IBM Plex Mono\',monospace;">⬡ '+escH(rc.circ.nome)+'</span>'+
+          '<span style="font-size:12px;opacity:.7;">'+rc.recs.length+' elemento'+(rc.recs.length!==1?'i':'')+'</span>'+
+        '</div>'+
+        '<div style="display:flex;align-items:center;gap:20px;">'+
+          '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:15px;font-weight:500;">'+rc.pdcKPa.toFixed(4)+' kPa</span>'+
+          '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:13px;opacity:.8;">'+rc.pdcMca.toFixed(4)+' m c.a.</span>'+
+        '</div>'+
+      '</div>'+
+      '<div style="background:'+rc.pal.bg+';padding:4px 16px;">'+
+        '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;">'+
+          '<div style="flex:1;height:6px;background:rgba(0,0,0,.1);border-radius:3px;">'+
+            '<div style="width:'+pbarW.toFixed(1)+'%;height:6px;background:'+rc.pal.hdr+';border-radius:3px;opacity:.7;"></div>'+
+          '</div>'+
+          '<span style="font-size:11px;color:'+rc.pal.hdr+';font-family:\'IBM Plex Mono\',monospace;min-width:40px;">'+pbarW.toFixed(0)+'%</span>'+
+        '</div>'+
+      '</div>'+
+      '<div style="padding:12px;background:#fff;">'+
+        (rc.warns.length?'<div class="wbox" style="margin-bottom:8px;">⚠ '+rc.warns.join(' · ')+'</div>':'')+
+        '<div style="overflow-x:auto;">'+
+          '<table class="rtable"><thead><tr>'+
+            '<th style="width:24px;"></th><th>Elemento</th><th>Q (l/h)</th><th>L (m)</th><th>DN adottato</th>'+
+            '<th>v (m/s)</th><th>Re</th><th>J (Pa/m)</th><th>ΔP (kPa)</th><th>ΔP (m c.a.)</th><th>Stato</th>'+
+          '</tr></thead>'+
+          '<tbody>'+(rc.rows||'<tr><td colspan="11" style="color:var(--mu);text-align:center;padding:16px;">Nessun elemento valido</td></tr>')+'</tbody>'+
+          '</table>'+
+        '</div>'+
+        '<div style="display:flex;justify-content:flex-end;gap:24px;margin-top:8px;padding:8px 10px;background:'+rc.pal.bg+';border-radius:4px;font-size:12px;font-family:\'IBM Plex Mono\',monospace;color:'+rc.pal.hdr+';">'+
+          '<span>Totale: <b>'+rc.pdcKPa.toFixed(4)+' kPa</b></span>'+
+          '<span><b>'+rc.pdcMca.toFixed(4)+' m c.a.</b></span>'+
+          '<span><b>'+rc.pdcBar.toFixed(5)+' bar</b></span>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  });
+
+  var sorted=risCircuiti.slice().sort(function(a,b){return b.pdcKPa-a.pdcKPa;});
+  var critico=sorted[0];
+  html+='<div class="sumbox-final">'+
+    '<div style="font-size:11px;color:rgba(255,255,255,.45);margin-bottom:14px;text-transform:uppercase;letter-spacing:.8px;">'+
+      'Sommario — '+impN[imp]+' · '+m.nome+' · T media '+fl.tmedia.toFixed(1)+'°C'+
+    '</div>'+
+    sorted.map(function(rc,i){
+      return '<div class="sr" style="'+(i===0?'color:#f1c40f;':'')+'">'+
+        '<span>'+(i===0?'⭐ ':'')+escH(rc.circ.nome)+(i===0?' — circuito critico':'')+'</span>'+
+        '<span class="sv">'+rc.pdcKPa.toFixed(4)+' kPa &nbsp;/&nbsp; '+rc.pdcMca.toFixed(4)+' m c.a.</span>'+
+      '</div>';
+    }).join('')+
+    '<div class="sr">'+
+      '<span>Circolatore — prevalenza minima (+15% su circuito critico)</span>'+
+      '<span class="sv" style="color:#7ec8a0;">≥ '+(critico.pdcKPa*1.15).toFixed(3)+' kPa &nbsp;/&nbsp; '+(critico.pdcMca*1.15).toFixed(4)+' m c.a.</span>'+
+    '</div>'+
+  '</div>'+
+  '<div class="ibox">m c.a. = ΔP[Pa] / (ρ · 9.81) con ρ = '+fl.rho.toFixed(1)+' kg/m³ a T media '+fl.tmedia.toFixed(1)+'°C · Il circuito critico è quello con la maggiore perdita di carico totale.</div>';
+
+  document.getElementById('risultati-content').innerHTML=html;
+  document.getElementById('btn-excel').style.display='inline-block';
+
+  ultimoCalc={risCircuiti:risCircuiti,critNome:critico.circ.nome,critKPa:critico.pdcKPa,critMca:critico.pdcMca,
+    mat:m.nome,imp:impN[imp],tmedia:fl.tmedia,rho:fl.rho,commessa:raccogliStato().commessa};
+}
+
+// ===== STATO =====
+function raccogliStato(){
+  return{_version:3,_tipo:'HydroCalc project',
+    commessa:{numero:document.getElementById('c-numero').value,progetto:document.getElementById('c-progetto').value,
+      cliente:document.getElementById('c-cliente').value,indirizzo:document.getElementById('c-indirizzo').value,
+      progettista:document.getElementById('c-progettista').value,data:document.getElementById('c-data').value,
+      revisione:document.getElementById('c-revisione').value,note:document.getElementById('c-note').value},
+    config:{impTipo:document.getElementById('imp-tipo').value,tempMandata:document.getElementById('temp-mandata').value,
+      tempRitorno:document.getElementById('temp-ritorno').value,matTipo:document.getElementById('mat-tipo').value,
+      rugosita:document.getElementById('rugosita').value,velMin:document.getElementById('vel-min').value,
+      velMax:document.getElementById('vel-max').value,pdcTarget:document.getElementById('pdc-target').value,
+      coeffLoc:document.getElementById('coeff-loc').value,metodoLoc:document.getElementById('metodo-loc').value},
+    circuiti:circuiti,ccnt:ccnt,ecnt:ecnt};
+}
+function ripristinaStato(s){
+  if(!s||s._tipo!=='HydroCalc project'){toast('File non valido.','err');return false;}
+  var c=s.commessa||{};
+  document.getElementById('c-numero').value=c.numero||'';
+  document.getElementById('c-progetto').value=c.progetto||'';
+  document.getElementById('c-cliente').value=c.cliente||'';
+  document.getElementById('c-indirizzo').value=c.indirizzo||'';
+  document.getElementById('c-progettista').value=c.progettista||'';
+  document.getElementById('c-data').value=c.data||'';
+  document.getElementById('c-revisione').value=c.revisione||'Rev. 0';
+  document.getElementById('c-note').value=c.note||'';
+  var cf=s.config||{};
+  document.getElementById('imp-tipo').value=cf.impTipo||'riscaldamento';
+  document.getElementById('temp-mandata').value=cf.tempMandata||70;
+  document.getElementById('temp-ritorno').value=cf.tempRitorno||55;
+  document.getElementById('mat-tipo').value=cf.matTipo||'multistrato';
+  document.getElementById('rugosita').value=cf.rugosita||0.007;
+  document.getElementById('vel-min').value=cf.velMin||0.3;
+  document.getElementById('vel-max').value=cf.velMax||1.5;
+  document.getElementById('pdc-target').value=cf.pdcTarget||100;
+  document.getElementById('coeff-loc').value=cf.coeffLoc||1.5;
+  document.getElementById('metodo-loc').value=cf.metodoLoc||'dettaglio';
+  circuiti=s.circuiti||[]; ccnt=s.ccnt||0; ecnt=s.ecnt||0;
+  updateBadge(); updateFluidProps(); updateMaterial(); renderCircuiti();
+  return true;
+}
+function nomeFile(){
+  var num=(document.getElementById('c-numero').value.trim()||'').replace(/[^a-z0-9_\-]/gi,'_');
+  var prj=(document.getElementById('c-progetto').value.trim()||'').replace(/[^a-z0-9_\-]/gi,'_').slice(0,30);
+  return([num,prj].filter(Boolean).join('_')||'progetto_idraulico')+'.hyd';
+}
+async function salvaProgetto(){
+  var json=JSON.stringify(raccogliStato(),null,2),blob=new Blob([json],{type:'application/json'});
+  if(fileHandle){try{var w=await fileHandle.createWritable();await w.write(blob);await w.close();toast('✓ Salvato: '+fileHandle.name,'ok');return;}catch(e){fileHandle=null;}}
+  await salvaComeProgetto();
+}
+async function salvaComeProgetto(){
+  var json=JSON.stringify(raccogliStato(),null,2),blob=new Blob([json],{type:'application/json'}),fname=nomeFile();
+  if('showSaveFilePicker' in window){
+    try{fileHandle=await window.showSaveFilePicker({suggestedName:fname,types:[{description:'File HydroCalc',accept:{'application/json':['.hyd','.json']}}]});
+      var w=await fileHandle.createWritable();await w.write(blob);await w.close();
+      document.getElementById('path-display').value=fileHandle.name;
+      document.getElementById('path-info').textContent='Salvato: '+fileHandle.name;
+      toast('✓ Salvato: '+fileHandle.name,'ok');
+    }catch(e){if(e.name!=='AbortError')toast('Errore salvataggio.','err');}
+  } else {
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;a.click();
+    toast('✓ Scaricato: '+fname,'ok',4000);
+    document.getElementById('path-display').value='Download: '+fname;
+  }
+}
+async function apriProgetto(){
+  if('showOpenFilePicker' in window){
+    try{var arr=await window.showOpenFilePicker({types:[{description:'File HydroCalc',accept:{'application/json':['.hyd','.json']}}]});
+      var fh=arr[0];fileHandle=fh;var file=await fh.getFile(),testo=await file.text(),stato=JSON.parse(testo);
+      if(ripristinaStato(stato)){document.getElementById('path-display').value=fh.name;document.getElementById('path-info').textContent='Aperto: '+fh.name;toast('✓ Caricato: '+fh.name,'ok');}
+    }catch(e){if(e.name!=='AbortError')toast('Errore apertura.','err');}
+  } else {document.getElementById('file-input').click();}
+}
+function leggiFileInput(input){
+  var file=input.files[0];if(!file)return;
+  var r=new FileReader();
+  r.onload=function(e){try{var s=JSON.parse(e.target.result);if(ripristinaStato(s)){document.getElementById('path-display').value=file.name;toast('✓ Caricato: '+file.name,'ok');}}catch(ex){toast('File non valido.','err');}};
+  r.readAsText(file);input.value='';
+}
+function nuovoProgetto(){
+  if(!confirm('Nuovo progetto? I dati non salvati andranno persi.'))return;
+  fileHandle=null;circuiti=[];ccnt=0;ecnt=0;
+  ['c-numero','c-progetto','c-cliente','c-indirizzo','c-progettista','c-note'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('c-revisione').value='Rev. 0';
+  document.getElementById('c-data').value=new Date().toISOString().slice(0,10);
+  document.getElementById('path-display').value='';
+  document.getElementById('imp-tipo').value='riscaldamento';
+  document.getElementById('temp-mandata').value=70;document.getElementById('temp-ritorno').value=55;
+  document.getElementById('mat-tipo').value='multistrato';document.getElementById('pdc-target').value=100;
+  document.getElementById('coeff-loc').value=1.5;document.getElementById('metodo-loc').value='dettaglio';
+  updateBadge();updateFluidProps();updateMaterial();renderCircuiti();toast('Nuovo progetto.','ok');
+}
+
+// ===== EXCEL =====
+function esportaExcel(){
+  if(!ultimoCalc)return;
+  var d=ultimoCalc,wb=XLSX.utils.book_new(),C=d.commessa||{};
+  var now=new Date(),dataStr=now.getDate().toString().padStart(2,'0')+'/'+(now.getMonth()+1).toString().padStart(2,'0')+'/'+now.getFullYear();
+  d.risCircuiti.forEach(function(rc,i){
+    var H=['N°','Tipo','Elemento','Q (l/h)','L (m)','Dislivello (m)','DN sugg.','DN adott.','Di int. (mm)','v (m/s)','Re','f Darcy','J (Pa/m)','ΔP dist. (Pa)','ΔP loc. (Pa)','ΔP stat. (Pa)','ΔP ogg. (Pa)','ΔP tot. (kPa)','ΔP tot. (m c.a.)','Stato'];
+    var DR=rc.recs.map(function(r){return[r.idx,r.tipo,r.nome,r.portata==='—'?'':r.portata,r.lunghezza==='—'?'':r.lunghezza,r.dislivello==='—'?'':r.dislivello,r.dnSugg==='—'?'':r.dnSugg,r.dnAdott==='—'?'':r.dnAdott,r.diInt==='—'?'':r.diInt,r.v==='—'?'':parseFloat(parseFloat(r.v).toFixed(4)),r.Re==='—'?'':r.Re,r.f==='—'?'':parseFloat(r.f.toFixed(6)),r.jspec==='—'?'':parseFloat(r.jspec.toFixed(2)),parseFloat(r.pdist.toFixed(2)),parseFloat(r.ploc.toFixed(2)),parseFloat(r.pstat.toFixed(2)),parseFloat(r.pogg.toFixed(2)),parseFloat(r.ptotKpa.toFixed(5)),parseFloat(r.ptotMca.toFixed(5)),r.stato];});
+    DR.push([]);DR.push(['','','TOTALE '+rc.circ.nome,'','','','','','','','','','','','','','',parseFloat(rc.pdcKPa.toFixed(5)),parseFloat(rc.pdcMca.toFixed(5)),'']);
+    var ws=XLSX.utils.aoa_to_sheet([H].concat(DR));
+    ws['!cols']=[{wch:4},{wch:14},{wch:22},{wch:9},{wch:9},{wch:10},{wch:11},{wch:11},{wch:9},{wch:10},{wch:8},{wch:9},{wch:9},{wch:12},{wch:12},{wch:10},{wch:10},{wch:11},{wch:12},{wch:9}];
+    var sn=rc.circ.nome.slice(0,28).replace(/[:\\\/\?\*\[\]]/g,'');
+    XLSX.utils.book_append_sheet(wb,ws,sn);
+  });
+  var sorted=d.risCircuiti.slice().sort(function(a,b){return b.pdcKPa-a.pdcKPa;});
+  var S=[['RELAZIONE DI CALCOLO — DIMENSIONAMENTO TUBAZIONI IMPIANTI IDRONICI'],[''],
+    ['DATI COMMESSA'],['Numero commessa:',C.numero||'—'],['Riferimento progetto:',C.progetto||'—'],
+    ['Cliente:',C.cliente||'—'],['Indirizzo:',C.indirizzo||'—'],['Progettista:',C.progettista||'—'],
+    ['Data:',C.data||dataStr],['Revisione:',C.revisione||'Rev. 0'],['Note:',C.note||''],[''],
+    ['METODO'],['Normativa:','UNI EN 12831 · UNI 9182 · UNI EN 806'],['Metodo:','Darcy-Weisbach · Colebrook-White'],[''],
+    ['IMPIANTO'],['Tipo:',d.imp],['Materiale:',d.mat],['T media fluido (°C):',d.tmedia.toFixed(1)],['Densità (kg/m³):',d.rho.toFixed(1)],[''],
+    ['CONFRONTO CIRCUITI'],['Circuito','ΔP tot. (kPa)','ΔP tot. (m c.a.)','N° elementi','Critico?']].concat(
+    sorted.map(function(rc,i){return[rc.circ.nome,parseFloat(rc.pdcKPa.toFixed(5)),parseFloat(rc.pdcMca.toFixed(5)),rc.recs.length,i===0?'SÌ':''];})).concat([
+    [''],['CIRCOLATORE'],
+    ['Circuito critico:',d.critNome],
+    ['Prevalenza min. (kPa):',parseFloat((d.critKPa*1.15).toFixed(4))],
+    ['Prevalenza min. (m c.a.):',parseFloat((d.critMca*1.15).toFixed(4))],
+    ['Margine:','15%'],[''],
+    ['NOTE'],['m c.a. = ΔP[Pa]/(ρ×9.81)','ρ calcolata alla T media del fluido']
+  ]);
+  var ws2=XLSX.utils.aoa_to_sheet(S);
+  ws2['!cols']=[{wch:38},{wch:20},{wch:16},{wch:12},{wch:10}];
+  ws2['!merges']=[{s:{r:0,c:0},e:{r:0,c:4}}];
+  XLSX.utils.book_append_sheet(wb,ws2,'Sommario commessa');
+  var num=(C.numero||'').replace(/[^a-z0-9_\-]/gi,'_');
+  var fname=(num?num+'_':'')+'calcolo_idraulico_'+now.getFullYear()+(now.getMonth()+1).toString().padStart(2,'0')+now.getDate().toString().padStart(2,'0')+'.xlsx';
+  XLSX.writeFile(wb,fname);
+  toast('✓ Excel: '+fname,'ok');
+}
+
+function showTab(n,btn){
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
+  document.getElementById('panel-'+n).classList.add('active');
+  btn.classList.add('active');
+  if(n==='tratti')renderCircuiti();
+}
+
+document.getElementById('c-data').value=new Date().toISOString().slice(0,10);
+updateFluidProps(); updateMaterial(); updateBadge();
+</script>
+
+<script>
+/* ============================================================
+   CONTROLLO ACCESSO — l'autenticazione avviene sul portale
+   (index.html). Qui non si chiede la password: se l'utente si è
+   già sbloccato nel portale, il foglio si mostra; altrimenti
+   viene rimandato al portale per il login.
+   ============================================================ */
+/* Controllo accesso gestito dal lucchetto autonomo in testa alla pagina. */
+</script>
+</body>
+</html>

@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dimensionamento impianto fotovoltaico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f4f2ed; --panel:#faf9f7; --panel2:#f4f2ed;
+  --ink:#1c1a17; --muted:#7a7570; --faint:#a39d95;
+  --line:#d4cfc7; --line2:#e5e1d9;
+  --solar:#e8612c; --solar-d:#c74e1f;
+  --dc:#1a3a5c; --dc-soft:#eef3f8;
+  --pass:#27ae60; --pass-bg:#d4edda;
+  --fail:#c0392b; --fail-bg:#f8d7da;
+  --warn:#b8790a; --warn-bg:#fff3cd;
+  --shadow:0 1px 2px rgba(28,26,23,.05),0 6px 20px rgba(28,26,23,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0f151b; --panel:#161f28; --panel2:#111922;
+    --ink:#e6edf3; --muted:#9fb0bd; --faint:#6f7f8c;
+    --line:#26333f; --line2:#1d2832;
+    --solar:#f0793f; --solar-d:#e8612c; --dc:#6ea8e6;
+    --dc-soft:#16273a; --pass:#3ecf8e; --pass-bg:#12271f; --fail:#e06a5c; --fail-bg:#2a1717; --warn:#e0a020; --warn-bg:#2a2110;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0f151b; --panel:#161f28; --panel2:#111922;
+  --ink:#e6edf3; --muted:#9fb0bd; --faint:#6f7f8c;
+  --line:#26333f; --line2:#1d2832;
+  --solar:#f0793f; --solar-d:#e8612c; --dc:#6ea8e6;
+  --dc-soft:#16273a; --pass:#3ecf8e; --pass-bg:#12271f; --fail:#e06a5c; --fail-bg:#2a1717; --warn:#e0a020; --warn-bg:#2a2110;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:"IBM Plex Sans",system-ui,sans-serif;background:var(--paper);color:var(--ink);
+  font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.01em}
+a{color:var(--dc)}
+sub{font-size:.75em}
+
+header{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--panel) 88%, transparent);
+  backdrop-filter:saturate(1.4) blur(8px);border-bottom:1px solid var(--line)}
+.hwrap{max-width:1240px;margin:0 auto;padding:10px 20px}
+.htop{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:11px;margin-right:auto}
+.mark{width:34px;height:34px;border-radius:9px;flex:0 0 auto;
+  background:radial-gradient(circle at 50% 42%, var(--solar) 0 30%, transparent 31%),conic-gradient(from 0deg, var(--solar-d), var(--solar), var(--solar-d));
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);position:relative}
+.mark::after{content:"";position:absolute;inset:0;border-radius:9px;
+  background:repeating-conic-gradient(from 0deg, transparent 0 15deg, rgba(255,255,255,.35) 15deg 16deg)}
+.brand b{font-size:15px;font-weight:600;display:block;line-height:1.1}
+.brand span{font-size:11.5px;color:var(--muted)}
+.proj-name{border:1px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:8px;
+  padding:6px 10px;font-size:13px;font-weight:500;min-width:180px}
+.hbtn{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;
+  padding:7px 12px;font-size:12.5px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.hbtn:hover{border-color:var(--muted)}
+.hbtn:disabled{opacity:.4;cursor:not-allowed}
+.hbtn.pri{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;margin-top:10px;background:var(--line);
+  border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.kpi{background:var(--panel);padding:8px 12px}
+.kpi .k{font-size:10.5px;color:var(--muted);letter-spacing:.02em}
+.kpi .v{font-size:19px;font-weight:600;line-height:1.2}
+.kpi .v small{font-size:11px;color:var(--muted);font-weight:500}
+.kpi.status .v{display:flex;align-items:center;gap:7px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.dot.ok{background:var(--pass)}.dot.no{background:var(--fail)}.dot.wa{background:var(--warn)}
+
+.layout{max-width:1240px;margin:0 auto;padding:18px 20px 60px;display:grid;grid-template-columns:212px 1fr;gap:20px;align-items:start}
+nav.rail{position:sticky;top:118px}
+.rail ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.rail a{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--muted);padding:8px 11px;
+  border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent}
+.rail a .n{font-size:11px;width:20px;color:var(--faint);font-variant-numeric:tabular-nums}
+.rail a:hover{background:var(--panel)}
+.rail a.on{background:var(--panel);color:var(--ink);border-color:var(--line);box-shadow:var(--shadow)}
+.rail a .st{margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--line)}
+.rail a .st.ok{background:var(--pass)}.rail a .st.no{background:var(--fail)}.rail a .st.wa{background:var(--warn)}
+
+main{min-width:0}
+section.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);
+  padding:20px 22px;margin-bottom:18px;display:none}
+section.card.show{display:block}
+.sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
+.sec-head h2{font-size:18px}
+.sec-head .idx{font-family:"IBM Plex Mono",monospace;color:var(--solar-d);font-weight:600;font-size:13px}
+.sec-sub{color:var(--muted);font-size:13px;margin:0 0 16px}
+.grp{margin:18px 0 6px;padding-bottom:5px;border-bottom:1px solid var(--line2);font-size:12px;font-weight:600;
+  color:var(--dc);display:flex;align-items:center;gap:8px}
+.grp .tag{font-weight:500;color:var(--faint);font-size:11px;margin-left:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:12px 16px}
+.f{display:flex;flex-direction:column;gap:4px}
+.f label{font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center}
+.f .u{color:var(--faint);font-weight:500}
+.f input,.f select{border:1px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:8px;
+  padding:8px 10px;font-size:14px;font-family:inherit;width:100%;font-variant-numeric:tabular-nums}
+.f input:focus,.f select:focus{outline:2px solid color-mix(in srgb,var(--dc) 45%,transparent);outline-offset:1px;border-color:var(--dc)}
+.f input[readonly]{background:transparent;border-style:dashed;color:var(--muted)}
+.f.calc input{background:transparent;border-style:dashed;color:var(--muted);font-family:"IBM Plex Mono",monospace}
+.hint{font-size:11px;color:var(--faint)}
+.tog{display:flex;align-items:center;gap:9px;font-size:13.5px;cursor:pointer;user-select:none}
+.tog input{width:16px;height:16px;accent-color:var(--dc)}
+
+.help{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;border:1px solid var(--line);
+  color:var(--faint);font-size:10px;font-weight:700;cursor:help;flex:0 0 auto;line-height:1;background:var(--panel)}
+.help:hover,.help:focus{border-color:var(--dc);color:var(--dc);outline:none}
+#tip{position:fixed;z-index:80;display:none;background:var(--ink);color:var(--panel);font-size:12px;line-height:1.45;
+  padding:9px 11px;border-radius:9px;box-shadow:0 8px 30px rgba(0,0,0,.28);pointer-events:none;max-width:300px}
+#tip b{color:var(--solar)}
+#tip code{font-family:"IBM Plex Mono",monospace;font-size:11px;background:rgba(255,255,255,.12);padding:1px 4px;border-radius:4px}
+#sysbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px;padding:9px 11px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+#sysbar .lab{font-size:12px;color:var(--muted);font-weight:600}
+.systab{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:9px;padding:6px 11px;font-size:12.5px;font-weight:500;cursor:pointer}
+.systab.on{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.systab .sx{opacity:.55;font-size:12px;cursor:pointer;line-height:1}
+.systab .sx:hover{opacity:1}
+#sysAdd{border:1px dashed var(--line);background:transparent;color:var(--dc);border-radius:9px;padding:6px 11px;font-size:12.5px;cursor:pointer;font-weight:600}
+#sysAdd:hover{border-color:var(--dc);background:var(--dc-soft)}
+#sysAgg{margin-left:auto;font-size:11.5px;color:var(--muted)}
+#sysAgg b{color:var(--ink)}
+@media print{#sysbar{display:none!important}}
+.pick{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:4px;border:1px solid var(--line);color:var(--dc);font-size:10px;cursor:pointer;background:var(--panel);margin-left:2px;line-height:1}
+.pick:hover{border-color:var(--dc);background:var(--dc-soft)}
+#picker{position:fixed;z-index:85;display:none;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 34px rgba(0,0,0,.25);padding:6px 6px 4px;max-height:300px;overflow:auto;min-width:150px}
+#picker .pkhead{display:flex;gap:10px;padding:3px 6px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--line2);font-size:10.5px}
+#picker .pkhead span{flex:1;text-align:right}#picker .pkhead span:first-child{text-align:left}
+#picker .pkrow{display:flex;gap:10px;align-items:center}
+#picker .pkrow>span{flex:1;text-align:right;color:var(--muted);font-size:12px;font-family:"IBM Plex Mono",monospace}
+#picker .pkrow>span:first-child{text-align:left;color:var(--ink)}
+#picker .pkv{flex:1;text-align:right;border:none;background:transparent;color:var(--dc);font-family:"IBM Plex Mono",monospace;font-size:12px;cursor:pointer;padding:3px 6px;border-radius:5px;font-variant-numeric:tabular-nums}
+#picker .pkv:hover{background:var(--dc-soft)}
+#picker .pknote{font-size:10.5px;color:var(--faint);padding:6px;border-top:1px solid var(--line2);margin-top:4px;max-width:230px;line-height:1.4}
+
+.verifs{margin-top:16px;border:1px solid var(--line);border-radius:11px;overflow:hidden}
+.vrow{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:center;padding:9px 13px;
+  border-top:1px solid var(--line2);font-size:13px}
+.vrow:first-child{border-top:none}
+.vrow .ico{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff}
+.vrow.ok .ico{background:var(--pass)}.vrow.no .ico{background:var(--fail)}.vrow.wa .ico{background:var(--warn)}
+.vrow .lab{min-width:0}
+.vrow .lab b{font-weight:600}
+.vrow .lab .rule{color:var(--muted);font-size:11.5px}
+.vrow .lab .ref{color:var(--faint);font-size:11px}
+.vrow .val{text-align:right;font-family:"IBM Plex Mono",monospace;font-size:12.5px;white-space:nowrap}
+.vrow .val .a{font-weight:600}
+.vrow.ok .val .a{color:var(--pass)}.vrow.no .val .a{color:var(--fail)}.vrow.wa .val .a{color:var(--warn)}
+.vrow .val .lim{color:var(--muted)}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:20px;font-size:11.5px;font-weight:600}
+.badge.ok{background:var(--pass-bg);color:var(--pass)}
+.badge.no{background:var(--fail-bg);color:var(--fail)}
+.badge.wa{background:var(--warn-bg);color:var(--warn)}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:11px;overflow:hidden;margin-top:8px}
+.ro{background:var(--panel2);padding:10px 13px}
+.ro .k{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px}
+.ro .v{font-size:16px;font-weight:600;font-family:"IBM Plex Mono",monospace}
+.note{background:var(--panel2);border:1px solid var(--line2);border-left:3px solid var(--dc);border-radius:8px;
+  padding:11px 13px;font-size:12.5px;color:var(--muted);margin-top:14px}
+.note b{color:var(--ink)}
+.note.warn{border-left-color:var(--warn)}
+.note.solar{border-left-color:var(--solar)}
+.mtbl{width:100%;border-collapse:collapse;margin-top:6px;font-size:13px}
+.mtbl th{font-size:11px;color:var(--muted);font-weight:500;text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+.mtbl th .help{vertical-align:middle}
+.mtbl td{padding:5px 8px;border-bottom:1px solid var(--line2);font-variant-numeric:tabular-nums}
+.mtbl input,.mtbl select{width:78px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:7px;
+  padding:6px 8px;font-family:"IBM Plex Mono",monospace;font-size:13px}
+.mtbl select{width:92px;font-family:inherit}
+.mtbl td.res{font-family:"IBM Plex Mono",monospace;font-size:12px}
+.mtbl td .ok{color:var(--pass)}.mtbl td .no{color:var(--fail)}.mtbl td .wa{color:var(--warn)}
+.xrm{padding:4px 9px;font-size:14px;line-height:1}
+.bars{display:flex;align-items:flex-end;gap:5px;height:130px;margin-top:14px;padding:0 2px}
+.bar{flex:1;background:linear-gradient(var(--solar),var(--solar-d));border-radius:4px 4px 0 0;position:relative;min-height:3px}
+.bar span{position:absolute;bottom:-18px;left:0;right:0;text-align:center;font-size:10px;color:var(--muted)}
+.rep-sec{margin-top:18px}
+.rep-sec h3{font-size:14px;color:var(--dc);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--line2)}
+table.rep{width:100%;border-collapse:collapse;font-size:12.5px}
+table.rep td{padding:6px 8px;border-bottom:1px solid var(--line2)}
+table.rep td.k{color:var(--muted);width:55%}
+table.rep td.v{font-family:"IBM Plex Mono",monospace;text-align:right}
+
+@media (max-width:860px){
+  .layout{grid-template-columns:1fr;padding:14px}
+  nav.rail{position:static;margin:-4px 0 4px}
+  .rail ol{flex-direction:row;overflow-x:auto;gap:6px;padding-bottom:6px}
+  .rail a{white-space:nowrap}.rail a .st{margin-left:6px}
+  .kpis{grid-template-columns:repeat(2,1fr)}.kpi.status{grid-column:1/-1}
+}
+@media print{
+  header,nav.rail,.no-print{display:none!important}
+  .layout{display:block;padding:0;max-width:none}
+  section.card{display:block!important;box-shadow:none;border:1px solid #ccc;break-inside:avoid;margin-bottom:10px}
+  body{background:#fff}
+}
+/* --- allineamento foglio professionale (palette calda, blu/arancio) --- */
+header{border-bottom:2px solid var(--dc)}
+.brand b{color:var(--dc);font-weight:600}
+.hbtn.pri{background:var(--dc);color:#fff;border-color:var(--dc)}
+.hbtn.pri:hover{filter:brightness(1.1);border-color:var(--dc)}
+.hbtn.save{background:#5b4a9e;color:#fff;border-color:#5b4a9e}
+.hbtn.save:hover{filter:brightness(1.1);border-color:#5b4a9e}
+.hbtn.open{background:var(--panel);color:var(--dc);border-color:var(--dc)}
+.hbtn.open:hover{background:var(--dc-soft)}
+.ro .v{color:var(--dc)}
+.kpi .v{font-family:"IBM Plex Mono",monospace;color:var(--dc)}
+.kpi .v small{color:var(--muted)}
+.kpi.status .v{color:var(--ink)}
+.rail a.on{border-left:2px solid var(--solar)}
+#toast{position:fixed;bottom:20px;right:20px;background:var(--dc);color:#fff;padding:10px 18px;border-radius:6px;font-size:13px;font-family:"IBM Plex Mono",monospace;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+#toast.show{opacity:1}
+#toast.ok{background:var(--pass)}#toast.err{background:var(--fail)}
+</style>
+
+<!-- ============================================================
+     LUCCHETTO CONDIVISO STUDIO (autonomo, nessun redirect)
+     Password condivisa con la raccolta, chiave localStorage 'studio_ok'.
+     Sbloccato una volta in questo browser, resta valido per tutte le
+     pagine finche' non si chiude / si preme "Esci" nel portale.
+     ============================================================ -->
+<div id="studiolock" style="position:fixed;inset:0;z-index:100000;background:linear-gradient(135deg,#12283f,#1a3a5c);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Sans',sans-serif;">
+  <div style="background:#faf9f7;border-radius:10px;padding:32px 30px;width:340px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.4);text-align:center;">
+    <div style="font-size:34px;margin-bottom:10px;">&#128274;</div>
+    <h2 style="color:#1a3a5c;font-size:16px;font-weight:500;margin:0 0 6px;">Accesso riservato</h2>
+    <p style="font-size:12px;color:#7a7570;margin:0 0 18px;">Inserire la password per accedere al foglio.</p>
+    <input type="password" id="studiolock-pwd" placeholder="Password" autocomplete="current-password"
+      style="width:100%;padding:9px 10px;border:1px solid #d4cfc7;border-radius:4px;font-family:'IBM Plex Mono',monospace;background:#fff;color:#1c1a17;outline:none;text-align:center;font-size:15px;letter-spacing:2px;margin-bottom:12px;box-sizing:border-box;"
+      onkeydown="if(event.key==='Enter')studioSblocca()" autofocus>
+    <div id="studiolock-err" style="color:#c0392b;font-size:12px;height:16px;margin-bottom:6px;"></div>
+    <button type="button" onclick="studioSblocca()"
+      style="width:100%;padding:9px 16px;border:none;border-radius:4px;font-size:13px;cursor:pointer;background:#1a3a5c;color:#fff;font-family:'IBM Plex Sans',sans-serif;">Sblocca</button>
+    <div style="margin-top:14px;"><a href="index.html" style="font-size:11px;color:#7a7570;text-decoration:none;">&#8592; Torna al portale</a></div>
+  </div>
+</div>
+<script>
+(function(){
+  var PASSWORD='system1';
+  function hide(){
+    var l=document.getElementById('studiolock'); if(l) l.style.display='none';
+    var a=document.getElementById('appwrap');    if(a) a.style.display='block';
+  }
+  window.studioSblocca=function(){
+    var i=document.getElementById('studiolock-pwd');
+    if(i && i.value===PASSWORD){ try{localStorage.setItem('studio_ok','1');}catch(e){} hide(); }
+    else{ var e=document.getElementById('studiolock-err'); if(e) e.textContent='Password errata.'; if(i){ i.value=''; i.focus(); } }
+  };
+  try{ if(localStorage.getItem('studio_ok')==='1'){ hide(); } }catch(e){}
+})();
+</script>
+
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <div class="htop">
+      <div class="brand">
+        <div class="mark"></div>
+        <div><b>Dimensionamento fotovoltaico</b><span>Stringhe · cavi · protezioni · producibilità — metodo ABB QT10 / CEI 82-25 / 64-8 / 0-21</span></div>
+      </div>
+      <input class="proj-name" id="projName" value="Impianto residenziale 4,5 kWp" aria-label="Nome progetto">
+      <button class="hbtn open no-print" id="openBtn" title="Apri progetto da file">📂 Apri</button>
+      <button class="hbtn save no-print" id="saveFileBtn" title="Salva progetto su file">💾 Salva</button>
+      <button class="hbtn pri no-print" onclick="window.print()">🖨 Stampa</button>
+      <button class="hbtn no-print" id="themeBtn" title="Tema chiaro/scuro">◐</button>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="k">Potenza impianto</div><div class="v" id="kpiKwp">–</div></div>
+      <div class="kpi"><div class="k">Moduli totali</div><div class="v" id="kpiMod">–</div></div>
+      <div class="kpi"><div class="k">Rapporto DC/AC</div><div class="v" id="kpiRatio">–</div></div>
+      <div class="kpi"><div class="k">Producibilità</div><div class="v" id="kpiEn">–</div></div>
+      <div class="kpi status"><div class="k">Esito verifiche</div><div class="v" id="kpiStatus"><span class="dot"></span>–</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="rail"><ol id="rail"></ol></nav>
+  <main id="main"></main>
+</div>
+
+<datalist id="cityList"></datalist>
+<div id="tip"></div>
+<div id="picker"></div>
+<div id="toast"></div>
+<input type="file" id="fileInput" accept=".fvsol,.json" style="display:none">
+
+<div id="jsonModal" class="no-print" style="display:none;position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.4);align-items:center;justify-content:center">
+  <div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;max-width:560px;width:92%;padding:20px;box-shadow:var(--shadow)">
+    <h2 style="font-size:16px;margin-bottom:8px">Esporta / importa progetto</h2>
+    <p class="hint" style="margin:0 0 10px">Copia il testo per salvare il progetto, oppure incolla dati e premi Carica.</p>
+    <textarea id="jsonArea" style="width:100%;height:200px;font-family:'IBM Plex Mono',monospace;font-size:11px;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--panel2);color:var(--ink)"></textarea>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+      <button class="hbtn" onclick="document.getElementById('jsonModal').style.display='none'">Chiudi</button>
+      <button class="hbtn" id="jsonLoad">Carica dati</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const nf=(x,d=2)=>(isFinite(x)?Number(x):0).toLocaleString('it-IT',{minimumFractionDigits:d,maximumFractionDigits:d});
+const ni=x=>(isFinite(x)?Math.round(x):0).toLocaleString('it-IT');
+
+/* ============================================================
+   CITY DATABASE — lat, lon, alt, GHI mensile media giornaliera (kWh/m²/gg)
+   Stima climatica (non chiamata PVGIS live: la sandbox blocca la rete).
+   ============================================================ */
+const CITIES=[
+ {n:"Torino",lat:45.07,lon:7.69,alt:239,g:[1.35,2.30,3.80,4.90,5.70,6.30,6.70,5.80,4.40,2.75,1.55,1.15]},
+ {n:"Milano",lat:45.46,lon:9.19,alt:120,g:[1.25,2.15,3.55,4.75,5.55,6.15,6.55,5.65,4.25,2.65,1.45,1.05]},
+ {n:"Bergamo",lat:45.70,lon:9.67,alt:249,g:[1.30,2.20,3.65,4.80,5.60,6.20,6.60,5.70,4.30,2.70,1.50,1.10]},
+ {n:"Verona",lat:45.44,lon:10.99,alt:59,g:[1.35,2.25,3.70,4.85,5.70,6.30,6.70,5.80,4.40,2.80,1.55,1.15]},
+ {n:"Venezia",lat:45.44,lon:12.34,alt:2,g:[1.35,2.30,3.75,4.85,5.75,6.30,6.70,5.85,4.45,2.85,1.60,1.15]},
+ {n:"Trento",lat:46.07,lon:11.12,alt:194,g:[1.30,2.20,3.65,4.80,5.60,6.20,6.60,5.70,4.30,2.70,1.50,1.10]},
+ {n:"Bologna",lat:44.49,lon:11.34,alt:54,g:[1.40,2.35,3.85,4.95,5.85,6.45,6.85,5.95,4.55,2.90,1.65,1.20]},
+ {n:"Genova",lat:44.41,lon:8.93,alt:19,g:[1.55,2.50,3.95,5.05,5.95,6.55,6.90,6.05,4.70,3.10,1.85,1.40]},
+ {n:"Firenze",lat:43.77,lon:11.26,alt:50,g:[1.55,2.55,4.05,5.15,6.05,6.75,7.15,6.25,4.80,3.15,1.90,1.40]},
+ {n:"Ancona",lat:43.62,lon:13.52,alt:16,g:[1.60,2.60,4.10,5.25,6.20,6.85,7.25,6.35,4.90,3.25,1.95,1.45]},
+ {n:"Perugia",lat:43.11,lon:12.39,alt:493,g:[1.60,2.60,4.15,5.25,6.20,6.90,7.30,6.40,4.95,3.25,1.95,1.45]},
+ {n:"Pescara",lat:42.46,lon:14.21,alt:4,g:[1.70,2.70,4.25,5.40,6.35,7.05,7.40,6.55,5.05,3.35,2.05,1.55]},
+ {n:"Roma",lat:41.90,lon:12.50,alt:21,g:[1.75,2.75,4.25,5.45,6.40,7.10,7.45,6.60,5.15,3.45,2.15,1.60]},
+ {n:"Napoli",lat:40.85,lon:14.27,alt:17,g:[1.90,2.90,4.40,5.60,6.55,7.25,7.60,6.75,5.35,3.65,2.30,1.75]},
+ {n:"Foggia",lat:41.46,lon:15.55,alt:76,g:[1.85,2.85,4.40,5.55,6.55,7.25,7.60,6.75,5.30,3.60,2.25,1.70]},
+ {n:"Bari",lat:41.12,lon:16.87,alt:5,g:[1.95,2.95,4.45,5.65,6.65,7.35,7.65,6.80,5.40,3.70,2.35,1.80]},
+ {n:"Lecce",lat:40.35,lon:18.17,alt:49,g:[2.05,3.05,4.55,5.75,6.75,7.45,7.80,6.90,5.50,3.80,2.45,1.90]},
+ {n:"Cosenza",lat:39.30,lon:16.25,alt:238,g:[2.05,3.05,4.55,5.80,6.80,7.50,7.85,6.95,5.55,3.85,2.50,1.90]},
+ {n:"Reggio Calabria",lat:38.11,lon:15.65,alt:15,g:[2.15,3.15,4.65,5.90,6.95,7.65,8.00,7.10,5.70,4.00,2.65,2.00]},
+ {n:"Cagliari",lat:39.22,lon:9.12,alt:4,g:[2.20,3.20,4.70,5.95,7.00,7.70,8.05,7.15,5.75,4.05,2.70,2.05]},
+ {n:"Sassari",lat:40.73,lon:8.56,alt:225,g:[2.10,3.10,4.60,5.85,6.90,7.60,7.95,7.05,5.65,3.95,2.60,1.95]},
+ {n:"Palermo",lat:38.12,lon:13.36,alt:14,g:[2.25,3.25,4.75,6.00,7.05,7.75,8.10,7.20,5.80,4.10,2.75,2.10]},
+ {n:"Catania",lat:37.50,lon:15.09,alt:7,g:[2.30,3.30,4.80,6.05,7.15,7.85,8.20,7.30,5.90,4.20,2.85,2.15]},
+ {n:"Trapani",lat:38.02,lon:12.51,alt:3,g:[2.30,3.30,4.80,6.05,7.10,7.80,8.15,7.25,5.85,4.15,2.80,2.15]},
+];
+function findCity(name){ name=(name||'').trim().toLowerCase(); if(!name)return null;
+  return CITIES.find(c=>c.n.toLowerCase()===name) || (name.length>=3?CITIES.find(c=>c.n.toLowerCase().startsWith(name)):null); }
+
+/* transposition GHI orizz. -> POA (Liu-Jordan / Erbs, media mensile) */
+const DIM=[31,28,31,30,31,30,31,31,30,31,30,31];
+const REPD=[17,47,75,105,135,162,198,228,258,288,318,344];
+function transpose(lat,ghiDaily,tilt,az,alb){
+  const rad=Math.PI/180, phi=lat*rad, beta=tilt*rad, gamma=az*rad, Gsc=1367;
+  const poa=[]; let poaA=0,ghiA=0;
+  for(let m=0;m<12;m++){
+    const n=REPD[m], dec=23.45*Math.sin(2*Math.PI*(284+n)/365)*rad, H=ghiDaily[m];
+    const ws=Math.acos(Math.max(-1,Math.min(1,-Math.tan(phi)*Math.tan(dec))));
+    const H0=(24*3600/Math.PI)*Gsc*(1+0.033*Math.cos(2*Math.PI*n/365))*(Math.cos(phi)*Math.cos(dec)*Math.sin(ws)+ws*Math.sin(phi)*Math.sin(dec))/3.6e6;
+    let KT=H0>0?H/H0:0; KT=Math.max(0.05,Math.min(0.8,KT));
+    const wsDeg=ws/rad;
+    let f=(wsDeg<=81.4)?(1.391-3.560*KT+4.189*KT*KT-2.137*KT*KT*KT):(1.311-3.022*KT+3.427*KT*KT-1.821*KT*KT*KT);
+    f=Math.max(0,Math.min(1,f));
+    const Hd=H*f, Hb=H-Hd;
+    let sT=0,sH=0;
+    for(let wd=-180;wd<=180;wd+=2){
+      const w=wd*rad, cosz=Math.cos(phi)*Math.cos(dec)*Math.cos(w)+Math.sin(phi)*Math.sin(dec);
+      if(cosz<=0)continue;
+      const cost=Math.sin(dec)*Math.sin(phi)*Math.cos(beta)-Math.sin(dec)*Math.cos(phi)*Math.sin(beta)*Math.cos(gamma)
+        +Math.cos(dec)*Math.cos(phi)*Math.cos(beta)*Math.cos(w)+Math.cos(dec)*Math.sin(phi)*Math.sin(beta)*Math.cos(gamma)*Math.cos(w)
+        +Math.cos(dec)*Math.sin(beta)*Math.sin(gamma)*Math.sin(w);
+      sH+=cosz; sT+=Math.max(0,cost);
+    }
+    const Rb=sH>0?sT/sH:0;
+    const Ht=Hb*Rb+Hd*(1+Math.cos(beta))/2+H*alb*(1-Math.cos(beta))/2;
+    const mth=Ht*DIM[m]; poa.push(mth); poaA+=mth; ghiA+=H*DIM[m];
+  }
+  return {poa,poaA,ghiA};
+}
+
+/* ============================================================
+   HELP — input
+   ============================================================ */
+const HELP={
+ loc:"Località: seleziona una città dall'elenco → si compilano latitudine, longitudine, altitudine e l'irraggiamento (sezione Producibilità).",
+ lat:"Latitudine (°). Compilata dalla località; regolabile. Riferimento per l'inclinazione ottimale (β≈lat) e per il calcolo dell'irraggiamento sul piano.",
+ lon:"Longitudine (°). Compilata dalla località; regolabile.",
+ alt:"Altitudine s.l.m. (m). Compilata dalla località; regolabile.",
+ tStd:"Temperatura in condizioni standard di prova (STC) = 25 °C, cui sono riferiti i dati di targa del modulo.",
+ tMin:"Temperatura minima della cella (caso peggiore per la VOC: a freddo la tensione a vuoto è massima). Limita il n° MASSIMO di moduli in serie. ≈ T ambiente minima del sito (IEC 62548).",
+ tMax:"Temperatura massima della cella (caso peggiore per la VMPP: a caldo è minima). Limita il n° MINIMO di moduli per restare nella finestra MPPT.",
+ tMaxSug:"Stima da NOCT: <code>T_cella = T_amb + (NOCT−20)/800·G</code> con G=1000 W/m². Valore indicativo.",
+ grid:"Punto di connessione. BT→CEI 0-21, MT→CEI 0-16. Determina i requisiti della protezione di interfaccia.",
+ nInv:"Numero di inverter identici. Moltiplica potenza ed energia dell'impianto (impianti multi-inverter/grandi).",
+ cls:"Classificazione dimensionale CEI 0-21 (Quaderno ABB 2026): definisce i requisiti di connessione e protezione applicabili.",
+
+ mP:"Potenza nominale del modulo al MPP in STC: <code>P = VMPP × IMPP</code>.",
+ mEff:"Efficienza: <code>η = P/(Superficie×1000 W/m²)</code>.",
+ mVmp:"Tensione al MPP in STC. Tensione di stringa: <code>V_str = N×VMPP</code>.",
+ mImp:"Corrente al MPP in STC: percorre la stringa in esercizio.",
+ mVoc:"Tensione a circuito aperto in STC. Base per la VOC a freddo.",
+ mIsc:"Corrente di cortocircuito in STC. Base per i cavi (1,25·ISC) e per i fusibili.",
+ mVmax:"Massima tensione di sistema del modulo (isolamento). La tensione di stringa non deve superarla.",
+ mArea:"Superficie del modulo (m²).",
+ mNoct:"NOCT: T nominale cella (800 W/m², 20 °C, 1 m/s). Stima la T max cella.",
+ mFuse:"Massima corrente del fusibile serie indicata dal costruttore del modulo. La protezione di stringa non deve superarla [4.3].",
+ mKrev:"Massima corrente inversa del modulo, in multipli di ISC (2,5–3·ISC, IEC 62257-7-1). Sotto soglia il fusibile non serve.",
+ mCoefU:"Unità dei coefficienti di tensione: V/°C (assoluto) o %/°C (relativo, tipico datasheet).",
+ mBvoc:"Coeff. temperatura VOC (β, negativo): <code>VOC(T)=VOC·[1+β/100·(T−25)]</code> (%/°C) o <code>VOC+β·(T−25)</code> (V/°C).",
+ mBvmp:"Coeff. temperatura VMPP. Se vuoto si usa quello VOC.",
+ mGp:"Coeff. temperatura potenza (γ, %/°C, negativo).",
+
+ iPdc:"P max generatore FV in ingresso. La potenza dell'array non dovrebbe superarla (salvo clipping ammesso).",
+ iPac:"P nominale AC. ABB: Pac/Ppv 0,8–0,9 → DC/AC ≈ 1,11–1,25.",
+ iVdcMax:"V DC max assoluta (UMAX). [3.1]: <code>N·VOC(Tmin) ≤ UMAX</code>.",
+ iVmpptMin:"V MPPT min. [3.2]: <code>N·VMPP(Tmax) ≥ UMPPTmin</code>.",
+ iVmpptMax:"V MPPT max. [3.3]: <code>N·VMPP(Tmin) ≤ UMPPTmax</code>.",
+ iIdcMax:"I DC totale max in ingresso (somma MPPT).",
+ iImpptMax:"I max per singolo MPPT: <code>n_stringhe·ISC ≤ Imax MPPT</code>.",
+ iNmppt:"N° ingressi MPPT indipendenti. Definisce gli MPPT assegnabili alle stringhe.",
+ iEff:"Rendimento max. Per la resa annua è più realistico il rendimento europeo.",
+ iFreq:"Frequenza di rete (50 Hz).",
+ iVac:"V nominale AC: 230 V monofase / 400 V trifase.",
+ iCosf:"Fattore di potenza: <code>I=Pac/(V·cosφ)</code> mono, <code>Pac/(√3·V·cosφ)</code> trifase.",
+
+ optType:"V di stringa fissa (SolarEdge): la stringa lavora a V costante → non valgono le verifiche VOC/temp. A livello modulo (Tigo): il modulo resta accoppiato → valgono le verifiche di stringa.",
+ optVin:"V ingresso max ottimizzatore. Deve essere ≥ VOC(Tmin) del modulo.",
+ optImax:"I max ottimizzatore. Deve essere ≥ ISC del modulo.",
+ optVstr:"V di stringa nominale imposta (es. 400 V SolarEdge).",
+ optNmin:"Moduli/stringa minimi (costruttore).",
+ optNmax:"Moduli/stringa massimi (costruttore).",
+
+ c1type:"Cavo di stringa. H1Z2Z2-K (EN 50618): 90 °C continui, resistente UV, per posa dietro i moduli.",
+ c1s:"Sezione (mm²). Verifica portata (Iz≥1,25·ISC) e caduta di tensione.",
+ c1io:"Portata I₀ (costruttore, ~30 °C in aria libera). Da declassare con K1·K2·K.",
+ c1k1:"Declassamento temperatura (K1). ABB cavi solari: 0,58 (70 °C dietro i moduli). CEI-UNEL 35024.",
+ c1k2:"Declassamento raggruppamento (K2): n° circuiti adiacenti. CEI-UNEL 35024.",
+ c1k3:"Fattore addizionale (0,9 tubo/canale). ABB solari: <code>0,58·0,9=0,52</code>.",
+ c1udc:"V nom. DC cavo. ≥ VOC max stringa. Tab.3.2 ABB: 0,6/1 kV → 1500 V DC.",
+ c1lm:"Lunghezza collegamenti tra moduli (×1 nella caduta di tensione).",
+ c1lq:"Lunghezza stringa→quadro (×2, andata+ritorno).",
+ c2s:"Sezione cavo principale DC quadro→inverter (mm²).",
+ c2io:"Portata I₀ cavo principale DC.",
+ c2k:"Declassamento totale (K1·K2) cavo principale.",
+ c2l:"Lunghezza cavo principale DC (×2).",
+ c2ns:"Stringhe // sul cavo (y): <code>Ib=y·1,25·ISC</code> [3.5].",
+ c2udc:"V nom. DC cavo principale. ≥ VOC max stringa.",
+ c3s:"Sezione cavo AC (mm²).",
+ c3type:"Cavo lato AC (non solare). FG16(O)R16 (EPR/XLPE, 90 °C) tipico per posa fissa interrata/incassata; N07V-K (PVC, 70 °C) in tubo; H07RN-F (gomma) per posa mobile. Determina il coefficiente K per la verifica I²t e la portata di riferimento.",
+ c3io:"Portata I₀ cavo AC.",
+ c3k:"Declassamento totale cavo AC.",
+ c3l:"Lunghezza cavo AC (×2 mono / √3 trifase).",
+ rhoDc:"ρ rame a caldo lato DC (≈0,021 Ω·mm²/m). <code>ΔU=ρ·L·I/S</code>.",
+ rhoAc:"ρ rame lato AC (≈0,018). <code>ΔU=2·ρ·L·I/S</code> mono, <code>√3·ρ·L·I/S</code> trifase.",
+ duDcLim:"Limite ΔU DC. ABB: 1–2% (anziché 4%) per limitare le perdite Joule.",
+ duAcLim:"Limite ΔU AC (~1%). Totale DC+AC ≤ 3%.",
+
+ protType:"Fusibile gPV (IEC 60269-6): compatto, per corto circuito e corrente inversa. Interruttore magnetotermico: protegge e seziona; con >3 stringhe // ABB richiede il termomagnetico (non solo magnetico).",
+ protForce:"Installa la protezione di stringa anche se non strettamente necessaria (uniformità di quadro o scelta progettuale).",
+ lps:"LPS esterno (parafulmine). Con LPS → SPD Tipo 1; senza → Tipo 2. CEI 81-10/81-28.",
+ spdDist:"Distanza campo→inverter. Se >10 m: SPD alle due estremità del cavo DC.",
+
+ prMode:"Automatica: irraggiamento sul piano calcolato dalla località, inclinazione e orientamento. Manuale: valori inseriti a mano (es. da PVGIS).",
+ tilt:"Inclinazione dei moduli (β). Ottimale ≈ latitudine per la resa annua; più bassa favorisce l'estate.",
+ az:"Orientamento (azimut γ): 0°=Sud, −90°=Est, +90°=Ovest, ±180°=Nord.",
+ albedo:"Riflessione del suolo (ρ). 0,2 tipico; 0,1 asfalto; 0,6 cemento chiaro; 0,8 neve.",
+ pr:"Performance Ratio (ηBOS): rendimento d'impianto (0,75–0,85). <code>E=kWp·H·PR</code> [2.10].",
+ co2:"Fattore CO₂ rete (kg/kWh). <code>CO₂ evitata = Energia·fattore</code>.",
+ i2tDev:"Energia specifica passante (I²t, A²s) del dispositivo di protezione di stringa, dal datasheet. Verifica [4.4]: <code>I²t ≤ K²·S²</code>. Lascia 0 per vedere solo il limite K²·S² e il tempo max di intervento.",
+ peMat:"Materiale/isolante del conduttore di protezione: rame PVC K=115, rame EPR/XLPE K=143 (ABB/CEI 64-8). Usato nella verifica adiabatica <code>S≥√(I²t)/K</code>.",
+ peL:"Lunghezza del collegamento equipotenziale struttura moduli → barra di terra. <code>Reqp=ρ·L/S</code>.",
+ peS:"Sezione del conduttore equipotenziale adottato. Minimo 6 mm² Cu (protezione), 16 mm² se collegato a LPS. Verifica [5.2]: <code>Icc·Reqp ≤ 120 V</code>.",
+ batChem:"Chimica batteria. LFP (LiFePO₄): sicura, ~6000 cicli, DoD 90-100%. NMC: più densa, ~4000 cicli, DoD 80-90%.",
+ batCap:"Capacità nominale (kWh). <code>Energia utile = Capacità × DoD</code>.",
+ batDod:"Profondità di scarica ammessa (DoD). LFP 90-100%, NMC 80-90%.",
+ batEff:"Rendimento di andata e ritorno (carica+scarica). Tipico 90-95%. <code>Energia resa = utile × η</code>.",
+ batP:"Potenza max di carica/scarica (kW). <code>C-rate = P / Capacità</code>.",
+ batCoup:"DC-coupled: batteria lato DC (inverter ibrido, meno conversioni). AC-coupled: inverter batteria separato lato AC. Ibrido: inverter unico FV+batteria.",
+ batV:"Tensione nominale del pacco batteria. 48/51,2 V bassa tensione; 200-400 V alta tensione.",
+ batLoad:"Consumo elettrico giornaliero medio dell'utenza (kWh/gg).",
+ batNight:"Quota di consumo nelle ore senza sole (sera/notte): è ciò che l'accumulo può coprire.",
+ batDirect:"Quota di produzione FV autoconsumata direttamente senza accumulo (residenziale tipico 25-35%).",
+ vMt:"Tensione nominale della rete MT di consegna (tipicamente 15 o 20 kV).",
+ trafoLoad:"Fattore di utilizzo del trasformatore (carico rispetto alla potenza nominale). Tip. 80-90%. Sn ≈ Pac/utilizzo.",
+ mbX:"Numero di stringhe in parallelo nel combiner box (x). Corrente combiner = x·ISC; potere d'interruzione Icu ≥ (x−1)·1,25·ISC [4.5].",
+ mbY:"Stringhe già protette a monte / in parallelo sul cavo di sottocampo (y). Icu ≥ (x−y)·1,25·ISC [4.6].",
+ mbN:"Numero di combiner box (quadri di primo parallelo) dell'impianto.",
+ instType:"Tipo di installazione: determina se serve la verifica dell'ombreggiamento tra le file (solo per impianti a file su tetto piano o a terra).",
+ modL:"Lunghezza del modulo lungo la falda/pendenza (m). Con l'inclinazione dà l'altezza h=L·sinβ che proietta l'ombra.",
+ shTilt:"Inclinazione dei moduli (β) per il calcolo dell'ombra tra le file.",
+ shLat:"Latitudine del sito: determina l'elevazione solare minima invernale α = 90 − lat − 23,45°.",
+ shAlpha:"Elevazione solare di progetto. Vuoto = solstizio invernale a mezzogiorno (ombra minima). Riducila per garantire assenza d'ombra su una finestra oraria più ampia (es. 9-15).",
+ snowZone:"Zona di carico neve NTC 2018 (dipende dalla provincia). Determina il carico al suolo qsk.",
+ snowAs:"Altitudine del sito s.l.m. (as): sopra 200 m il carico neve cresce secondo NTC 2018.",
+ snowCE:"Coefficiente di esposizione C_E (0,9 ventoso · 1,0 normale · 1,1 riparato).",
+ snowTilt:"Inclinazione della copertura: μ1=0,8 fino a 30°, decresce fino a 0 a 60°. qs=μ1·C_E·C_t·qsk.",
+ windZone:"Zona di vento NTC 2018 (1-9, dipende dalla regione). Determina vb0, a0, ks.",
+ windAs:"Altitudine del sito (as) per il coefficiente di altitudine ca del vento.",
+ windCE:"Coefficiente di esposizione c_e (dipende da categoria di rugosità e altezza, tip. 1,8-2,7).",
+ windCP:"Coefficiente di pressione netto c_p del pannello (dipende da inclinazione e posizione, tip. 1,3-1,8).",
+};
+const H_IRR="Irraggiamento mensile sul piano dei moduli (kWh/m²). In automatico è calcolato dalla località+β+γ; in manuale lo inserisci tu.";
+
+/* ============================================================
+   SECTIONS
+   ============================================================ */
+const SECTIONS=[
+ {id:'progetto',idx:'01',title:'Progetto e sito',sub:'Seleziona la località: coordinate e altitudine si compilano da sole. Le temperature definiscono le tensioni di dimensionamento.',
+  html:`
+   <div class="grp">Ubicazione <span class="tag">scegli la città → dati automatici</span></div>
+   <div class="grid">
+     <div class="f"><label>Località</label><input id="loc" list="cityList" value="Milano" placeholder="Cerca città…"></div>
+     <div class="f"><label>Latitudine <span class="u">°</span></label><input id="lat" value="45.46" inputmode="decimal"></div>
+     <div class="f"><label>Longitudine <span class="u">°</span></label><input id="lon" value="9.19" inputmode="decimal"></div>
+     <div class="f"><label>Altitudine <span class="u">m</span></label><input id="alt" value="120" inputmode="decimal"></div>
+   </div>
+   <div class="grp">Condizioni ambientali <span class="tag">definiscono VOC a freddo e VMPP a caldo</span></div>
+   <div class="grid">
+     <div class="f"><label>Temp. standard STC <span class="u">°C</span></label><input id="tStd" value="25" inputmode="decimal"></div>
+     <div class="f"><label>Temp. min. cella <span class="u">°C</span></label><input id="tMin" value="-10" inputmode="decimal"></div>
+     <div class="f"><label>Temp. max. cella <span class="u">°C</span></label><input id="tMax" value="70" inputmode="decimal"></div>
+     <div class="f calc"><label>Suggerita T max (NOCT)</label><input id="tMaxSug" readonly></div>
+   </div>
+   <div class="grp">Connessione e classificazione</div>
+   <div class="grid">
+     <div class="f"><label>Punto di connessione</label>
+       <select id="grid"><option value="bt1">BT monofase 230 V</option><option value="bt3">BT trifase 400 V</option><option value="mt">MT</option></select></div>
+     <div class="f"><label>N° inverter identici (sistema)</label><input id="nInv" value="1" inputmode="numeric"></div>
+   </div>
+   <div class="readout" id="clsOut" style="grid-template-columns:1fr"></div>
+   <div class="note solar"><b>Temperature.</b> La T minima cella (VOC, caso peggiore) ≈ T ambiente minima del sito. La T max cella si stima con NOCT: <code>T_cella = T_amb + (NOCT−20)/800·G</code>. Su tetto integrato aggiungi +30/35 °C alla T ambiente.</div>
+  `},
+ {id:'modulo',idx:'02',title:'Modulo fotovoltaico',sub:'Dati di targa STC e coefficienti di temperatura da datasheet del modulo.',
+  html:`
+   <div class="grid">
+     <div class="f"><label>Potenza P<sub>MPP</sub> <span class="u">W</span></label><input id="mP" value="375" inputmode="decimal"></div>
+     <div class="f"><label>Efficienza <span class="u">%</span></label><input id="mEff" value="20.5" inputmode="decimal"></div>
+     <div class="f"><label>Tensione V<sub>MPP</sub> <span class="u">V</span></label><input id="mVmp" value="54.7" inputmode="decimal"></div>
+     <div class="f"><label>Corrente I<sub>MPP</sub> <span class="u">A</span></label><input id="mImp" value="6.09" inputmode="decimal"></div>
+     <div class="f"><label>Tensione V<sub>OC</sub> <span class="u">V</span></label><input id="mVoc" value="65.3" inputmode="decimal"></div>
+     <div class="f"><label>Corrente I<sub>SC</sub> <span class="u">A</span></label><input id="mIsc" value="6.46" inputmode="decimal"></div>
+     <div class="f"><label>Tensione max sistema <span class="u">V</span></label><input id="mVmax" value="1000" inputmode="decimal"></div>
+     <div class="f"><label>Superficie <span class="u">m²</span></label><input id="mArea" value="1.66" inputmode="decimal"></div>
+     <div class="f"><label>NOCT <span class="u">°C</span></label><input id="mNoct" value="45" inputmode="decimal"></div>
+     <div class="f"><label>I max fusibile serie <span class="u">A</span></label><input id="mFuse" value="20" inputmode="decimal"></div>
+     <div class="f"><label>I inversa modulo <span class="u">×ISC</span></label><input id="mKrev" value="2.5" inputmode="decimal"></div>
+   </div>
+   <div class="grp">Coefficienti di temperatura</div>
+   <div class="grid">
+     <div class="f"><label>Unità coefficienti V</label><select id="mCoefU"><option value="V">V/°C</option><option value="pct">%/°C</option></select></div>
+     <div class="f"><label>Coeff. V<sub>OC</sub> (β)</label><input id="mBvoc" value="-0.176" inputmode="decimal"></div>
+     <div class="f"><label>Coeff. V<sub>MPP</sub> (β)</label><input id="mBvmp" value="-0.176" inputmode="decimal"></div>
+     <div class="f"><label>Coeff. P<sub>MPP</sub> (γ) <span class="u">%/°C</span></label><input id="mGp" value="-0.38" inputmode="decimal"></div>
+   </div>
+   <div class="grp">Tensioni corrette con temperatura</div>
+   <div class="readout" id="modOut"></div>
+  `},
+ {id:'inverter',idx:'03',title:'Inverter',sub:'Limiti elettrici: finestra MPPT, tensione e corrente massime lato DC, potenza AC.',
+  html:`
+   <div class="grid">
+     <div class="f"><label>P nom. ingresso DC <span class="u">W</span></label><input id="iPdc" value="4500" inputmode="decimal"></div>
+     <div class="f"><label>P nom. AC <span class="u">W</span></label><input id="iPac" value="3000" inputmode="decimal"></div>
+     <div class="f"><label>V max DC assoluta <span class="u">V</span></label><input id="iVdcMax" value="600" inputmode="decimal"></div>
+     <div class="f"><label>V MPPT min <span class="u">V</span></label><input id="iVmpptMin" value="90" inputmode="decimal"></div>
+     <div class="f"><label>V MPPT max <span class="u">V</span></label><input id="iVmpptMax" value="560" inputmode="decimal"></div>
+     <div class="f"><label>I max DC totale <span class="u">A</span></label><input id="iIdcMax" value="18" inputmode="decimal"></div>
+     <div class="f"><label>I max per MPPT <span class="u">A</span></label><input id="iImpptMax" value="12.5" inputmode="decimal"></div>
+     <div class="f"><label>N° ingressi MPPT</label><input id="iNmppt" value="2" inputmode="numeric"></div>
+     <div class="f"><label>Rendimento max <span class="u">%</span></label><input id="iEff" value="95" inputmode="decimal"></div>
+     <div class="f"><label>Frequenza <span class="u">Hz</span></label><input id="iFreq" value="50" inputmode="decimal"></div>
+     <div class="f"><label>V nom. AC <span class="u">V</span></label><input id="iVac" value="230" inputmode="decimal"></div>
+     <div class="f"><label>cos φ</label><input id="iCosf" value="1" inputmode="decimal"></div>
+   </div>
+   <div class="readout" id="invOut"></div>
+   <div class="verifs" id="invVerif"></div>
+   <div class="note"><b>Fattore di potenza (cos φ).</b> Il valore nominale è 1 (sola potenza attiva) e minimizza la corrente AC. La CEI 0-21 però impone la capacità di regolare il reattivo fino a <b>cos φ 0,90</b> (curve cosφ(P) o Q(V) attivabili dal distributore per il controllo di tensione): in quel caso <code>I = Pac/(V·cosφ)</code> aumenta di ~11%. Per un dimensionamento cautelativo di cavi e protezioni AC imposta <b>0,90</b>.</div>
+  `},
+ {id:'ottimizzatori',idx:'04',title:'Ottimizzatori (opzionale)',sub:'Se selezionati, cambiano le regole di stringa: la verifica di tensione segue l\'ottimizzatore.',
+  html:`
+   <label class="tog" style="margin-bottom:14px"><input type="checkbox" id="optOn"> Impianto con ottimizzatori di potenza</label>
+   <div id="optBox" style="display:none">
+     <div class="grid">
+       <div class="f"><label>Tipo</label><select id="optType"><option value="fixedstr">Tensione di stringa fissa (es. SolarEdge)</option><option value="modlevel">A livello di modulo / MLPE (es. Tigo, TS4)</option></select></div>
+       <div class="f"><label>V ingresso max <span class="u">V</span></label><input id="optVin" value="80" inputmode="decimal"></div>
+       <div class="f"><label>I ingr./usc. max <span class="u">A</span></label><input id="optImax" value="15" inputmode="decimal"></div>
+     </div>
+     <div id="optFixed" class="grid" style="margin-top:2px">
+       <div class="f"><label>V stringa nominale <span class="u">V</span></label><input id="optVstr" value="400" inputmode="decimal"></div>
+       <div class="f"><label>Moduli min/stringa</label><input id="optNmin" value="8" inputmode="numeric"></div>
+       <div class="f"><label>Moduli max/stringa</label><input id="optNmax" value="25" inputmode="numeric"></div>
+     </div>
+     <div class="verifs" id="optVerif"></div>
+     <div class="note solar"><b>SolarEdge-style:</b> stringa a tensione costante → contano il range moduli e la V/I ottimizzatore. <b>MLPE Tigo:</b> il modulo resta accoppiato → restano valide le verifiche della sez. 05 più i limiti V/I.</div>
+     <div class="note"><b>Come scegliere (qualsiasi marca).</b> Non conta il produttore ma il <b>principio di funzionamento</b> indicato sul datasheet dell'ottimizzatore: se il sistema impone una <b>tensione di stringa fissa</b> e richiede un inverter dedicato (l'ottimizzatore regola l'uscita a V costante) → scegli "tensione di stringa fissa"; se è un dispositivo <b>add-on</b> che lavora con un normale inverter di stringa e fa solo MPPT/monitoraggio/spegnimento per modulo senza disaccoppiare la stringa → scegli "a livello di modulo / MLPE". Inserisci poi V ingresso max e I max dal datasheet del modello specifico (Huawei, SMA TS4, APsystems, ecc.).</div>
+   </div>
+  `},
+ {id:'stringhe',idx:'05',title:'Configurazione stringhe',sub:'Aggiungi o togli le stringhe (da 1 a molte sullo stesso inverter) e assegnale agli MPPT. Il tool verifica ogni stringa e la corrente per MPPT.',
+  html:`
+   <div class="readout" id="rangeOut"></div>
+   <div class="grp">Stringhe dell'impianto <span class="tag">+ Aggiungi / × Rimuovi</span></div>
+   <table class="mtbl"><thead><tr>
+     <th>#</th>
+     <th>Moduli in serie<span class="help" data-tip="Numero di moduli in serie nella stringa. Deve stare nel range calcolato sopra.">?</span></th>
+     <th>MPPT<span class="help" data-tip="Ingresso MPPT a cui è collegata la stringa. Più stringhe sullo stesso MPPT sono in parallelo (le correnti si sommano).">?</span></th>
+     <th>V<sub>MPP</sub> str</th>
+     <th>V<sub>OC</sub> max<span class="help" data-tip="N·VOC(Tmin): tensione a vuoto a freddo. ≤ V DC max inverter [3.1].">?</span></th>
+     <th>V<sub>MPP</sub> min<span class="help" data-tip="N·VMPP(Tmax): tensione MPP a caldo. ≥ V MPPT min [3.2].">?</span></th>
+     <th>Esito</th><th></th></tr></thead>
+   <tbody id="strBody"></tbody></table>
+   <button class="hbtn" id="addStr" style="margin-top:10px">+ Aggiungi stringa</button>
+   <div class="grp">Riepilogo per MPPT</div>
+   <div class="readout" id="mpptAgg"></div>
+   <div class="verifs" id="strVerif"></div>
+  `},
+ {id:'cavi',idx:'06',title:'Cavi',sub:'Portata (Iz) con declassamenti, tensione DC del cavo e caduta di tensione per i tratti DC di stringa, DC principale e AC.',
+  html:`
+   <div class="grp">Cavo solare di stringa (modulo → quadro DC)</div>
+   <div class="grid">
+     <div class="f"><label>Tipo cavo</label><select id="c1type"><option value="h1">H1Z2Z2-K (EN 50618, 90 °C)</option><option value="pvc">N07V-K / PVC (70 °C)</option></select></div>
+     <div class="f"><label>Sezione <span class="u">mm²</span></label><input id="c1s" value="2.5" inputmode="decimal"></div>
+     <div class="f"><label>Portata I₀ <span class="u">A</span></label><input id="c1io" value="33" inputmode="decimal"></div>
+     <div class="f"><label>K1 temperatura</label><input id="c1k1" value="0.91" inputmode="decimal"></div>
+     <div class="f"><label>K2 raggruppamento</label><input id="c1k2" value="1" inputmode="decimal"></div>
+     <div class="f"><label>K addizionale</label><input id="c1k3" value="0.9" inputmode="decimal"></div>
+     <div class="f"><label>V nom. DC cavo <span class="u">V</span></label><input id="c1udc" value="1500" inputmode="decimal"></div>
+     <div class="f"><label>Lungh. tra moduli <span class="u">m</span></label><input id="c1lm" value="16" inputmode="decimal"></div>
+     <div class="f"><label>Lungh. stringa→quadro <span class="u">m</span></label><input id="c1lq" value="20" inputmode="decimal"></div>
+   </div>
+   <div class="verifs" id="c1v"></div>
+   <div class="grp">Cavo principale DC (quadro → inverter)</div>
+   <div class="grid">
+     <div class="f"><label>Sezione <span class="u">mm²</span></label><input id="c2s" value="2.5" inputmode="decimal"></div>
+     <div class="f"><label>Portata I₀ <span class="u">A</span></label><input id="c2io" value="21" inputmode="decimal"></div>
+     <div class="f"><label>K totale</label><input id="c2k" value="1" inputmode="decimal"></div>
+     <div class="f"><label>V nom. DC cavo <span class="u">V</span></label><input id="c2udc" value="1125" inputmode="decimal"></div>
+     <div class="f"><label>Lunghezza <span class="u">m</span></label><input id="c2l" value="2" inputmode="decimal"></div>
+     <div class="f"><label>Stringhe // sul cavo (y)</label><input id="c2ns" value="1" inputmode="numeric"></div>
+   </div>
+   <div class="verifs" id="c2v"></div>
+   <div class="grp">Cavo AC (inverter → punto di consegna)</div>
+   <div class="grid">
+     <div class="f"><label>Tipo cavo AC</label><select id="c3type"><option value="epr">FG16(O)R16 / EPR-XLPE (90 °C)</option><option value="pvc">N07V-K / PVC (70 °C)</option><option value="rubber">H07RN-F / gomma (90 °C)</option></select></div>
+     <div class="f"><label>Sezione <span class="u">mm²</span></label><input id="c3s" value="4" inputmode="decimal"></div>
+     <div class="f"><label>Portata I₀ <span class="u">A</span></label><input id="c3io" value="28" inputmode="decimal"></div>
+     <div class="f"><label>K totale</label><input id="c3k" value="1" inputmode="decimal"></div>
+     <div class="f"><label>Lunghezza <span class="u">m</span></label><input id="c3l" value="15" inputmode="decimal"></div>
+   </div>
+   <div class="verifs" id="c3v"></div>
+   <div class="note"><b>Cavo AC non solare.</b> Diverso dai cavi DC di stringa: tipicamente FG16(O)R16 (EPR/XLPE 90 °C) per posa fissa, N07V-K (PVC 70 °C) in tubo, o H07RN-F per posa mobile. Il tipo determina il coefficiente K per la verifica I²t e la portata di riferimento (usa la tabella ▤).</div>
+   <div class="grp">Caduta di tensione complessiva <span class="tag">ρ Cu a caldo</span></div>
+   <div class="grid">
+     <div class="f"><label>ρ rame DC <span class="u">Ω·mm²/m</span></label><input id="rhoDc" value="0.021" inputmode="decimal"></div>
+     <div class="f"><label>ρ rame AC <span class="u">Ω·mm²/m</span></label><input id="rhoAc" value="0.018" inputmode="decimal"></div>
+     <div class="f"><label>Limite ΔU DC <span class="u">%</span></label><input id="duDcLim" value="1.5" inputmode="decimal"></div>
+     <div class="f"><label>Limite ΔU AC <span class="u">%</span></label><input id="duAcLim" value="1" inputmode="decimal"></div>
+   </div>
+   <div class="readout" id="duOut"></div>
+   <div class="verifs" id="duV"></div>
+   <div class="grp">Verifica termica al cortocircuito (I²t) <span class="tag">ABB [4.4] · adiabatica</span></div>
+   <div class="grid" style="max-width:420px">
+     <div class="f"><label>I²t dispositivo protezione <span class="u">A²s</span></label><input id="i2tDev" value="0" inputmode="decimal"></div>
+   </div>
+   <div class="verifs" id="i2tV"></div>
+   <div class="note"><b>I²t ≤ K²·S² [4.4].</b> K dipende dall'isolante: <code>115</code> rame/PVC, <code>143</code> rame/EPR-XLPE. Poiché per le stringhe ISC è di poco superiore a IMPP, l'energia di cortocircuito è modesta e la verifica è quasi sempre soddisfatta; diventa dimensionante sul cavo di schiera con più stringhe in parallelo. Formula adiabatica: <code>t=(K·S/I)²</code>.</div>
+   <div class="note warn"><b>Portate e declassamenti (ABB QT10 §3.4.2).</b> I₀ dato dal costruttore a 30 °C in aria libera. Cavi solari ABB: <code>0,58·0,9=0,52</code>; non solari <code>0,58·0,91=0,53</code>. Leggi I₀/K1/K2 dalle tabelle CEI-UNEL 35024/35026 secondo cavo e posa reale.</div>
+  `},
+ {id:'protezioni',idx:'07',title:'Dispositivi di protezione',sub:'Protezione di stringa (fusibile gPV o interruttore magnetotermico), sezionatore DC, SPD e protezioni AC secondo ABB QT10 / IEC 62257-7-1 / CEI 64-8 / 0-21.',
+  html:`
+   <div class="grp">Protezione di stringa</div>
+   <div class="grid" style="max-width:640px">
+     <div class="f"><label>Dispositivo</label><select id="protType"><option value="fuse">Fusibile gPV</option><option value="mcb">Interruttore magnetotermico DC</option></select></div>
+     <div class="f"><label>Forzatura installazione</label><label class="tog" style="padding-top:6px"><input type="checkbox" id="protForce"> Installa anche se non necessario</label></div>
+   </div>
+   <div class="readout" id="fuseOut"></div>
+   <div class="verifs" id="fuseV"></div>
+   <div class="grp">Sezionatore / interruttore DC</div>
+   <div class="readout" id="dcSwOut"></div>
+   <div class="grp">Scaricatori (SPD)</div>
+   <div class="grid">
+     <div class="f"><label>LPS esterno (parafulmine)</label><select id="lps"><option value="no">No</option><option value="si">Sì</option></select></div>
+     <div class="f"><label>Distanza campo→inverter <span class="u">m</span></label><input id="spdDist" value="22" inputmode="decimal"></div>
+   </div>
+   <div class="verifs" id="spdV"></div>
+   <div class="grp">Protezioni lato AC</div>
+   <div class="readout" id="acProtOut"></div>
+   <div class="verifs" id="acProtV"></div>
+   <div class="grp">Conduttore di protezione e messa a terra (PE)</div>
+   <div class="grid">
+     <div class="f"><label>Materiale PE</label><select id="peMat"><option value="cu-pvc">Rame PVC (K=115)</option><option value="cu-epr">Rame EPR/XLPE (K=143)</option></select></div>
+     <div class="f"><label>Lungh. collegamento equipot. <span class="u">m</span></label><input id="peL" value="15" inputmode="decimal"></div>
+     <div class="f"><label>Sezione equipot. adottata <span class="u">mm²</span></label><input id="peS" value="6" inputmode="decimal"></div>
+   </div>
+   <div class="readout" id="peOut"></div>
+   <div class="verifs" id="peV"></div>
+   <div class="grp">Protezione di interfaccia (SPI / DDI) <span class="tag">CEI 0-21 / 0-16</span></div>
+   <div class="readout" id="spiCfg"></div>
+   <table class="mtbl" style="margin-top:10px"><thead><tr>
+     <th>Soglia<span class="help" data-tip="Soglie di intervento del SPI (CEI 0-21). Il SPI comanda l'apertura del DDI quando tensione/frequenza escono dai limiti per il tempo indicato.">?</span></th>
+     <th>Valore</th><th>Assoluto</th><th>Tempo</th></tr></thead>
+   <tbody id="spiBody"></tbody></table>
+   <div class="verifs" id="spiVer"></div>
+   <div class="note" id="spiNote"></div>
+   <div class="note solar"><b>Messa a terra (QT10 §5).</b> La struttura dei moduli va collegata alla barra equipotenziale. Sezione PE lato AC secondo CEI 64-8 §543 (S≤16→=S; 16–35→16; &gt;35→S/2). Al doppio guasto a terra [5.2]: <code>Icc·Reqp ≤ 120 V</code>. Resistenza di terra [5.1]: <code>Re ≤ 120/Id</code>. In presenza di LPS il collegamento alla calata è min 16 mm² Cu.</div>
+  `},
+ {id:'accumulo',idx:'08',title:'Accumulo (opzionale)',sub:'Se presente, dimensiona il sistema di accumulo: energia utile, C-rate, contributo all\'autoconsumo e all\'autosufficienza.',
+  html:`
+   <label class="tog" style="margin-bottom:14px"><input type="checkbox" id="batOn"> Impianto con sistema di accumulo</label>
+   <div id="batBox" style="display:none">
+     <div class="grid">
+       <div class="f"><label>Chimica</label><select id="batChem"><option value="lfp">LiFePO₄ (LFP)</option><option value="nmc">Li-NMC</option></select></div>
+       <div class="f"><label>Capacità nominale <span class="u">kWh</span></label><input id="batCap" value="10" inputmode="decimal"></div>
+       <div class="f"><label>Profondità scarica DoD <span class="u">%</span></label><input id="batDod" value="90" inputmode="decimal"></div>
+       <div class="f"><label>Rendimento round-trip <span class="u">%</span></label><input id="batEff" value="92" inputmode="decimal"></div>
+       <div class="f"><label>Potenza max carica/scarica <span class="u">kW</span></label><input id="batP" value="5" inputmode="decimal"></div>
+       <div class="f"><label>Accoppiamento</label><select id="batCoup"><option value="dc">DC-coupled</option><option value="ac">AC-coupled</option><option value="hyb">Inverter ibrido</option></select></div>
+       <div class="f"><label>Tensione batteria <span class="u">V</span></label><input id="batV" value="51.2" inputmode="decimal"></div>
+     </div>
+     <div class="grp">Autoconsumo (stima)</div>
+     <div class="grid">
+       <div class="f"><label>Consumo giornaliero <span class="u">kWh/gg</span></label><input id="batLoad" value="10" inputmode="decimal"></div>
+       <div class="f"><label>Quota serale/notturna <span class="u">%</span></label><input id="batNight" value="55" inputmode="decimal"></div>
+       <div class="f"><label>Autoconsumo diretto (no accumulo) <span class="u">%</span></label><input id="batDirect" value="30" inputmode="decimal"></div>
+     </div>
+     <div class="readout" id="batOut"></div>
+     <div class="verifs" id="batV"></div>
+     <div class="note solar"><b>Accumulo e norma.</b> Energia utile = Capacità×DoD; energia resa = utile×η. C-rate = P/Capacità (LFP tip. ≤1C, NMC ≤2C). Il sistema deve essere conforme alla <b>CEI 0-21</b> (gestione SoC, anti-islanding) con protezioni DC dedicate lato batteria e posizionamento a temperatura controllata. La stima di autoconsumo è indicativa: dipende dal profilo di carico reale.</div>
+   </div>
+  `},
+ {id:'producibilita',idx:'09',title:'Producibilità',sub:'Energia annua dall\'irraggiamento sul piano dei moduli. In automatico è stimato da località, inclinazione e orientamento (modello Liu-Jordan/Erbs).',
+  html:`
+   <div class="grid" style="max-width:820px">
+     <div class="f"><label>Modalità dati</label><select id="prMode"><option value="auto">Automatica (da località)</option><option value="manual">Manuale</option></select></div>
+     <div class="f"><label>Inclinazione β <span class="u">°</span></label><input id="tilt" value="30" inputmode="decimal"></div>
+     <div class="f"><label>Orientamento γ <span class="u">°</span></label><input id="az" value="0" inputmode="decimal"></div>
+     <div class="f"><label>Albedo suolo</label><input id="albedo" value="0.2" inputmode="decimal"></div>
+     <div class="f"><label>Performance Ratio</label><input id="pr" value="0.80" inputmode="decimal"></div>
+     <div class="f"><label>Fattore CO₂ <span class="u">kg/kWh</span></label><input id="co2" value="0.31" inputmode="decimal"></div>
+   </div>
+   <button class="hbtn" id="pvgisBtn" style="margin-top:10px">↗ Dati esatti da PVGIS</button>
+   <div class="grp">Irraggiamento mensile sul piano dei moduli <span class="tag">kWh/m² · POA</span></div>
+   <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="mtbl" style="min-width:640px"><thead><tr id="irrHead"></tr></thead><tbody><tr id="irrBody"></tr></tbody></table></div>
+   <div class="note" id="poaNote"></div>
+   <div class="readout" id="yieldOut" style="margin-top:14px"></div>
+   <div class="bars" id="bars" style="margin-bottom:24px"></div>
+  `},
+ {id:'mt',idx:'10',title:'Grandi impianti / MT (CEI 0-16)',sub:'Requisiti aggiuntivi per la connessione in media tensione: trasformatore MT/BT, protezione generale (DG/SPG), Controllore Centrale di Impianto (CCI), combiner box e cabina di consegna.',
+  html:`
+   <label class="tog" style="margin-bottom:14px"><input type="checkbox" id="mtOn"> Impianto in MT (CEI 0-16) — mostra i requisiti</label>
+   <div id="mtBox" style="display:none">
+     <div class="note" style="margin-top:0">In media tensione l'energia segue questa catena: il <b>generatore FV</b> è parallelato nei <b>combiner box</b> (quadri di primo e secondo parallelo), convertito dagli <b>inverter</b>, raccolto nel <b>quadro BT</b> e innalzato dal <b>trasformatore BT/MT</b>. A monte, il <b>Dispositivo Generale (DG)</b> con il <b>Sistema di Protezione Generale (SPG/PG)</b> protegge la rete; la consegna avviene nella <b>cabina</b> al punto di connessione (PDC). All'interfaccia agisce il <b>SPI/DDI</b>, mentre il <b>CCI</b> dialoga col distributore per regolare potenza attiva/reattiva ed eseguire il telescatto.</div>
+     <div style="overflow-x:auto;padding:4px 0 8px">
+     <svg viewBox="0 0 830 168" style="min-width:760px;height:auto">
+       ${['FV|generatore','Combiner|1°/2° parall.','Inverter|DC → AC','Quadro BT|prot. BT','Trafo|BT / MT','DG + SPG|PG 51·50·67N','Cabina|consegna PDC','Rete MT|'].map((b,i)=>{const x=10+i*102,[t,s]=b.split('|');const acc=(i===0)?'var(--solar)':(i===2?'var(--dc)':(i===7?'var(--ink)':''));return `<rect x="${x}" y="42" width="90" height="44" rx="9" fill="var(--panel2)" stroke="var(--line)"/>${acc?`<rect x="${x}" y="42" width="5" height="44" rx="2" fill="${acc}"/>`:''}<text x="${x+12}" y="63" font-size="12" font-weight="600" fill="var(--ink)">${t}</text><text x="${x+12}" y="78" font-size="9.5" fill="var(--muted)">${s}</text>${i<7?`<line x1="${x+90}" y1="64" x2="${x+102}" y2="64" stroke="var(--muted)" stroke-width="1.4"/><path d="M${x+102} 64 l-6 -3 v6 z" fill="var(--muted)"/>`:''}`;}).join('')}
+       <line x1="257" y1="86" x2="257" y2="118" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 3"/>
+       <line x1="565" y1="86" x2="565" y2="118" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 3"/>
+       <rect x="150" y="118" width="470" height="34" rx="9" fill="var(--panel)" stroke="var(--solar)" stroke-width="1.6"/>
+       <text x="164" y="133" font-size="11.5" font-weight="600" fill="var(--ink)">CCI — Controllore Centrale di Impianto</text>
+       <text x="164" y="147" font-size="9.5" fill="var(--muted)">regolazione P/Q · telescatto · dialogo con il distributore</text>
+       <text x="214" y="36" font-size="9.5" fill="var(--dc)">SPI / DDI</text>
+     </svg>
+     </div>
+     <div class="grp">Trasformatore MT/BT</div>
+     <div class="grid">
+       <div class="f"><label>Tensione MT <span class="u">kV</span></label><select id="vMt"><option value="15">15</option><option value="20" selected>20</option></select></div>
+       <div class="f"><label>Fattore di utilizzo <span class="u">%</span></label><input id="trafoLoad" value="90" inputmode="decimal"></div>
+     </div>
+     <div class="readout" id="trafoOut"></div>
+     <div class="grp">Protezione generale (DG / SPG con relè PG)</div>
+     <table class="mtbl"><thead><tr><th>Soglia</th><th>ANSI</th><th>Valore (rif. DSO)</th><th>Tempo</th></tr></thead><tbody id="pgBody"></tbody></table>
+     <div class="note">Valori comunicati dal <b>distributore</b>; il SPG include TA/TV/TO. In alternativa al DG unico fino a <b>3 DGL</b>; oltre 20 kW è richiesta la funzione di <b>rincalzo</b> su DG/DGL. Va garantito il <b>coordinamento MT/BT</b> (§3.4.2.9) e l'attenzione all'<b>energizzazione del trasformatore</b> (§3.4.2.10).</div>
+     <div class="grp">Controllore Centrale di Impianto (CCI) <span class="tag">§3.4.2.8</span></div>
+     <div class="verifs" id="cciV"></div>
+     <div class="grp">Combiner box (quadri di primo/secondo parallelo)</div>
+     <div class="grid">
+       <div class="f"><label>Stringhe per combiner (x)</label><input id="mbX" value="12" inputmode="numeric"></div>
+       <div class="f"><label>Stringhe già in // (y)</label><input id="mbY" value="1" inputmode="numeric"></div>
+       <div class="f"><label>N° combiner box</label><input id="mbN" value="8" inputmode="numeric"></div>
+     </div>
+     <div class="readout" id="mbOut"></div>
+     <div class="verifs" id="mbV"></div>
+     <div class="grp">Cabina di consegna / interconnessione</div>
+     <div class="note solar">La <b>cabina di consegna</b> ospita gli scomparti (celle) di <b>consegna</b> (competenza DSO), <b>misura</b> e <b>protezione</b> (DG/SPG dell'utente); il punto di connessione (PDC) è nella cabina di interconnessione. Per potenze > 100 kW e < 6 MW la connessione è in MT (CEI 0-16), oltre 6 MW in AT.</div>
+   </div>
+   <div class="note" id="mtHint"></div>
+  `},
+ {id:'ombra',idx:'11',title:'Ombreggiamento e carichi',sub:'Distanza tra le file per evitare l\'ombreggiamento invernale (attiva per impianti a file) e stima dei carichi di neve e vento (NTC 2018).',
+  html:`
+   <div class="grid" style="max-width:440px">
+     <div class="f"><label>Tipo di installazione</label><select id="instType"><option value="integ">Integrato / complanare a tetto</option><option value="falda">Tetto a falda con struttura</option><option value="piano">Tetto piano a file</option><option value="terra">Impianto a terra a file</option></select></div>
+   </div>
+   <div id="shadeBox" style="display:none">
+     <div class="grp">Ombreggiamento tra le file <span class="tag">solstizio invernale</span></div>
+     <svg viewBox="0 0 440 212" style="width:100%;max-width:470px;height:auto;margin:4px 0 8px">
+       <line x1="20" y1="160" x2="420" y2="160" stroke="var(--line)" stroke-width="1.5"/>
+       <circle cx="92" cy="58" r="9" fill="var(--solar)"/>
+       <g stroke="var(--solar)" stroke-width="1.4"><line x1="92" y1="41" x2="92" y2="47"/><line x1="74" y1="58" x2="80" y2="58"/><line x1="78" y1="45" x2="82" y2="49"/><line x1="106" y1="45" x2="102" y2="49"/></g>
+       <polyline points="102,70 152,112 300,160" fill="none" stroke="var(--solar)" stroke-width="1.5" stroke-dasharray="5 4"/>
+       <line x1="152" y1="112" x2="152" y2="160" stroke="var(--line2)" stroke-width="1" stroke-dasharray="3 3"/>
+       <line x1="70" y1="160" x2="152" y2="112" stroke="var(--dc)" stroke-width="4" stroke-linecap="round"/>
+       <line x1="300" y1="160" x2="382" y2="112" stroke="var(--dc)" stroke-width="4" stroke-linecap="round"/>
+       <path d="M96 160 A26 26 0 0 0 92.4 146.9" fill="none" stroke="var(--muted)" stroke-width="1.2"/>
+       <text x="99" y="153" font-size="13" fill="var(--ink)">β</text>
+       <path d="M274 160 A26 26 0 0 1 275.6 152" fill="none" stroke="var(--muted)" stroke-width="1.2"/>
+       <text x="256" y="153" font-size="13" fill="var(--ink)">α</text>
+       <text x="95" y="126" font-size="11" fill="var(--dc)" transform="rotate(-30 95 126)">L</text>
+       <g stroke="var(--muted)" stroke-width="1"><line x1="70" y1="190" x2="300" y2="190"/><line x1="70" y1="185" x2="70" y2="195"/><line x1="300" y1="185" x2="300" y2="195"/></g>
+       <text x="128" y="206" font-size="11" fill="var(--muted)">D — passo tra le file</text>
+       <g stroke="var(--pass)" stroke-width="1"><line x1="152" y1="174" x2="300" y2="174"/><line x1="152" y1="170" x2="152" y2="178"/><line x1="300" y1="170" x2="300" y2="178"/></g>
+       <text x="168" y="170" font-size="10.5" fill="var(--pass)">distanza libera</text>
+       <text x="52" y="150" font-size="10" fill="var(--muted)">fila 1</text>
+       <text x="300" y="150" font-size="10" fill="var(--muted)">fila 2</text>
+       <text x="332" y="80" font-size="10" fill="var(--solar-d)">raggio solare</text>
+     </svg>
+     <div class="hint" style="margin:-4px 0 6px">β = inclinazione moduli · α = elevazione solare · D = passo (L·cosβ + L·sinβ/tan α) · distanza libera = L·sinβ/tan α</div>
+     <div class="grid">
+       <div class="f"><label>Lunghezza modulo (falda) <span class="u">m</span></label><input id="modL" value="1.72" inputmode="decimal"></div>
+       <div class="f"><label>Inclinazione β <span class="u">°</span></label><input id="shTilt" value="30" inputmode="decimal"></div>
+       <div class="f"><label>Latitudine <span class="u">°</span></label><input id="shLat" value="45.46" inputmode="decimal"></div>
+       <div class="f"><label>Elevazione solare progetto <span class="u">°</span></label><input id="shAlpha" placeholder="auto solstizio" inputmode="decimal"></div>
+     </div>
+     <div class="readout" id="shadeOut"></div>
+     <div class="note" id="shadeNote"></div>
+   </div>
+   <div class="grp">Carico neve <span class="tag">NTC 2018 §3.4</span></div>
+   <div class="grid">
+     <div class="f"><label>Zona neve</label><select id="snowZone"><option value="1a">I - Alpina</option><option value="1m">I - Mediterranea</option><option value="2">II</option><option value="3">III</option></select></div>
+     <div class="f"><label>Altitudine a<sub>s</sub> <span class="u">m</span></label><input id="snowAs" value="120" inputmode="decimal"></div>
+     <div class="f"><label>C<sub>E</sub> esposizione</label><input id="snowCE" value="1.0" inputmode="decimal"></div>
+     <div class="f"><label>Inclinazione β <span class="u">°</span></label><input id="snowTilt" value="30" inputmode="decimal"></div>
+   </div>
+   <div class="readout" id="snowOut"></div>
+   <div class="grp">Carico vento <span class="tag">NTC 2018 §3.3</span></div>
+   <div class="grid">
+     <div class="f"><label>Zona vento</label><select id="windZone"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option></select></div>
+     <div class="f"><label>Altitudine a<sub>s</sub> <span class="u">m</span></label><input id="windAs" value="120" inputmode="decimal"></div>
+     <div class="f"><label>c<sub>e</sub> esposizione</label><input id="windCE" value="2.0" inputmode="decimal"></div>
+     <div class="f"><label>c<sub>p</sub> netto pannello</label><input id="windCP" value="1.3" inputmode="decimal"></div>
+   </div>
+   <div class="readout" id="windOut"></div>
+   <div class="note warn"><b>Verifica strutturale.</b> Valori indicativi NTC 2018 (EN 1991): il dimensionamento di struttura, fissaggi e zavorre va confermato da un <b>ingegnere strutturista</b> con i coefficienti reali di sito, esposizione e configurazione.</div>
+  `},
+ {id:'iter',idx:'12',title:'Iter di connessione',sub:'Guida alle procedure di domanda di connessione e messa in esercizio, in base alla tipologia e alla potenza dell\'impianto. Le soglie normative evolvono: verifica sempre le regole vigenti di ARERA/GSE e del tuo distributore.',
+  html:`
+   <div class="readout" id="iterHint" style="grid-template-columns:1fr"></div>
+   <div class="grp">Diagramma di flusso della connessione</div>
+   <div style="overflow-x:auto;padding:6px 0">
+   <svg viewBox="0 0 740 560" style="min-width:700px;height:auto">
+     <rect x="270" y="8" width="200" height="36" rx="9" fill="var(--panel2)" stroke="var(--line)"/>
+     <text x="370" y="31" font-size="12" font-weight="600" fill="var(--ink)" text-anchor="middle">Progetto FV definito</text>
+     <line x1="370" y1="44" x2="370" y2="58" stroke="var(--muted)"/>
+     <polygon points="370,58 520,104 370,150 220,104" fill="var(--panel)" stroke="var(--solar)" stroke-width="1.6"/>
+     <text x="370" y="99" font-size="10.5" fill="var(--ink)" text-anchor="middle">POD attivo · ≤ 200 kW · BT</text>
+     <text x="370" y="113" font-size="10.5" fill="var(--ink)" text-anchor="middle">lavori semplici · no vincoli?</text>
+     <line x1="220" y1="104" x2="150" y2="104" stroke="var(--muted)"/><line x1="150" y1="104" x2="150" y2="150" stroke="var(--muted)"/><path d="M150 150 l-4 -6 h8 z" fill="var(--muted)"/>
+     <text x="182" y="99" font-size="10" font-weight="700" fill="var(--pass)">SÌ</text>
+     <line x1="520" y1="104" x2="590" y2="104" stroke="var(--muted)"/><line x1="590" y1="104" x2="590" y2="150" stroke="var(--muted)"/><path d="M590 150 l-4 -6 h8 z" fill="var(--muted)"/>
+     <text x="556" y="99" font-size="10" font-weight="700" fill="var(--fail)">NO</text>
+     <text x="150" y="145" font-size="10.5" font-weight="700" fill="var(--solar-d)" text-anchor="middle">MODELLO UNICO (≤200 kW)</text>
+     ${['Parte I Modello Unico (PEC al DSO)','Verifica DSO → avvio automatico','Realizzazione impianto conforme','Parte II (fine lavori)','Attivazione contatore + POD + RID'].map((t,i)=>{const y=152+i*50;return `<rect x="30" y="${y}" width="240" height="36" rx="8" fill="var(--panel2)" stroke="var(--solar)" stroke-width="1.3"/><text x="150" y="${y+22}" font-size="10.5" fill="var(--ink)" text-anchor="middle">${t}</text>`+(i<4?`<line x1="150" y1="${y+36}" x2="150" y2="${y+50}" stroke="var(--muted)"/><path d="M150 ${y+50} l-4 -6 h8 z" fill="var(--muted)"/>`:'');}).join('')}
+     <text x="590" y="145" font-size="10.5" font-weight="700" fill="var(--dc)" text-anchor="middle">ITER ORDINARIO (TICA)</text>
+     ${['Domanda di connessione (portale DSO)','Preventivo DSO (ARERA 20/45/60 gg)','Accettazione + pagamento (45 gg)','Autorizzazioni (edil. libera/PAS/AU)','Realizzazione impianto','Regolamento esercizio + collaudi','Attivazione connessione + RID'].map((t,i)=>{const y=152+i*50;return `<rect x="470" y="${y}" width="240" height="36" rx="8" fill="var(--panel2)" stroke="var(--dc)" stroke-width="1.3"/><text x="590" y="${y+22}" font-size="9.8" fill="var(--ink)" text-anchor="middle">${t}</text>`+(i<6?`<line x1="590" y1="${y+36}" x2="590" y2="${y+50}" stroke="var(--muted)"/><path d="M590 ${y+50} l-4 -6 h8 z" fill="var(--muted)"/>`:'');}).join('')}
+     <line x1="150" y1="388" x2="150" y2="528" stroke="var(--muted)"/><line x1="150" y1="528" x2="250" y2="528" stroke="var(--muted)"/><path d="M250 528 l-6 -4 v8 z" fill="var(--muted)"/>
+     <line x1="590" y1="488" x2="590" y2="528" stroke="var(--muted)"/><line x1="590" y1="528" x2="490" y2="528" stroke="var(--muted)"/><path d="M490 528 l6 -4 v8 z" fill="var(--muted)"/>
+     <rect x="250" y="510" width="240" height="38" rx="9" fill="var(--panel)" stroke="var(--pass)" stroke-width="1.6"/>
+     <text x="370" y="526" font-size="10.5" font-weight="600" fill="var(--ink)" text-anchor="middle">Esercizio + valorizzazione energia</text>
+     <text x="370" y="540" font-size="9.5" fill="var(--muted)" text-anchor="middle">RID · autoconsumo · CER (GSE / GAUDÌ Terna)</text>
+   </svg>
+   </div>
+   <div class="grp">Verifiche preliminari</div>
+   <div class="note">Prima della domanda, verifica: <b>punto di connessione</b> (POD di prelievo esistente e attivo, oppure nuovo punto); <b>potenza complessiva</b> (minore tra somma delle potenze STC dei moduli e potenza degli inverter); tipo di <b>lavori</b> (semplici o complessi, come definiti nel TICA); <b>titolo edilizio</b> (edilizia libera, PAS o Autorizzazione Unica) ed eventuali <b>vincoli</b> (le aree tutelate ex art. 136 D.Lgs. 42/2004 sono escluse dal Modello Unico); <b>conformità tecnica</b> CEI 0-21/0-16, 64-8 Sez. 712, 82-25 con SPI/DDI; <b>regime</b> di valorizzazione dell'energia immessa.</div>
+   <div class="grp">A · Modello Unico semplificato <span class="tag">fino a 200 kW</span></div>
+   <div class="note solar">Applicabile a impianti fino a <b>200 kW</b> (DM 297/2022; template GSE aggiornati dal 30/05/2025) con un'unica procedura in due parti (Parte I e Parte II), che sostituisce domanda + preventivo dell'iter ordinario. <b>Non basta “contatore + &lt;200 kW”</b>: devono valere insieme tutte le condizioni sotto, e i lavori di connessione devono essere “semplici”.</div>
+   <div style="font-size:12px;color:var(--muted);font-weight:600;margin:10px 0 4px">Condizioni (tutte necessarie)</div>
+   <table class="mtbl"><tbody>
+     <tr><td class="res" style="color:var(--ink)">Ubicazione</td><td class="res">su edifici o strutture/manufatti fuori terra (no impianti a terra in campo aperto)</td></tr>
+     <tr><td class="res" style="color:var(--ink)">Punto di connessione</td><td class="res">cliente finale con <b>POD di prelievo già attivo</b></td></tr>
+     <tr><td class="res" style="color:var(--ink)">Lavori di connessione</td><td class="res"><b>semplici</b> secondo il TICA (senza rinforzi di rete)</td></tr>
+     <tr><td class="res" style="color:var(--ink)">Potenza</td><td class="res">≤ 200 kW = min(Σ potenze STC moduli ; Σ potenze nominali inverter)</td></tr>
+     <tr><td class="res" style="color:var(--ink)">Regime energia</td><td class="res">richiesta <b>contestuale di RID</b> (o cessione a mercato)</td></tr>
+     <tr><td class="res" style="color:var(--ink)">Incentivi</td><td class="res">nessun incentivo GSE che richieda la misura dell'energia <i>prodotta</i></td></tr>
+     <tr><td class="res" style="color:var(--ink)">POC</td><td class="res">non condiviso con altre Unità di Produzione</td></tr>
+     <tr><td class="res" style="color:var(--ink)">Vincoli</td><td class="res">non in aree tutelate art. 136 D.Lgs. 42/2004</td></tr>
+   </tbody></table>
+   <div class="note"><b>Lavori semplici vs complessi.</b> Sono <b>semplici</b> gli interventi del gestore limitati all'installazione dei misuratori, o la realizzazione/modifica/sostituzione a regola d'arte dell'impianto del gestore con intervento limitato alla presa → Modello Unico con <b>avvio automatico e nessun preventivo</b>. Se il gestore accerta <b>lavori complessi</b> (serve rinforzo/estensione della rete) lo comunica con i motivi e si applica l'<b>iter ordinario con preventivo</b> (poi la connessione prosegue). L'estensione del Modello Unico ha <b>superato</b> il vecchio vincolo “immissione ≤ potenza disponibile in prelievo”, quello del medesimo livello di tensione e quello dell'assenza di altri impianti sul punto: oggi conta la valutazione semplice/complesso del distributore.</div>
+   <div style="font-size:12px;color:var(--muted);font-weight:600;margin:10px 0 4px">Passaggi</div>
+   <table class="mtbl"><thead><tr><th>#</th><th>Passo</th><th>Contenuto / tempi</th></tr></thead><tbody>
+     <tr><td>1</td><td>Verifiche preliminari</td><td class="res">POD attivo · ≤200 kW · lavori semplici · no vincoli · RID</td></tr>
+     <tr><td>2</td><td>Parte I (prima dei lavori)</td><td class="res">invio informatico/PEC al gestore; accettazione condizioni e costi TICA per lavori semplici</td></tr>
+     <tr><td>3</td><td>Verifica del DSO</td><td class="res">compatibilità + lavori semplici → avvio automatico, nessun preventivo (se complessi → preventivo)</td></tr>
+     <tr><td>4</td><td>Misura</td><td class="res">il distributore installa/adegua il contatore bidirezionale</td></tr>
+     <tr><td>5</td><td>Realizzazione</td><td class="res">impianto conforme (CEI 0-21/0-16, 64-8, 82-25)</td></tr>
+     <tr><td>6</td><td>Parte II (fine lavori)</td><td class="res">dichiarazione di conformità + regolamento di esercizio controfirmato + allegati</td></tr>
+     <tr><td>7</td><td>Attivazione</td><td class="res">attivazione connessione, POD, registrazione GAUDÌ (Terna), avvio RID</td></tr>
+   </tbody></table>
+   <div class="note solar"><b>Impianti ≤ 20 kW (Del. ARERA 361/2023).</b> Semplificazioni ulteriori: i controlli in fase di attivazione possono essere sostituiti da una <b>dichiarazione sostitutiva di atto notorio</b> e <b>decade l'obbligo del misuratore di produzione (M2)</b> fino a 20 kW.</div>
+   <div style="font-size:12px;color:var(--muted);font-weight:600;margin:10px 0 4px">Documenti tipici</div>
+   <div class="note">Dati anagrafici del soggetto responsabile · dati impianto (potenza, moduli, inverter, ubicazione) · titolo di disponibilità dell'immobile · <b>schema elettrico unifilare</b> · <b>dichiarazione di conformità DM 37/2008</b> (Parte II) · <b>regolamento di esercizio</b> controfirmato (Parte II) · foto/targhe · <b>mandato</b> del cliente finale se il richiedente non coincide con il titolare del POD.</div>
+   <div class="grp">B · Iter ordinario (TICA) <span class="tag">&gt; 200 kW, lavori complessi, nuovo POD, MT/AT</span></div>
+   <table class="mtbl"><thead><tr><th>#</th><th>Passo</th><th>Contenuto / tempi</th></tr></thead><tbody>
+     <tr><td>1</td><td>Domanda di connessione</td><td class="res">portale del distributore, con corrispettivo, dati e progetto</td></tr>
+     <tr><td>2</td><td>Preventivo del DSO</td><td class="res">tempi ARERA: 20 gg lav. ≤100 kW · 45 gg ≤1 MW · 60 gg &gt;1 MW</td></tr>
+     <tr><td>3</td><td>Accettazione</td><td class="res">accettazione e pagamento; il preventivo è valido 45 gg lav.</td></tr>
+     <tr><td>4</td><td>Autorizzazioni</td><td class="res">edilizia libera / PAS / Autorizzazione Unica (PAUR) secondo taglia e sito</td></tr>
+     <tr><td>5</td><td>Realizzazione</td><td class="res">esecuzione + comunicazione di fine lavori</td></tr>
+     <tr><td>6</td><td>Regolamento di esercizio + collaudi</td><td class="res">prove SPI; per MT: DG/SPG, telescatto, CCI; registrazione GAUDÌ</td></tr>
+     <tr><td>7</td><td>Attivazione</td><td class="res">attivazione connessione e contatori</td></tr>
+   </tbody></table>
+   <div class="grp">Casi possibili e iter corrispondente</div>
+   <table class="mtbl"><thead><tr><th>Situazione</th><th>Iter</th></tr></thead><tbody>
+     <tr><td class="res" style="color:var(--ink)">Tetto/struttura, POD attivo, ≤ 200 kW, lavori semplici</td><td class="res"><span class="ok">Modello Unico</span></td></tr>
+     <tr><td class="res" style="color:var(--ink)">Impianto ≤ 20 kW</td><td class="res"><span class="ok">Modello Unico</span> + semplificazioni (no M2, dich. sostitutiva)</td></tr>
+     <tr><td class="res" style="color:var(--ink)">Lavori complessi accertati dal DSO</td><td class="res"><span class="wa">Ordinario</span> (preventivo), poi prosegue</td></tr>
+     <tr><td class="res" style="color:var(--ink)">Impianto a terra in campo aperto</td><td class="res"><span class="wa">Ordinario</span> + autorizzazioni (PAS / Aut. Unica)</td></tr>
+     <tr><td class="res" style="color:var(--ink)">Potenza &gt; 200 kW</td><td class="res"><span class="wa">Ordinario</span> TICA (preventivo)</td></tr>
+     <tr><td class="res" style="color:var(--ink)">Nuovo punto di connessione (nessun POD attivo)</td><td class="res"><span class="wa">Ordinario</span></td></tr>
+     <tr><td class="res" style="color:var(--ink)">Connessione in MT/AT</td><td class="res"><span class="wa">Ordinario</span> + CEI 0-16 (cabina, DG/SPG, CCI)</td></tr>
+     <tr><td class="res" style="color:var(--ink)">POC condiviso o incentivi con misura di produzione</td><td class="res"><span class="no">Escluso dal Modello Unico</span></td></tr>
+     <tr><td class="res" style="color:var(--ink)">Repowering/modifica/accumulo senza + potenza in immissione</td><td class="res"><span class="ok">Modello Unico</span> (variazione)</td></tr>
+     <tr><td class="res" style="color:var(--ink)">Modifica con aumento della potenza in immissione</td><td class="res"><span class="wa">Ordinario</span> di variazione</td></tr>
+     <tr><td class="res" style="color:var(--ink)">Area vincolata (art. 136 D.Lgs. 42/2004)</td><td class="res"><span class="no">Escluso dal Modello Unico</span></td></tr>
+   </tbody></table>
+   <div class="grp">C · Connessione in MT/AT (CEI 0-16)</div>
+   <div class="note">Per gli impianti connessi in <b>media tensione</b> (indicativamente 100 kW – 6 MW; oltre in AT) si aggiungono: <b>cabina di consegna</b> con gli scomparti di consegna/misura/protezione, <b>DG + SPG</b> con relè PG, <b>regolamento di esercizio</b> con <b>telescatto</b>, <b>CCI</b> (Controllore Centrale di Impianto) per la regolazione P/Q comandata dal distributore, e i relativi <b>collaudi</b>. Vedi la sezione “Grandi impianti / MT”.</div>
+   <div class="grp">D · Valorizzazione dell'energia immessa</div>
+   <div class="note"><b>RID (Ritiro Dedicato)</b>: è oggi il meccanismo principale per l'energia immessa in rete (spesso attivato automaticamente col Modello Unico). <b>Scambio sul Posto (SSP)</b>: <b>non più attivabile per i nuovi impianti dal 27 settembre 2025</b> (Del. ARERA 78/2025); le convenzioni esistenti non sono rinnovabili oltre i 15 anni. <b>Autoconsumo diffuso / CER</b> (Comunità Energetiche Rinnovabili): configurazioni con incentivo GSE sull'energia condivisa. Per i grandi impianti è possibile la <b>cessione</b> sul mercato.</div>
+   <div class="note warn"><b>Attenzione.</b> Le soglie e le procedure evolvono di frequente (ARERA, GSE, decreti MASE, TICA). Verifica sempre i valori vigenti e le regole specifiche del tuo distributore (e-distribuzione, Areti, Unareti, ecc.). Questa guida è di supporto e non sostituisce la consulenza di un professionista abilitato. Le <b>modifiche</b> a impianti esistenti possono usare il Modello Unico se non aumentano la potenza in immissione.</div>
+  `},
+ {id:'report',idx:'13',title:'Report',sub:'Sintesi completa di configurazione e verifiche. Usa "Stampa report" per esportare in PDF.',
+  html:`<div id="reportBody"></div>`}
+];
+
+const MONTHS=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+const IRR0=[76.08,93.24,147.8,168.31,189.22,203.89,224.14,200.23,163.12,110.87,68.89,64.71];
+
+function build(){
+  const rail=$('rail'), main=$('main');
+  SECTIONS.forEach((s,i)=>{
+    const li=document.createElement('li');
+    li.innerHTML=`<a data-go="${s.id}" class="${i===0?'on':''}"><span class="n">${s.idx}</span>${s.title}<span class="st" id="st-${s.id}"></span></a>`;
+    rail.appendChild(li);
+    const sec=document.createElement('section');
+    sec.className='card'+(i===0?' show':''); sec.id='sec-'+s.id;
+    sec.innerHTML=`<div class="sec-head"><span class="idx">${s.idx}</span><h2>${s.title}</h2></div><p class="sec-sub">${s.sub}</p>`+s.html;
+    main.appendChild(sec);
+  });
+  const sb=document.createElement('div'); sb.id='sysbar'; sb.className='no-print';
+  sb.innerHTML='<span class="lab">Sistemi (inverter) sul POC</span><span id="systabs" style="display:inline-flex;gap:6px;flex-wrap:wrap"></span><button id="sysAdd" type="button">+ Sistema</button><span id="sysAgg"></span>';
+  main.insertBefore(sb, main.firstChild);
+  CITIES.forEach(c=>{ const o=document.createElement('option'); o.value=c.n; $('cityList').appendChild(o); });
+  const h=$('irrHead'), b=$('irrBody');
+  MONTHS.forEach((m,i)=>{ h.innerHTML+=`<th>${m}${i===0?'<span class="help" data-tip="'+H_IRR.replace(/"/g,'&quot;')+'">?</span>':''}</th>`; b.innerHTML+=`<td><input id="irr${i}" value="${IRR0[i]}" inputmode="decimal"></td>`; });
+  rail.querySelectorAll('a[data-go]').forEach(a=>a.addEventListener('click',()=>{
+    const id=a.dataset.go;
+    rail.querySelectorAll('a').forEach(x=>x.classList.remove('on')); a.classList.add('on');
+    document.querySelectorAll('section.card').forEach(x=>x.classList.remove('show'));
+    $('sec-'+id).classList.add('show'); window.scrollTo({top:0,behavior:'smooth'});
+  }));
+  injectHelp();
+}
+function injectHelp(){
+  document.querySelectorAll('.f').forEach(f=>{
+    const inp=f.querySelector('input,select'); if(!inp||!HELP[inp.id])return;
+    const lab=f.querySelector('label'); if(!lab||lab.querySelector('.help'))return;
+    const s=document.createElement('span'); s.className='help'; s.tabIndex=0;
+    s.dataset.tip=HELP[inp.id]; s.textContent='?'; lab.appendChild(s);
+  });
+}
+
+/* reference tables (tabular values) */
+const TBL={
+ sect:{head:['Sezione mm²'],rows:[[1.5],[2.5],[4],[6],[10],[16],[25],[35]]},
+ amp:{head:['Sez.','90°C aria','70°C tubo'],note:'Portate indicative (IEC 60364-5-52, 2 conduttori caricati, 30 °C). Verifica sul datasheet del cavo.',
+   rows:[['1,5',30,17.5],['2,5',41,24],['4',55,32],['6',70,41],['10',98,57],['16',132,76],['25',176,101],['35',218,125]]},
+ k1:{head:['T amb','90°C','70°C'],note:'CEI-UNEL 35024 / IEC 60364-5-52. Dietro i moduli (~70 °C) → 0,58 con isolante 90 °C.',
+   rows:[['10 °C',1.15,1.22],['15 °C',1.12,1.17],['20 °C',1.08,1.12],['25 °C',1.04,1.06],['30 °C',1.00,1.00],['35 °C',0.96,0.94],['40 °C',0.91,0.87],['45 °C',0.87,0.79],['50 °C',0.82,0.71],['55 °C',0.76,0.61],['60 °C',0.71,0.50],['65 °C',0.65,'—'],['70 °C',0.58,'—'],['75 °C',0.50,'—'],['80 °C',0.41,'—']]},
+ k2:{head:['N° circ.','K2'],note:'Cavi raggruppati, strato singolo (IEC 60364-5-52 Tab. B.52.17).',
+   rows:[['1',1.00],['2',0.80],['3',0.70],['4',0.65],['5',0.60],['6',0.57],['7',0.54],['8',0.52],['9',0.50],['12',0.45],['16',0.41],['20',0.38]]},
+};
+const PICK={c1s:'sect',c1io:'amp',c1k1:'k1',c1k2:'k2',c2s:'sect',c2io:'amp',c2k:'k2',c3s:'sect',c3io:'amp',c3k:'k2'};
+function injectPickers(){ Object.keys(PICK).forEach(id=>{ const inp=$(id); if(!inp)return; const lab=inp.closest('.f')&&inp.closest('.f').querySelector('label'); if(!lab||lab.querySelector('.pick'))return;
+  const b=document.createElement('span'); b.className='pick'; b.textContent='▤'; b.title='Valori tabellari'; b.dataset.target=id; b.dataset.tbl=PICK[id]; lab.appendChild(b); }); }
+function openPicker(btn){ const t=TBL[btn.dataset.tbl], target=btn.dataset.target, pk=$('picker');
+  let h=`<div class="pkhead">${t.head.map(x=>`<span>${x}</span>`).join('')}</div>`;
+  t.rows.forEach(r=>{ h+='<div class="pkrow">'+r.map(c=> typeof c==='number'
+    ? `<button class="pkv" data-v="${c}">${c.toLocaleString('it-IT',{maximumFractionDigits:2})}</button>`
+    : `<span>${c}</span>`).join('')+'</div>'; });
+  if(t.note) h+=`<div class="pknote">${t.note}</div>`;
+  pk.innerHTML=h; pk.style.display='block';
+  const r=btn.getBoundingClientRect(), pw=pk.offsetWidth, ph=pk.offsetHeight;
+  let left=Math.min(r.left,innerWidth-pw-12), top=r.bottom+6; if(top+ph>innerHeight-8) top=Math.max(8,r.top-ph-6);
+  pk.style.left=Math.max(8,left)+'px'; pk.style.top=top+'px';
+  pk.querySelectorAll('.pkv').forEach(b=>b.onclick=()=>{ const el=$(target); el.value=String(b.dataset.v).replace('.',','); el.dispatchEvent(new Event('input',{bubbles:true})); pk.style.display='none'; }); }
+
+/* data-entry hints */
+const HINTS={
+ tMin:'Nord −10÷−5 · Centro −5÷0 · Sud/isole 0÷5 °C',
+ tMax:'tetto ventilato 60÷70 · integrato 70÷80 °C',
+ mVoc:'moduli attuali ~40÷50 V',
+ mIsc:'moduli attuali ~9÷14 A',
+ mBvoc:'valore negativo · es. −0,27 %/°C o −0,176 V/°C',
+ iVdcMax:'residenziale 500÷600 · stringa 1000÷1100 V',
+ c1s:'stringa tipica 2,5÷6 mm² · usa ▤',
+ c1io:'usa ▤ secondo cavo e posa',
+ c1k1:'0,58 dietro i moduli a 70 °C (isolante 90 °C) · ▤',
+ c1k2:'1 se stringa singola nel tubo · ▤',
+ pr:'residenziale 0,80÷0,85',
+ tilt:'ottimale ≈ latitudine del sito',
+ az:'0° = Sud (massima resa annua)',
+ batDod:'LFP 90÷100 · NMC 80÷90 %',
+ batDirect:'residenziale tipico 25÷35 %',
+ mNoct:'usato per la T max cella suggerita',
+ mFuse:'limite superiore del fusibile di stringa',
+ iCosf:'1 = solo attiva · CEI 0-21 fino a 0,90 → per l\'AC usa 0,90 cautelativo',
+ c3type:'cavo non solare · usa ▤ per la portata',
+};
+function injectHints(){ Object.keys(HINTS).forEach(id=>{ const inp=$(id); if(!inp)return; const f=inp.closest('.f'); if(!f||f.querySelector('.hint'))return;
+  const d=document.createElement('div'); d.className='hint'; d.textContent=HINTS[id]; f.appendChild(d); }); }
+
+/* helpers */
+const g=id=>{const e=$(id); if(!e)return 0; const v=parseFloat(String(e.value).replace(',','.')); return isFinite(v)?v:0;};
+const gt=id=>$(id)?$(id).value:'';
+function vAt(vStc,beta,unit,T,tStd){ return unit==='pct'? vStc*(1+beta/100*(T-tStd)) : vStc+beta*(T-tStd); }
+function verifHTML(list){ return list.map(v=>{
+  const cls=v.ok?(v.warn?'wa':'ok'):'no'; const ic=v.ok?(v.warn?'!':'✓'):'✕';
+  return `<div class="vrow ${cls}"><div class="ico">${ic}</div>
+    <div class="lab"><b>${v.name}</b> <span class="rule">${v.rule||''}</span> ${v.ref?`<span class="ref">· ${v.ref}</span>`:''}</div>
+    <div class="val">${v.val||''}</div></div>`; }).join(''); }
+function ro(list){ return list.map(x=>`<div class="ro"><div class="k">${x[0]}${x[2]?` <span class="help" data-tip="${String(x[2]).replace(/"/g,'&quot;')}">?</span>`:''}</div><div class="v">${x[1]}</div></div>`).join(''); }
+const stdFuse=[6,10,12,15,16,20,25,30,32,40,50,63];
+const stdMcb=[6,10,13,16,20,25,32,40,50,63,80,100,125];
+function nextStd(x,arr){ for(const v of arr) if(v>=x) return v; return arr[arr.length-1]; }
+function classify(kWp){
+  if(kWp*1000<0.35) return['Plug & Play','< 350 W · micro-inverter, connessione a spina (CEI 0-21)'];
+  if(kWp<6) return['Residenziale monofase','≤ 6 kW monofase (il DSO può elevare a 10 kW) · CEI 0-21'];
+  if(kWp<=11.08) return['Residenziale','mono o trifase · CEI 0-21 · soglia trifase a 11,08 kW (√3·400·16)'];
+  if(kWp<=20) return['Residenziale trifase','> 11,08 kW: obbligo trifase + SPI/DDI · CEI 0-21'];
+  if(kWp<=1000) return['Industriale / C&I','20 kWp–1 MWp: SPI/DDI + rincalzo al DDI + dichiarazione UTF · CEI 0-21/0-16'];
+  return['Utility scale','> 1 MWp: connessione MT/AT · CEI 0-16'];
+}
+
+/* dynamic strings */
+window.__strings=window.__strings||[{mods:6,mppt:1},{mods:6,mppt:2}];
+function renderStrings(){
+  const nMppt=Math.max(1,Math.round(g('iNmppt')));
+  window.__strings.forEach(s=>{ if(s.mppt>nMppt) s.mppt=nMppt; });
+  const tb=$('strBody'); if(!tb)return; tb.innerHTML='';
+  window.__strings.forEach((s,i)=>{
+    let opts=''; for(let k=1;k<=nMppt;k++) opts+=`<option value="${k}" ${s.mppt===k?'selected':''}>MPPT ${k}</option>`;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${i+1}</td>
+      <td><input data-si="${i}" data-f="mods" value="${s.mods}" inputmode="numeric"></td>
+      <td><select data-si="${i}" data-f="mppt">${opts}</select></td>
+      <td class="res rVmp">–</td><td class="res rVoc">–</td><td class="res rVmin">–</td><td class="res rEs">–</td>
+      <td><button class="hbtn xrm" data-si="${i}" title="Rimuovi stringa" ${window.__strings.length<=1?'disabled':''}>×</button></td>`;
+    tb.appendChild(tr);
+  });
+  tb.querySelectorAll('[data-si]').forEach(el=>{
+    if(el.classList.contains('xrm')) el.addEventListener('click',()=>{ window.__strings.splice(+el.dataset.si,1); renderStrings(); compute(); });
+    else el.addEventListener('input',e=>{ const i=+e.target.dataset.si,f=e.target.dataset.f;
+      window.__strings[i][f]= f==='mppt'?+e.target.value:(parseFloat(e.target.value)||0); compute(); });
+  });
+}
+
+/* ============================================================
+   SISTEMI (più inverter sullo stesso POC)
+   ============================================================ */
+const SHARED=new Set(['loc','lat','lon','alt','tStd','tMin','tMax','grid','lps','spdDist','peMat','peL','peS',
+ 'pr','co2','batOn','batChem','batCap','batDod','batEff','batP','batCoup','batV','batLoad','batNight','batDirect',
+ 'mtOn','vMt','trafoLoad','mbX','mbY','mbN','instType','modL','shTilt','shLat','shAlpha','snowZone','snowAs','snowCE','snowTilt',
+ 'windZone','windAs','windCE','windCP','projName']);
+function collectPerSys(){ const o={}; document.querySelectorAll('#main input[id],#main select[id]').forEach(el=>{
+  if(SHARED.has(el.id)||el.closest('#sysbar'))return; o[el.id]=el.type==='checkbox'?el.checked:el.value; }); return o; }
+function applyPerSys(o){ Object.keys(o||{}).forEach(k=>{ const el=$(k); if(!el)return; if(el.type==='checkbox') el.checked=o[k]; else el.value=o[k]; }); }
+function saveCur(){ if(!window.__sys)return; const s=window.__sys[window.__cur]; if(!s)return;
+  s.vals=collectPerSys(); s.strings=JSON.parse(JSON.stringify(window.__strings||[])); }
+function loadCur(){ const s=window.__sys[window.__cur]; if(!s)return; applyPerSys(s.vals);
+  window.__strings=JSON.parse(JSON.stringify(s.strings||[])); renderStrings(); }
+function renderSysbar(){ const t=$('systabs'); if(!t||!window.__sys)return; t.innerHTML='';
+  window.__sys.forEach((s,i)=>{ const b=document.createElement('span'); b.className='systab'+(i===window.__cur?' on':'');
+    b.innerHTML=`<span>${s.name}</span>`+(i===window.__cur?`<span class="sx" data-ren="${i}" title="Rinomina">✎</span>`:'')+(window.__sys.length>1&&i===window.__cur?`<span class="sx" data-del="${i}" title="Elimina">✕</span>`:'');
+    b.addEventListener('click',e=>{ if(e.target.dataset.del!==undefined){e.stopPropagation();delSys(+e.target.dataset.del);return;}
+      if(e.target.dataset.ren!==undefined){e.stopPropagation();renSys(+e.target.dataset.ren);return;} switchSys(i); });
+    t.appendChild(b); }); }
+function switchSys(i){ if(i===window.__cur)return; saveCur(); window.__cur=i; loadCur(); renderSysbar(); compute(); }
+function addSys(){ saveCur(); const src=window.__sys[window.__cur];
+  window.__sys.push({name:'Sistema '+(window.__sys.length+1),vals:JSON.parse(JSON.stringify(src.vals)),strings:JSON.parse(JSON.stringify(src.strings))});
+  window.__cur=window.__sys.length-1; loadCur(); renderSysbar(); compute(); }
+function delSys(i){ if(window.__sys.length<=1)return; window.__sys.splice(i,1); window.__cur=0; loadCur(); renderSysbar(); compute(); }
+function renSys(i){ const n=prompt('Nome del sistema:',window.__sys[i].name); if(n){ window.__sys[i].name=n.slice(0,24); renderSysbar(); } }
+function initSystems(){ if(!window.__sys){ window.__sys=[{name:'Sistema 1',vals:collectPerSys(),strings:JSON.parse(JSON.stringify(window.__strings||[]))}]; window.__cur=0; } renderSysbar(); }
+function sysMetrics(v,strings){ const nn=s=>+String(s).replace(',','.')||0;
+  const P=nn(v.mP),Isc=nn(v.mIsc),nInv=Math.max(1,Math.round(nn(v.nInv)||1));
+  let mods=0; (strings||[]).forEach(s=>mods+=(+s.mods||0));
+  const kWp=mods*P*nInv/1000, Pac=nn(v.iPac)*nInv, grid=gt('grid'), Vac=nn(v.iVac)||230, cosf=nn(v.iCosf)||1;
+  let Iac; if(grid==='bt1') Iac=Pac/(Vac*cosf); else Iac=Pac/(Math.sqrt(3)*(grid==='mt'?Vac:400)*cosf);
+  const pr=g('pr'), city=findCity($('loc').value); let poaA=0; const mode=v.prMode||'auto';
+  if(mode==='auto'&&city) poaA=transpose(city.lat,city.g,nn(v.tilt)||30,nn(v.az),nn(v.albedo)||0.2).poaA;
+  else for(let i=0;i<12;i++) poaA+=nn(v['irr'+i]);
+  return {kWp,Pac,Iac,energy:kWp*poaA*pr,totMod:mods*nInv,nInv,nStr:(strings||[]).length*nInv,name:v.__name}; }
+
+/* piena verifica di un singolo sistema, per il report per-sistema */
+function sysReport(v,strings,name){
+  const gv=id=>{const n=parseFloat(String(v[id]).replace(',','.'));return isFinite(n)?n:0;};
+  const gvt=id=>v[id]!==undefined?String(v[id]):'';
+  const tStd=g('tStd'),tMin=g('tMin'),tMax=g('tMax'),grid=gt('grid'),pr=g('pr');
+  const P=gv('mP'),Vmp=gv('mVmp'),Imp=gv('mImp'),Voc=gv('mVoc'),Isc=gv('mIsc');
+  const cU=gvt('mCoefU'),bVoc=gv('mBvoc'),bVmp=(v['mBvmp']===''||v['mBvmp']===undefined)?bVoc:gv('mBvmp');
+  const VocTmin=vAt(Voc,bVoc,cU,tMin,tStd),VmpTmin=vAt(Vmp,bVmp,cU,tMin,tStd),VmpTmax=vAt(Vmp,bVmp,cU,tMax,tStd);
+  const iPdc=gv('iPdc'),iPac=gv('iPac'),VdcMax=gv('iVdcMax'),VmpptMin=gv('iVmpptMin'),VmpptMax=gv('iVmpptMax');
+  const IdcMax=gv('iIdcMax'),ImpptMax=gv('iImpptMax'),nInv=Math.max(1,Math.round(gv('nInv'))),Vac=gv('iVac'),cosf=gv('iCosf')||1;
+  const nMaxHard=Math.floor(VdcMax/VocTmin),nMaxTrack=Math.floor(VmpptMax/VmpTmin),nMin=Math.ceil(VmpptMin/VmpTmax),nMax=Math.min(nMaxHard,nMaxTrack);
+  let totMod=0,arrPdc=0,maxStr=0,totStr=0,maxN=0; const mppt={}; const V=[];
+  (strings||[]).forEach((s,i)=>{ const nm=s.mods||0; totMod+=nm; arrPdc+=nm*P; totStr++; if(nm>maxN)maxN=nm; mppt[s.mppt]=(mppt[s.mppt]||0)+1;
+    const VocX=nm*VocTmin,VmpMin=nm*VmpTmax,VmpMaxC=nm*VmpTmin;
+    if(nm>0){ V.push({n:`Str ${i+1}: V<sub>OC</sub> max ≤ V<sub>DC</sub> max`,ok:VocX<=VdcMax,val:nf(VocX,0)+' ≤ '+nf(VdcMax,0)+' V'});
+      V.push({n:`Str ${i+1}: V<sub>MPP</sub> min ≥ MPPT min`,ok:VmpMin>=VmpptMin,val:nf(VmpMin,0)+' ≥ '+nf(VmpptMin,0)+' V'});
+      V.push({n:`Str ${i+1}: V<sub>MPP</sub> max ≤ MPPT max`,ok:VmpMaxC<=VmpptMax,warn:VmpMaxC>VmpptMax,val:nf(VmpMaxC,0)+' ≤ '+nf(VmpptMax,0)+' V'}); } });
+  Object.keys(mppt).forEach(k=>{const cnt=mppt[k];if(cnt>maxStr)maxStr=cnt;const I=cnt*Isc;V.push({n:`MPPT ${k}: I ≤ I max`,ok:I<=ImpptMax,val:nf(I,1)+' ≤ '+nf(ImpptMax,1)+' A'});});
+  const dcac=arrPdc/iPac,IdcTot=totStr*Isc;
+  let Iac; if(grid==='bt1') Iac=iPac/(Vac*cosf); else Iac=iPac/(Math.sqrt(3)*(grid==='mt'?Vac:400)*cosf);
+  V.push({n:'P<sub>DC</sub> array ≤ P<sub>DC</sub> max',ok:arrPdc<=iPdc*1.35,warn:arrPdc>iPdc*1.02,val:ni(arrPdc)+' / '+ni(iPdc)+' W'});
+  V.push({n:'I<sub>DC</sub> totale ≤ I<sub>DC</sub> max',ok:IdcTot<=IdcMax,val:nf(IdcTot,1)+' ≤ '+nf(IdcMax,1)+' A'});
+  const c1Iz=gv('c1io')*gv('c1k1')*gv('c1k2')*gv('c1k3'),IdesStr=1.25*Isc,VocStrMax=maxN*VocTmin;
+  V.push({n:'I<sub>z</sub> stringa ≥ 1,25·I<sub>SC</sub>',ok:c1Iz>=IdesStr,val:nf(c1Iz,1)+' ≥ '+nf(IdesStr,2)+' A'});
+  V.push({n:'V DC cavo ≥ V<sub>OC</sub> max stringa',ok:gv('c1udc')>=VocStrMax,val:nf(gv('c1udc'),0)+' ≥ '+nf(VocStrMax,0)+' V'});
+  const c2Iz=gv('c2io')*gv('c2k'),IdesMain=1.25*gv('c2ns')*Isc;
+  V.push({n:'I<sub>z</sub> principale DC ≥ 1,25·y·I<sub>SC</sub>',ok:c2Iz>=IdesMain,val:nf(c2Iz,1)+' ≥ '+nf(IdesMain,2)+' A'});
+  const c3Iz=gv('c3io')*gv('c3k'),IdesAc=1.25*Iac;
+  V.push({n:'I<sub>z</sub> AC ≥ 1,25·I<sub>AC</sub>',ok:c3Iz>=IdesAc,val:nf(c3Iz,1)+' ≥ '+nf(IdesAc,2)+' A'});
+  const rhoDc=gv('rhoDc'),rhoAc=gv('rhoAc'),nRef=maxN||6,Vstr=nRef*Vmp||1;
+  const duStr=rhoDc*(gv('c1lm')+2*gv('c1lq'))*Imp/(gv('c1s')||1)/Vstr*100;
+  const duMain=2*rhoDc*gv('c2l')*(gv('c2ns')*Imp)/(gv('c2s')||1)/Vstr*100;
+  const duAc=(grid==='bt1'?2:Math.sqrt(3))*rhoAc*gv('c3l')*Iac/(gv('c3s')||1)/(grid==='bt1'?Vac:400)*100;
+  const duTot=duStr+duMain+duAc;
+  V.push({n:'ΔU DC ≤ limite',ok:(duStr+duMain)<=gv('duDcLim'),val:nf(duStr+duMain,2)+' ≤ '+nf(gv('duDcLim'),1)+' %'});
+  V.push({n:'ΔU AC ≤ limite',ok:duAc<=gv('duAcLim'),val:nf(duAc,2)+' ≤ '+nf(gv('duAcLim'),1)+' %'});
+  const kRev=gv('mKrev')||2.5,x=maxStr,Iinv=(x-1)*1.25*Isc;
+  const needed=(x>=2&&Iinv>kRev*Isc)||(x>=2&&c1Iz<(x-1)*1.25*Isc),force=v['protForce']===true||v['protForce']==='true';
+  const install=needed||force,type=gvt('protType')||'fuse',fuseMin=1.25*Isc,fuseMax=Math.min(2*Isc,gv('mFuse'));
+  let In=0,devName='non necessaria'; if(install){ In=nextStd(fuseMin,type==='fuse'?stdFuse:stdMcb); devName=ni(In)+(type==='fuse'?' A gPV':' A magnetot.'); }
+  const UeAbb=1.2*maxN*Voc,Ie=1.25*maxStr*Isc;
+  const city=findCity($('loc').value); let poaA=0; const mode=gvt('prMode')||'auto';
+  if(mode==='auto'&&city) poaA=transpose(city.lat,city.g,gv('tilt')||30,gv('az'),gv('albedo')||0.2).poaA;
+  else for(let i=0;i<12;i++) poaA+=gv('irr'+i);
+  const kWp=totMod*P*nInv/1000,energy=kWp*poaA*pr;
+  const ok=V.every(x=>x.ok),warn=V.some(x=>x.ok&&x.warn);
+  const badge=ok?(warn?'<span class="badge wa">conforme con avvisi</span>':'<span class="badge ok">conforme</span>'):'<span class="badge no">da correggere</span>';
+  const RTx=a=>a.map(r=>`<tr><td class="k">${r[0]}</td><td class="v">${r[1]}</td></tr>`).join('');
+  const vrows=V.map(x=>`<tr><td class="k">${x.n}</td><td class="v">${x.ok?(x.warn?'<span class="badge wa">avviso</span>':'<span class="badge ok">ok</span>'):'<span class="badge no">no</span>'} · ${x.val||''}</td></tr>`).join('');
+  const strList=(strings||[]).map((s,i)=>`Str${i+1}·MPPT${s.mppt}: ${s.mods} mod`).join(' &nbsp; ');
+  return {ok,warn,energy,kWp,html:`<div class="rep-sec"><h3>${name} — ${nf(kWp,2)} kWp ${badge}</h3>
+    <table class="rep">${RTx([
+     ['Modulo','P '+nf(P,0)+' W · V<sub>OC</sub> '+nf(Voc,1)+' · I<sub>SC</sub> '+nf(Isc,2)+' A · β '+nf(bVoc,3)],
+     ['Inverter','P<sub>DC</sub> '+ni(iPdc)+' · P<sub>AC</sub> '+ni(iPac)+' W · MPPT '+nf(VmpptMin,0)+'–'+nf(VmpptMax,0)+' V · × '+nInv+' inv'],
+     ['Orientamento','β '+nf(gv('tilt'),0)+'° · γ '+nf(gv('az'),0)+'°'],
+     ['Tensioni','V<sub>OC</sub>(Tmin) '+nf(VocTmin,1)+' · V<sub>MPP</sub>(Tmax) '+nf(VmpTmax,1)+' · V<sub>MPP</sub>(Tmin) '+nf(VmpTmin,1)+' V'],
+     ['Stringhe (range '+ni(nMin)+'–'+ni(nMax)+')',strList||'—'],
+     ['DC/AC · I<sub>AC</sub>',nf(dcac,2)+' · '+nf(Iac,2)+' A'],
+     ['Cavi','I<sub>z</sub> stringa '+nf(c1Iz,1)+' A · ΔU tot '+nf(duTot,2)+' %'],
+     ['Protezione di stringa',install?(devName+' · sezionatore U<sub>e</sub> ≥ '+nf(UeAbb,0)+' V · I<sub>e</sub> ≥ '+nf(Ie,1)+' A'):'non necessaria (x ≤ 3)'],
+     ['Producibilità',nf(kWp,2)+' kWp · '+ni(energy)+' kWh/anno'],
+    ])}</table>
+    <table class="rep" style="margin-top:6px">${vrows}</table></div>`}; }
+
+/* ============================================================
+   COMPUTE
+   ============================================================ */
+function compute(){
+  const secStatus={progetto:'ok',modulo:'ok',producibilita:'ok'};
+  if(window.__sys) saveCur();
+  const systems=window.__sys||[{name:'Sistema 1',vals:collectPerSys(),strings:window.__strings}];
+  let TKWp=0,TPac=0,TIac=0,TEn=0,TMod=0,TInv=0,TStr=0;
+  systems.forEach(s=>{ const m=sysMetrics(s.vals,s.strings); TKWp+=m.kWp;TPac+=m.Pac;TIac+=m.Iac;TEn+=m.energy;TMod+=m.totMod;TInv+=m.nInv;TStr+=m.nStr; });
+  const nSys=systems.length;
+  if($('sysAgg')) $('sysAgg').innerHTML=nSys>1?'<b>'+nSys+'</b> sistemi · <b>'+nf(TKWp,1)+'</b> kWp · <b>'+ni(TPac)+'</b> W AC al POC':'';
+  const tStd=g('tStd'), tMin=g('tMin'), tMax=g('tMax');
+  const P=g('mP'), Vmp=g('mVmp'), Imp=g('mImp'), Voc=g('mVoc'), Isc=g('mIsc');
+  const cU=gt('mCoefU'); const bVoc=g('mBvoc'); const bVmp=($('mBvmp').value==='')?bVoc:g('mBvmp');
+  const noct=g('mNoct'), kRev=g('mKrev')||2.5;
+
+  $('tMaxSug').value = nf(25 + (noct-20)/800*1000,1)+' °C  (T_amb 25, G 1000)';
+
+  const VocTmin=vAt(Voc,bVoc,cU,tMin,tStd);
+  const VmpTmin=vAt(Vmp,bVmp,cU,tMin,tStd);
+  const VmpTmax=vAt(Vmp,bVmp,cU,tMax,tStd);
+  $('modOut').innerHTML=ro([
+    ['V<sub>OC</sub> a '+nf(tMin,0)+'°C',nf(VocTmin)+' V','VOC(Tmin)=VOC+β·(Tmin−25). Tensione a vuoto a freddo, massima: dimensiona il n° max di moduli.'],
+    ['V<sub>MPP</sub> a '+nf(tMax,0)+'°C',nf(VmpTmax)+' V','VMPP(Tmax)=VMPP+β·(Tmax−25). Tensione MPP a caldo, minima: dimensiona il n° min di moduli.'],
+    ['V<sub>MPP</sub> a '+nf(tMin,0)+'°C',nf(VmpTmin)+' V','VMPP(Tmin)=VMPP+β·(Tmin−25). MPP a freddo, massima: verifica ≤ V MPPT max.'],
+    ['I<sub>SC</sub> dimens. (×1,25)',nf(Isc*1.25)+' A','1,25·ISC: corrente d\'impiego dei cavi [3.4], il 25% copre irraggiamenti >1 kW/m².'],
+  ]);
+
+  const iPdc=g('iPdc'), iPac=g('iPac'), VdcMax=g('iVdcMax'), VmpptMin=g('iVmpptMin'), VmpptMax=g('iVmpptMax');
+  const IdcMax=g('iIdcMax'), ImpptMax=g('iImpptMax'), nMppt=Math.max(1,Math.round(g('iNmppt')));
+  const Vac=g('iVac'), cosf=g('iCosf')||1, grid=gt('grid'), nInv=Math.max(1,Math.round(g('nInv')));
+  const optOn=$('optOn').checked, optType=gt('optType');
+
+  const nMaxHard=Math.floor(VdcMax/VocTmin), nMaxTrack=Math.floor(VmpptMax/VmpTmin), nMin=Math.ceil(VmpptMin/VmpTmax);
+  const nMax=Math.min(nMaxHard,nMaxTrack);
+  $('rangeOut').innerHTML=ro([
+    ['N° min moduli/str',ni(nMin),'ceil(V MPPT min / VMPP a Tmax): sotto questo n° la stringa esce dalla finestra MPPT a caldo.'],
+    ['N° max tracking',ni(nMaxTrack),'floor(V MPPT max / VMPP a Tmin): oltre, la V MPP a freddo esce dalla finestra.'],
+    ['N° max assoluto',ni(nMaxHard),'floor(V DC max / VOC a Tmin): oltre, la V a vuoto a freddo supera il limite dell\'inverter [3.1].'],
+    ['Range consigliato',ni(nMin)+' – '+ni(nMax),'Intervallo valido = da N min a min(max tracking, max assoluto).'],
+  ]);
+
+  // strings
+  const rows=[...$('strBody').querySelectorAll('tr')];
+  let totMod=0, arrPdc=0, maxStrPerMppt=0, totStrings=0, maxN=0;
+  const strV=[], mpptCount={}, mpptMods={};
+  window.__strings.forEach((s,i)=>{
+    const nm=s.mods||0;
+    const VocStrMax=nm*VocTmin, VmpStrMin=nm*VmpTmax, VmpStrMaxC=nm*VmpTmin, VmpStr=nm*Vmp;
+    totMod+=nm; arrPdc+=nm*P; totStrings++; if(nm>maxN)maxN=nm;
+    mpptCount[s.mppt]=(mpptCount[s.mppt]||0)+1; (mpptMods[s.mppt]=mpptMods[s.mppt]||[]).push(nm);
+    const okV1=VocStrMax<=VdcMax, okV2=VmpStrMin>=VmpptMin, okV3=VmpStrMaxC<=VmpptMax;
+    const r=rows[i];
+    if(r){ const c=(ok,v)=>`<span class="${ok?'ok':'no'}">${v}</span>`;
+      r.querySelector('.rVmp').textContent=nf(VmpStr,0)+' V';
+      r.querySelector('.rVoc').innerHTML=c(okV1,nf(VocStrMax,0)+' V');
+      r.querySelector('.rVmin').innerHTML=c(okV2,nf(VmpStrMin,0)+' V');
+      r.querySelector('.rEs').innerHTML= nm>0?(okV1&&okV2&&okV3?'<span class="ok">OK</span>':'<span class="no">ERRATA</span>'):'—';
+    }
+    if(nm>0){
+      strV.push({name:`Str ${i+1} — V<sub>OC</sub> max ≤ V DC max`,rule:`a ${nf(tMin,0)}°C`,ref:'ABB [3.1]',ok:okV1,val:`<span class="a">${nf(VocStrMax)} V</span> <span class="lim">≤ ${nf(VdcMax)} V</span>`});
+      strV.push({name:`Str ${i+1} — V<sub>MPP</sub> min ≥ V MPPT min`,rule:`a ${nf(tMax,0)}°C`,ref:'ABB [3.2]',ok:okV2,val:`<span class="a">${nf(VmpStrMin)} V</span> <span class="lim">≥ ${nf(VmpptMin)} V</span>`});
+    }
+  });
+  // per-MPPT current + mismatch
+  Object.keys(mpptCount).forEach(k=>{
+    const cnt=mpptCount[k], I=cnt*Isc; if(cnt>maxStrPerMppt)maxStrPerMppt=cnt;
+    strV.push({name:`MPPT ${k} — I ≤ I max MPPT`,rule:`${cnt}× I_SC`,ref:'',ok:I<=ImpptMax,val:`<span class="a">${nf(I,1)} A</span> <span class="lim">≤ ${nf(ImpptMax,1)} A</span>`});
+    const set=new Set(mpptMods[k]); if(set.size>1) strV.push({name:`MPPT ${k} — stringhe // con moduli diversi`,rule:'sconsigliato (mismatch)',ref:'',ok:true,warn:true,val:''});
+  });
+  $('mpptAgg').innerHTML=ro(Object.keys(mpptCount).sort().map(k=>['MPPT '+k, mpptCount[k]+(mpptCount[k]>1?' stringhe //':' stringa')+' · '+nf(mpptCount[k]*Isc,1)+' A','Stringhe in parallelo su questo MPPT: le correnti si sommano (n·ISC).']).concat([['Moduli totali',ni(totMod),'Somma dei moduli di tutte le stringhe.'],['Stringhe totali',ni(totStrings),'']]));
+  $('strVerif').innerHTML=verifHTML(strV);
+  secStatus['stringhe']=strV.every(v=>v.ok)?(strV.some(v=>v.warn)?'wa':'ok'):'no';
+
+  // inverter aggregate
+  const IdcTot=totStrings*Isc, dcac=arrPdc/iPac;
+  let Iac; if(grid==='bt1') Iac=iPac/(Vac*cosf); else Iac=iPac/(Math.sqrt(3)*(grid==='mt'?Vac:400)*cosf);
+  const okPdc=arrPdc<=iPdc*1.35, warnPdc=arrPdc>iPdc*1.02;
+  const invV=[
+    {name:'Potenza DC array ≤ P DC max inverter',rule:'clipping ammesso se >100%',ref:'ABB §3.3',ok:okPdc,warn:warnPdc,val:`<span class="a">${ni(arrPdc)} W</span> <span class="lim">/ ${ni(iPdc)} W (${nf(arrPdc/iPdc*100,0)}%)</span>`},
+    {name:'Rapporto DC/AC',rule:'consigliato 1,11–1,25',ref:'ABB (Pac/Ppv 0,8–0,9)',ok:dcac<=1.5,warn:(dcac<1.05||dcac>1.30),val:`<span class="a">${nf(dcac)}</span>`},
+    {name:'Corrente DC totale ≤ I DC max',rule:'Σ n·ISC',ref:'',ok:IdcTot<=IdcMax,val:`<span class="a">${nf(IdcTot,1)} A</span> <span class="lim">≤ ${nf(IdcMax,1)} A</span>`},
+    {name:'Corrente nominale AC',rule:grid==='bt1'?'monofase':'trifase',ref:'',ok:true,val:`<span class="a">${nf(Iac,2)} A</span>`},
+  ];
+  $('invOut').innerHTML=ro([
+    ['P DC array',ni(arrPdc)+' W','Σ (moduli×Pmod) su tutte le stringhe.'],
+    ['P AC nom',ni(iPac)+' W'],
+    ['DC/AC',nf(dcac),'P DC array / P AC. ABB consiglia 1,11–1,25 (Pac/Ppv 0,8–0,9).'],
+    ['I AC',nf(Iac,2)+' A','mono: Pac/(V·cosφ) · trifase: Pac/(√3·V·cosφ).']
+  ]);
+  $('invVerif').innerHTML=verifHTML(invV);
+  secStatus['inverter']=invV.every(v=>v.ok)?(invV.some(v=>v.warn)?'wa':'ok'):'no';
+
+  // optimizers
+  $('optBox').style.display=optOn?'block':'none';
+  $('optFixed').style.display=(optOn&&optType==='fixedstr')?'grid':'none';
+  if(optOn){
+    const optV=[]; const optVin=g('optVin');
+    if(optType==='fixedstr'){
+      const Vstr=g('optVstr'), oNmin=g('optNmin'), oNmax=g('optNmax'), nAvg=maxN||6;
+      optV.push({name:'V stringa fissa nella finestra MPPT',ref:'datasheet ottimizz.',ok:Vstr>=VmpptMin&&Vstr<=VdcMax,val:`<span class="a">${nf(Vstr,0)} V</span> <span class="lim">in ${nf(VmpptMin,0)}–${nf(VdcMax,0)} V</span>`});
+      optV.push({name:'N° moduli/stringa nel range',ref:'',ok:nAvg>=oNmin&&nAvg<=oNmax,val:`<span class="a">${ni(nAvg)}</span> <span class="lim">in ${ni(oNmin)}–${ni(oNmax)}</span>`});
+      optV.push({name:'V<sub>OC</sub> modulo ≤ V ingr. max ottimizz.',rule:`a ${nf(tMin,0)}°C`,ref:'',ok:VocTmin<=optVin,val:`<span class="a">${nf(VocTmin)} V</span> <span class="lim">≤ ${nf(optVin)} V</span>`});
+    }else{
+      const optImax=g('optImax');
+      optV.push({name:'V<sub>OC</sub> modulo ≤ V ingr. max ottimizz.',rule:`a ${nf(tMin,0)}°C`,ref:'',ok:VocTmin<=optVin,val:`<span class="a">${nf(VocTmin)} V</span> <span class="lim">≤ ${nf(optVin)} V</span>`});
+      optV.push({name:'I<sub>SC</sub> modulo ≤ I max ottimizz.',ref:'',ok:Isc<=optImax,val:`<span class="a">${nf(Isc,2)} A</span> <span class="lim">≤ ${nf(optImax,2)} A</span>`});
+      optV.push({name:'Verifiche di stringa (sez. 05) ancora valide',rule:'MLPE non disaccoppia',ref:'',ok:true,warn:true,val:''});
+    }
+    $('optVerif').innerHTML=verifHTML(optV);
+    secStatus['ottimizzatori']=optV.every(v=>v.ok)?(optV.some(v=>v.warn)?'wa':'ok'):'no';
+  }
+
+  // CABLES
+  const IdesStr=1.25*Isc, VocStrMaxAll=maxN*VocTmin;
+  const c1Iz=g('c1io')*g('c1k1')*g('c1k2')*g('c1k3');
+  const c1v=[
+    {name:'Portata stringa I<sub>z</sub> ≥ 1,25·I<sub>SC</sub>',rule:'I₀·K1·K2·K',ref:'ABB [3.4]',ok:c1Iz>=IdesStr,val:`<span class="a">${nf(c1Iz,1)} A</span> <span class="lim">≥ ${nf(IdesStr,2)} A</span>`},
+    {name:'V nom. DC cavo ≥ V<sub>OC</sub> max stringa',ref:'ABB Tab.3.2',ok:g('c1udc')>=VocStrMaxAll,val:`<span class="a">${nf(g('c1udc'),0)} V</span> <span class="lim">≥ ${nf(VocStrMaxAll,0)} V</span>`},
+  ];
+  $('c1v').innerHTML=verifHTML(c1v);
+  const c2Iz=g('c2io')*g('c2k'), IdesMain=1.25*g('c2ns')*Isc;
+  const c2v=[
+    {name:'Portata DC principale I<sub>z</sub> ≥ 1,25·y·I<sub>SC</sub>',ref:'ABB [3.5]',ok:c2Iz>=IdesMain,val:`<span class="a">${nf(c2Iz,1)} A</span> <span class="lim">≥ ${nf(IdesMain,2)} A</span>`},
+    {name:'V nom. DC cavo ≥ V<sub>OC</sub> max stringa',ref:'ABB Tab.3.2',ok:g('c2udc')>=VocStrMaxAll,val:`<span class="a">${nf(g('c2udc'),0)} V</span> <span class="lim">≥ ${nf(VocStrMaxAll,0)} V</span>`},
+  ];
+  $('c2v').innerHTML=verifHTML(c2v);
+  const c3Iz=g('c3io')*g('c3k'), IdesAc=1.25*Iac;
+  const c3v=[{name:'Portata AC I<sub>z</sub> ≥ 1,25·I<sub>AC</sub>',ref:'CEI 64-8',ok:c3Iz>=IdesAc,val:`<span class="a">${nf(c3Iz,1)} A</span> <span class="lim">≥ ${nf(IdesAc,2)} A</span>`}];
+  $('c3v').innerHTML=verifHTML(c3v);
+
+  const rhoDc=g('rhoDc'), rhoAc=g('rhoAc'), nRef=maxN||6, Vstr=nRef*Vmp||1;
+  const duStr=rhoDc*(g('c1lm')+2*g('c1lq'))*Imp/(g('c1s')||1)/Vstr*100;
+  const duMain=2*rhoDc*g('c2l')*(g('c2ns')*Imp)/(g('c2s')||1)/Vstr*100;
+  const duAc=(grid==='bt1'?2:Math.sqrt(3))*rhoAc*g('c3l')*Iac/(g('c3s')||1)/(grid==='bt1'?Vac:400)*100;
+  const duDcTot=duStr+duMain, duTot=duDcTot+duAc;
+  $('duOut').innerHTML=ro([
+    ['ΔU stringa DC',nf(duStr,2)+' %','ρ·(L_moduli+2·L_stringa→quadro)·Imp / S / V_stringa.'],
+    ['ΔU principale DC',nf(duMain,2)+' %','2·ρ·L·(y·Imp) / S / V_stringa.'],
+    ['ΔU AC',nf(duAc,2)+' %','mono 2·ρ·L·Iac/S/V · trifase √3·ρ·L·Iac/S/V.'],
+    ['ΔU totale',nf(duTot,2)+' %','Somma DC + AC. Buona pratica ≤ 3%.']
+  ]);
+  const duV=[
+    {name:'ΔU lato DC',rule:'stringa + principale',ref:'ABB §3.4.2 (1–2%)',ok:duDcTot<=g('duDcLim'),val:`<span class="a">${nf(duDcTot,2)} %</span> <span class="lim">≤ ${nf(g('duDcLim'),1)} %</span>`},
+    {name:'ΔU lato AC',ref:'',ok:duAc<=g('duAcLim'),val:`<span class="a">${nf(duAc,2)} %</span> <span class="lim">≤ ${nf(g('duAcLim'),1)} %</span>`},
+    {name:'ΔU totale ≤ 3 %',rule:'buona pratica',ref:'',ok:duTot<=3,warn:duTot>3,val:`<span class="a">${nf(duTot,2)} %</span> <span class="lim">≤ 3 %</span>`},
+  ];
+  $('duV').innerHTML=verifHTML(duV);
+
+  // I²t — verifica termica al cortocircuito [4.4]
+  const Kc1=gt('c1type')==='h1'?143:115, i2tDev=g('i2tDev');
+  const IccStr=(maxStrPerMppt-1)*1.25*Isc;
+  const K2S2str=Math.pow(Kc1*g('c1s'),2), K2S2main=Math.pow(Kc1*g('c2s'),2);
+  const i2tV=[];
+  i2tV.push({name:'Cavo stringa — I²t max ammessa (K²·S²)',rule:`K=${Kc1}, S=${nf(g('c1s'),1)}`,ref:'ABB [4.4]',ok:true,val:`<span class="a">${ni(K2S2str)} A²s</span>`});
+  if(IccStr>0){ const tMaxStr=Math.pow(Kc1*g('c1s')/IccStr,2);
+    i2tV.push({name:'Cavo stringa — tempo max di intervento',rule:`I_cc=(x−1)·1,25·ISC=${nf(IccStr,1)} A`,ref:'adiabatica t=(K·S/I)²',ok:true,warn:true,val:`<span class="a">t ≤ ${tMaxStr>100?'>100':nf(tMaxStr,1)} s</span>`}); }
+  if(i2tDev>0){ const Smin=Math.sqrt(i2tDev)/Kc1;
+    i2tV.push({name:'I²t dispositivo ≤ K²·S² (cavo stringa)',ref:'ABB [4.4]',ok:i2tDev<=K2S2str,val:`<span class="a">${ni(i2tDev)}</span> <span class="lim">≤ ${ni(K2S2str)} A²s</span>`});
+    i2tV.push({name:'Sezione minima √(I²t)/K',ref:'',ok:g('c1s')>=Smin,val:`<span class="a">${nf(g('c1s'),1)} mm²</span> <span class="lim">≥ ${nf(Smin,2)} mm²</span>`}); }
+  i2tV.push({name:'Cavo principale DC — I²t max ammessa (K²·S²)',rule:`K=${Kc1}, S=${nf(g('c2s'),1)}`,ref:'ABB [4.4]',ok:true,val:`<span class="a">${ni(K2S2main)} A²s</span>`});
+  const Kc3=gt('c3type')==='pvc'?115:143, K2S2ac=Math.pow(Kc3*g('c3s'),2);
+  i2tV.push({name:'Cavo AC — I²t max ammessa (K²·S²)',rule:`K=${Kc3}, S=${nf(g('c3s'),1)}`,ref:'ABB [4.4] / CEI 64-8',ok:true,val:`<span class="a">${ni(K2S2ac)} A²s</span>`});
+  $('i2tV').innerHTML=verifHTML(i2tV);
+
+  const cAll=[...c1v,...c2v,...c3v,...duV,...i2tV];
+  secStatus['cavi']=cAll.every(v=>v.ok)?(cAll.some(v=>v.warn)?'wa':'ok'):'no';
+
+  // PROTECTION
+  const x=maxStrPerMppt, Iinv=(x-1)*1.25*Isc;
+  const revNeeded=x>=2 && Iinv>kRev*Isc, cableScNeeded=x>=2 && c1Iz<(x-1)*1.25*Isc;
+  const needed=revNeeded||cableScNeeded, force=$('protForce').checked, install=needed||force, type=gt('protType');
+  const fuseMin=1.25*Isc, fuseMax=Math.min(2*Isc,g('mFuse'));
+  let In=0, okDev=true, devName='';
+  if(install){
+    if(type==='fuse'){ In=nextStd(fuseMin,stdFuse); okDev=In>=fuseMin&&In<=fuseMax; devName=ni(In)+' A gPV'; }
+    else { In=nextStd(fuseMin,stdMcb); okDev=In>=fuseMin; devName=ni(In)+' A magnetot. DC'; }
+  }
+  let reason = install ? (needed?(revNeeded?'corrente inversa modulo':'corto circuito cavo'):'scelta progettuale (forzato)') : (x<=1?'stringa singola (nessuna corrente inversa)':'≤ '+nf(kRev,1)+'·ISC, non necessario');
+  $('fuseOut').innerHTML=ro([
+    ['Protezione di stringa',install?'installata':'non necessaria','Serve se la corrente inversa (x−1)·1,25·ISC supera '+nf(kRev,1)+'·ISC (x≥4) o se il cavo va protetto da corto circuito. Puoi comunque forzarla.'],
+    ['Dispositivo',install?(type==='fuse'?'Fusibile gPV':'Interruttore magnetotermico'):'—','Fusibile gPV (IEC 60269-6) o interruttore magnetotermico (integra il sezionamento).'],
+    ['Motivo',reason],
+    ['I inversa (x−1)·1,25·ISC',x>=2?nf(Iinv,2)+' A':'—','Corrente che una stringa guasta riceve dalle altre x−1 in parallelo.'],
+    ['Range In',install?nf(fuseMin,1)+'–'+(type==='fuse'?nf(fuseMax,1):'≥')+' A':'—',type==='fuse'?'Fusibile: 1,25·ISC ≤ In ≤ 2·ISC e ≤ I fus. modulo [4.3].':'Magnetotermico: I termica ≥ 1,25·ISC (ABB nota 5 / [4.1]).'],
+    ['I<sub>n</sub> scelta',install?devName:'—'],
+  ]);
+  const fuseV=[];
+  if(install){
+    if(type==='fuse') fuseV.push({name:'Fusibile gPV: 1,25·I<sub>SC</sub> ≤ I<sub>n</sub> ≤ 2·I<sub>SC</sub> e ≤ I fus. modulo',ref:'ABB [4.3] / IEC 60269-6',ok:okDev,val:`<span class="a">${ni(In)} A</span> <span class="lim">in ${nf(fuseMin,1)}–${nf(fuseMax,1)} A</span>`});
+    else fuseV.push({name:'Magnetotermico: I<sub>termica</sub> ≥ 1,25·I<sub>SC</sub>',ref:'ABB nota 5 / [4.1]',ok:okDev,val:`<span class="a">${ni(In)} A</span> <span class="lim">≥ ${nf(fuseMin,2)} A</span>`});
+    if(x>=2) fuseV.push({name:'Potere d\'interruzione I<sub>cu</sub> ≥ (x−1)·1,25·I<sub>SC</sub>',ref:'ABB [4.5]',ok:true,warn:true,val:`<span class="a">≥ ${nf(Iinv,2)} A</span>`});
+    if(type==='mcb' && x>3) fuseV.push({name:'Con >3 stringhe // usare interruttore termomagnetico',rule:'non solo magnetico',ref:'ABB nota 8',ok:true,warn:true,val:''});
+    if(force && !needed) fuseV.push({name:'Installazione per scelta progettuale',rule:'non richiesta dalla norma',ref:'',ok:true,warn:true,val:''});
+  }else{
+    fuseV.push({name:`Protezione di stringa non richiesta (x ≤ ${Math.floor(kRev/1.25)+1})`,rule:`I inversa ≤ ${nf(kRev,1)}·ISC`,ref:'ABB §4.1.2 / IEC 62257-7-1',ok:true,val:''});
+  }
+  $('fuseV').innerHTML=verifHTML(fuseV);
+
+  const UeAbb=1.2*maxN*Voc, UeTemp=maxN*VocTmin, Ie=1.25*maxStrPerMppt*Isc;
+  $('dcSwOut').innerHTML=ro([
+    ['U<sub>e</sub> ≥ 1,2·U<sub>OC</sub>',nf(UeAbb,0)+' V DC','ABB [4.1.4]: tensione d\'impiego ≥ 1,2·UOC del generatore (IEC 62257-7-1).'],
+    ['U<sub>e</sub> ≥ N·V<sub>OC</sub>(Tmin)',nf(UeTemp,0)+' V DC','Criterio alternativo con la VOC corretta in temperatura.'],
+    ['I<sub>e</sub> ≥ 1,25·x·I<sub>SC</sub>',nf(Ie,1)+' A DC','x = stringhe // sull\'MPPT più carico.'],
+    ['Tipo','sez. sotto carico','Sezionatore o interruttore-sezionatore azionabile sotto carico lato DC.'],
+  ]);
+
+  const lps=gt('lps'), dist=g('spdDist');
+  const spdV=[
+    {name:'SPD lato DC',rule:lps==='si'?'LPS esterno presente':'nessun LPS',ref:'CEI 81-10/81-28',ok:true,warn:true,val:`<span class="a">Tipo ${lps==='si'?'1+2':'2'}</span>`},
+    {name:'SPD alle due estremità',rule:'campo↔inverter',ref:'',ok:true,warn:dist>10,val:`<span class="a">${dist>10?'consigliati (L>10 m)':'a un\'estremità'}</span>`},
+    {name:'SPD lato AC',ref:'',ok:true,warn:true,val:`<span class="a">Tipo ${lps==='si'?'1+2':'2'}</span>`},
+  ];
+  $('spdV').innerHTML=verifHTML(spdV);
+
+  const mcbIn=nextStd(Iac*1.05,stdMcb), mcbOk=mcbIn>=Iac&&mcbIn<=c3Iz;
+  const pocMcb=nextStd(TIac*1.05,stdMcb);
+  $('acProtOut').innerHTML=ro([
+    ['Interruttore AC sistema I<sub>n</sub>',ni(mcbIn)+' A curva C','Del sistema attivo: Iac ≤ In ≤ Iz cavo (CEI 64-8 §433).'],
+    ['Interruttore generale POC',ni(pocMcb)+' A'+(nSys>1?' ('+nSys+' inverter //)':''),'Dimensionato sulla corrente AC totale al POC: Σ I_AC = '+nf(TIac,1)+' A.'],
+    ['RCD',grid==='mt'?'—':'tipo A (con RCMU) / B','Differenziale: tipo A se l\'inverter integra RCMU, altrimenti tipo B.'],
+    ['Protez. interfaccia',grid==='mt'?'CEI 0-16':'CEI 0-21 (SPI)','Sistema di protezione di interfaccia richiesto dalla norma di connessione.'],
+  ]);
+  const acV=[{name:'Interruttore AC: I<sub>AC</sub> ≤ I<sub>n</sub> ≤ I<sub>z</sub> cavo',ref:'CEI 64-8 §433',ok:mcbOk,val:`<span class="a">${ni(mcbIn)} A</span> <span class="lim">${nf(Iac,1)} ≤ In ≤ ${nf(c3Iz,1)} A</span>`}];
+  $('acProtV').innerHTML=verifHTML(acV);
+
+  // PE / messa a terra (CEI 64-8 §543 + QT10 [5.1][5.2])
+  const Sline=g('c3s'), Spe=Sline<=16?Sline:(Sline<=35?16:Sline/2);
+  const peSmin=(gt('lps')==='si')?16:6, IccArr=totStrings*Isc;
+  const Reqp=g('peS')>0?(0.018*g('peL')/g('peS')):0, Vfault=IccArr*Reqp;
+  $('peOut').innerHTML=ro([
+    ['Sezione PE (linea AC)',nf(Spe,1)+' mm²','CEI 64-8 §543: S≤16→S; 16–35→16; S>35→S/2 (stesso materiale).'],
+    ['Equipot. minimo',peSmin+' mm² Cu',(gt('lps')==='si')?'Con LPS: min 16 mm² Cu.':'Protezione: min 6 mm² Cu.'],
+    ['R equipot. Reqp',nf(Reqp,3)+' Ω','ρ·L/S del conduttore equipotenziale (ρ Cu≈0,018).'],
+    ['I_cc·Reqp',nf(Vfault,1)+' V','Tensione al doppio guasto a terra [5.2]: ≤ 120 V.'],
+  ]);
+  const peV=[
+    {name:'Conduttore equipotenziale ≥ minimo',rule:(gt('lps')==='si')?'con LPS':'senza LPS',ref:'CEI 64-8 §544',ok:g('peS')>=peSmin,val:`<span class="a">${nf(g('peS'),1)} mm²</span> <span class="lim">≥ ${peSmin} mm²</span>`},
+    {name:'Doppio guasto a terra: I_cc·Reqp ≤ 120 V',ref:'ABB [5.2]',ok:Vfault<=120,val:`<span class="a">${nf(Vfault,1)} V</span> <span class="lim">≤ 120 V</span>`},
+    {name:'Resistenza di terra Re ≤ 120/Id',rule:'da verificare con Id reale',ref:'ABB [5.1]',ok:true,warn:true,val:''},
+  ];
+  $('peV').innerHTML=verifHTML(peV);
+
+  // SPI — Sistema di Protezione di Interfaccia (CEI 0-21 / 0-16)
+  const kWpP=TKWp, VnSPI=grid==='mt'?Vac:230;
+  let ddiCfg;
+  if(grid==='mt') ddiCfg='SPI e DDI esterni obbligatori (CEI 0-16)';
+  else if(kWpP>20) ddiCfg='SPI + DDI esterni + dispositivo di rincalzo al DDI';
+  else if(kWpP>11.08) ddiCfg='SPI + DDI esterni obbligatori';
+  else ddiCfg='DDI integrato nell\'inverter ammesso (SPI interno)';
+  $('spiCfg').innerHTML=ro([
+    ['Configurazione richiesta',ddiCfg,'CEI 0-21: DDI integrato ammesso ≤ 11,08 kW; DDI esterno oltre; dispositivo di rincalzo > 20 kW. In MT (CEI 0-16) sempre esterni.'],
+    ['Tensione riferimento Vn',nf(VnSPI,0)+' V',grid==='mt'?'Tensione nominale MT.':'Tensione di fase BT.'],
+    ['Corrente DDI ≈',nf(Iac,1)+' A','Il DDI va dimensionato per la corrente dell\'impianto (≈ I AC inverter).'],
+  ]);
+  const thr=[
+    ['Massima tensione 59.S1','1,10 Vn',nf(1.10*VnSPI,0)+' V','≤ 603 s (media 10 min)'],
+    ['Massima tensione 59.S2','1,15 Vn',nf(1.15*VnSPI,0)+' V','0,2 s'],
+    ['Minima tensione 27.S1','0,85 Vn',nf(0.85*VnSPI,0)+' V','1,5 s'],
+    ['Minima tensione 27.S2','0,15 Vn',nf(0.15*VnSPI,0)+' V','0,2 s'],
+    ['Max frequenza 81>.S1 (strette)','50,2 Hz','—','0,1 s'],
+    ['Min frequenza 81&lt;.S1 (strette)','49,8 Hz','—','0,1 s'],
+    ['Max frequenza 81>.S2 (ampie)','51,5 Hz','—','0,1 s / 1 s'],
+    ['Min frequenza 81&lt;.S2 (ampie)','47,5 Hz','—','0,1 s / 4 s'],
+  ];
+  $('spiBody').innerHTML=thr.map(r=>`<tr><td>${r[0]}</td><td class="res">${r[1]}</td><td class="res">${r[2]}</td><td class="res">${r[3]}</td></tr>`).join('');
+  const spiVer=[{name:'SPI conforme alla norma di connessione',rule:grid==='mt'?'MT':(kWpP>11.08?'DDI esterno':'DDI integrato ammesso'),ref:grid==='mt'?'CEI 0-16':'CEI 0-21',ok:true,warn:true,val:`<span class="a">${kWpP>11.08||grid==='mt'?'esterno':'integrato'}</span>`}];
+  if(kWpP>20) spiVer.push({name:'Dispositivo di rincalzo al DDI',rule:'P > 20 kW',ref:'CEI 0-21',ok:true,warn:true,val:''});
+  spiVer.push({name:'Soglie strette/ampie impostate dal distributore',rule:'default: strette',ref:'CEI 0-21',ok:true,warn:true,val:''});
+  $('spiVer').innerHTML=verifHTML(spiVer);
+
+  const pAll=[...fuseV,...spdV,...acV,...peV,...spiVer];
+  secStatus['protezioni']=pAll.every(v=>v.ok)?(pAll.some(v=>v.warn)?'wa':'ok'):'no';
+
+  // PRODUCIBILITÀ
+  const mode=gt('prMode'), tilt=g('tilt'), az=g('az'), alb=g('albedo')||0.2;
+  const city=findCity($('loc').value);
+  let poaInfo=null;
+  if(mode==='auto' && city){
+    const tr=transpose(city.lat,city.g,tilt,az,alb); poaInfo=tr;
+    for(let i=0;i<12;i++){ const e=$('irr'+i); e.value=nf(tr.poa[i],1); e.readOnly=true; }
+    const gain=tr.ghiA>0?tr.poaA/tr.ghiA:1;
+    $('poaNote').className='note solar';
+    $('poaNote').innerHTML=`<b>Stima automatica</b> per ${city.n} (β=${nf(tilt,0)}°, γ=${nf(az,0)}°): irraggiamento orizzontale ≈ <b>${ni(tr.ghiA)}</b> kWh/m²/a → sul piano ≈ <b>${ni(tr.poaA)}</b> kWh/m²/a (fattore ${nf(gain,2)}). Modello Liu-Jordan/Erbs (stesso approccio PVGIS). Per i valori esatti usa il pulsante <b>PVGIS</b> e passa in modalità Manuale.`;
+  }else{
+    for(let i=0;i<12;i++) $('irr'+i).readOnly=false;
+    $('poaNote').className='note';
+    $('poaNote').innerHTML= (mode==='auto'&&!city) ? `<b>Seleziona una città</b> dall'elenco (sez. Progetto) per la stima automatica, oppure inserisci i valori a mano.` : `<b>Modalità manuale.</b> Inserisci l'irraggiamento mensile sul piano (kWh/m²), ad es. da PVGIS con il pulsante qui sopra.`;
+  }
+  const pr=g('pr'), co2f=g('co2'), kWpInv=totMod*P/1000, kWp=kWpInv*nInv;
+  let irrTot=0; const monthE=[];
+  for(let i=0;i<12;i++){ const h=g('irr'+i); irrTot+=h; monthE.push(kWp*h*pr); }
+  const eYear=kWp*irrTot*pr, specYield=irrTot*pr, co2Year=eYear*co2f;
+  $('yieldOut').innerHTML=ro([
+    ['Potenza '+(nSys>1?'sistema attivo':'impianto'),nf(kWp,2)+' kWp','Σ moduli × P_modulo × n_inverter / 1000.'],
+    ['Irragg. annuo piano',ni(irrTot)+' kWh/m²','Somma dei 12 valori mensili sul piano dei moduli (orientamento del sistema attivo).'],
+    ['Energia '+(nSys>1?'sistema attivo':'annua'),ni(eYear)+' kWh','E = kWp × H_annuo × PR [2.10].'],
+    ['Resa specifica',ni(specYield)+' kWh/kWp','H_annuo × PR.'],
+  ])+(nSys>1?ro([
+    ['Potenza TOTALE impianto',nf(TKWp,2)+' kWp','Somma di tutti i sistemi al POC.'],
+    ['Energia TOTALE impianto',ni(TEn)+' kWh','Somma dell\'energia di tutti i sistemi.'],
+    ['CO₂ evitata (totale)',ni(TEn*co2f)+' kg/a','Energia totale × fattore rete.'],
+  ]):ro([['CO₂ evitata',ni(co2Year)+' kg/a','Energia × fattore emissione rete.']]));
+  if(nSys>1){ const brk=systems.map(s=>{const m=sysMetrics(s.vals,s.strings);return s.name+' → '+nf(m.kWp,1)+' kWp · '+ni(m.energy)+' kWh';}).join(' &nbsp;·&nbsp; ');
+    $('poaNote').innerHTML+=`<div style="margin-top:6px"><b>Ripartizione per sistema:</b> ${brk}</div>`; }
+  const maxE=Math.max(...monthE,1);
+  $('bars').innerHTML=monthE.map((e,i)=>`<div class="bar" style="height:${Math.max(3,e/maxE*100)}%" title="${MONTHS[i]}: ${ni(e)} kWh"><span>${MONTHS[i][0]}</span></div>`).join('');
+
+  // ACCUMULO
+  let batInfo=null; const batOn=$('batOn').checked; $('batBox').style.display=batOn?'block':'none';
+  if(batOn){
+    const cap=g('batCap'), dod=g('batDod')/100, eff=g('batEff')/100, bP=g('batP'), chem=gt('batChem');
+    const usable=cap*dod, delivered=usable*eff, crate=cap>0?bP/cap:0;
+    const dailyPV=TEn/365, load=g('batLoad'), night=g('batNight')/100, direct=g('batDirect')/100;
+    const directSelf=Math.min(dailyPV,load*direct), surplus=Math.max(0,dailyPV-directSelf), deficit=load*night;
+    const battDay=Math.min(delivered,surplus,deficit), selfCons=directSelf+battDay;
+    const scPV=dailyPV>0?selfCons/dailyPV*100:0, ssLoad=load>0?selfCons/load*100:0;
+    const cycles=usable>0?battDay*365/usable:0, crateMax=chem==='lfp'?1:2;
+    $('batOut').innerHTML=ro([
+      ['Capacità utile',nf(usable,1)+' kWh','Capacità nominale × DoD.'],
+      ['Energia resa',nf(delivered,1)+' kWh','Utile × rendimento round-trip.'],
+      ['C-rate',nf(crate,2)+' C','Potenza max / capacità nominale.'],
+      ['Contributo giornaliero',nf(battDay,1)+' kWh/gg','min(energia resa, surplus FV, fabbisogno serale).'],
+      ['Autoconsumo FV',nf(scPV,0)+' %','(diretto+accumulo) / produzione FV giornaliera.'],
+      ['Autosufficienza',nf(ssLoad,0)+' %','(diretto+accumulo) / consumo giornaliero.'],
+      ['Cicli equivalenti/anno',ni(cycles),'Throughput annuo / capacità utile.'],
+    ]);
+    const bv=[
+      {name:'C-rate compatibile con la chimica',rule:chem.toUpperCase(),ref:'',ok:crate<=crateMax,warn:crate>crateMax*0.8,val:`<span class="a">${nf(crate,2)} C</span> <span class="lim">≤ ${crateMax} C</span>`},
+      {name:'Capacità non sovradimensionata',rule:'vs surplus giornaliero',ref:'',ok:true,warn:(surplus>0&&usable>surplus*1.5),val:`<span class="a">${nf(usable,1)} kWh</span> <span class="lim">surplus ${nf(surplus,1)} kWh/gg</span>`},
+      {name:'Conformità CEI 0-21 + protezioni DC dedicate lato batteria',ref:'CEI 0-21',ok:true,warn:true,val:''},
+    ];
+    $('batV').innerHTML=verifHTML(bv);
+    secStatus['accumulo']=bv.every(v=>v.ok)?(bv.some(v=>v.warn)?'wa':'ok'):'no';
+    batInfo={usable:nf(usable,1),crate:nf(crate,2),scPV:nf(scPV,0),ssLoad:nf(ssLoad,0)};
+  }
+
+  // ===== GRANDI IMPIANTI / MT (CEI 0-16) =====
+  const mtOn=$('mtOn').checked; $('mtBox').style.display=mtOn?'block':'none';
+  $('mtHint').innerHTML=(grid==='mt'||mtOn)?'':'Questi requisiti si applicano alla <b>connessione in MT (CEI 0-16)</b>. Attiva la casella qui sopra o seleziona la connessione MT nella sez. Progetto.';
+  const PacTot=TPac, vMt=g('vMt')*1000, util=(g('trafoLoad')||90)/100;
+  const stdKVA=[50,100,160,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150];
+  const SnMin=PacTot/1000/util, Sn=nextStd(SnMin,stdKVA);
+  const InBt=Sn*1000/(Math.sqrt(3)*400), InMt=Sn*1000/(Math.sqrt(3)*vMt);
+  $('trafoOut').innerHTML=ro([
+    ['P AC totale',ni(PacTot)+' W','Pac inverter × n° inverter.'],
+    ['Sn minimo',nf(SnMin,0)+' kVA','Pac / fattore di utilizzo.'],
+    ['Sn trasformatore',ni(Sn)+' kVA','Taglia normalizzata ≥ Sn min.'],
+    ['I nom. lato BT',nf(InBt,0)+' A','Sn/(√3·400 V).'],
+    ['I nom. lato MT',nf(InMt,1)+' A','Sn/(√3·Umt).'],
+  ]);
+  $('pgBody').innerHTML=[
+    ['Massima corrente 2ª soglia','51 (I&gt;&gt;)','250 A','500 ms'],
+    ['Massima corrente 3ª soglia','50 (I&gt;&gt;&gt;)','600 A','istantanea'],
+    ['Massima corrente omopolare','50/51N o 67N','rif. DSO','rif. DSO'],
+  ].map(r=>`<tr><td>${r[0]}</td><td class="res">${r[1]}</td><td class="res">${r[2]}</td><td class="res">${r[3]}</td></tr>`).join('');
+  const cciV=[
+    {name:'Regolazione potenza attiva (limitazione e gradiente)',ref:'CEI 0-16 §3.4.2.8',ok:true,warn:true,val:''},
+    {name:'Regolazione potenza reattiva (cosφ fisso, cosφ(P), Q(V))',ref:'',ok:true,warn:true,val:''},
+    {name:'Telescatto / teledistacco comandato dal DSO',ref:'',ok:true,warn:true,val:''},
+    {name:'Comunicazione col distributore (protocollo dedicato)',ref:'SOGL/DER',ok:true,warn:true,val:''},
+    {name:'Monitoraggio e misure di impianto',ref:'',ok:true,warn:true,val:''},
+  ];
+  $('cciV').innerHTML=verifHTML(cciV);
+  const mbX=Math.max(1,Math.round(g('mbX'))), mbY=Math.max(0,Math.round(g('mbY'))), mbN=Math.max(1,Math.round(g('mbN')));
+  const Icu1=(mbX-1)*1.25*Isc, Icu2=Math.max(0,mbX-mbY)*1.25*Isc, IzSub=mbX*1.25*Isc, Icomb=mbX*Isc;
+  $('mbOut').innerHTML=ro([
+    ['Corrente combiner',nf(Icomb,1)+' A','x·ISC.'],
+    ['Icu disp. stringa ≥',nf(Icu1,1)+' A','(x−1)·1,25·ISC [4.5].'],
+    ['Icu disp. sottocampo ≥',nf(Icu2,1)+' A','(x−y)·1,25·ISC [4.6].'],
+    ['Iz cavo sottocampo ≥',nf(IzSub,1)+' A','x·1,25·ISC [4.7].'],
+    ['Combiner box totali',ni(mbN),''],
+  ]);
+  const mbV=[
+    {name:'Fusibile di stringa nel combiner',rule:mbX>=4?'necessario (x≥4)':'non necessario (x≤3)',ref:'ABB §4.1.2',ok:true,warn:mbX>=4,val:mbX>=4?`<span class="a">${ni(nextStd(1.25*Isc,stdFuse))} A gPV</span>`:''},
+    {name:'Potere d\'interruzione I<sub>cu</sub> disp. di stringa',ref:'ABB [4.5]',ok:true,warn:true,val:`<span class="a">≥ ${nf(Icu1,1)} A</span>`},
+  ];
+  $('mbV').innerHTML=verifHTML(mbV);
+
+  // ===== OMBREGGIAMENTO E CARICHI (NTC 2018) =====
+  const instType=gt('instType'), rowsLayout=(instType==='piano'||instType==='terra');
+  $('shadeBox').style.display=rowsLayout?'block':'none';
+  const shTilt=g('shTilt'), shLat=g('shLat'), modL=g('modL');
+  const aWinter=90-Math.abs(shLat)-23.45, aInStr=$('shAlpha')?$('shAlpha').value:'', aUse=(aInStr===''||!isFinite(parseFloat(String(aInStr).replace(',','.'))))?aWinter:g('shAlpha');
+  const rd=Math.PI/180, hRow=modL*Math.sin(shTilt*rd), depth=modL*Math.cos(shTilt*rd);
+  const gap=aUse>0?hRow/Math.tan(aUse*rd):0, pitch=depth+gap, GCR=pitch>0?modL/pitch:0;
+  $('shadeOut').innerHTML=ro([
+    ['Elevazione solare α',nf(aUse,1)+'°'+(aInStr===''?' (auto)':''),'Solstizio: α=90−lat−23,45. Riducila per una finestra oraria più ampia.'],
+    ['Passo minimo tra file D',nf(pitch,2)+' m','D = L·cosβ + L·sinβ/tan(α).'],
+    ['Distanza libera tra file',nf(gap,2)+' m','L·sinβ/tan(α).'],
+    ['GCR',nf(GCR,2),'L/D: rapporto di copertura del suolo.'],
+  ]);
+  if($('shadeNote')) $('shadeNote').innerHTML=`Con β=${nf(shTilt,0)}° e α=${nf(aUse,1)}° serve un passo di almeno <b>${nf(pitch,2)} m</b> (distanza libera ${nf(gap,2)} m) per evitare l'ombra tra le file al solstizio invernale. GCR ${nf(GCR,2)}: a terra tipicamente 0,4–0,5.`;
+  const snZ=gt('snowZone'), snAs=g('snowAs'), snCE=g('snowCE')||1, snTilt=g('snowTilt');
+  let qsk; if(snZ==='1a') qsk=snAs<=200?1.50:1.39*(1+Math.pow(snAs/728,2));
+    else if(snZ==='1m') qsk=snAs<=200?1.50:1.35*(1+Math.pow(snAs/602,2));
+    else if(snZ==='2') qsk=snAs<=200?1.00:0.85*(1+Math.pow(snAs/481,2));
+    else qsk=snAs<=200?0.60:0.51*(1+Math.pow(snAs/481,2));
+  const mu1=snTilt<=30?0.8:(snTilt<60?0.8*(60-snTilt)/30:0), qs=mu1*snCE*1.0*qsk;
+  const modArea=g('mArea')||1.7, snowPerMod=qs*1000*modArea;
+  $('snowOut').innerHTML=ro([
+    ['q<sub>sk</sub> al suolo',nf(qsk,2)+' kN/m²','NTC 2018 per zona e altitudine.'],
+    ['μ1 (forma)',nf(mu1,2),'0,8 fino a 30°, → 0 a 60°.'],
+    ['q<sub>s</sub> sulla falda',nf(qs,2)+' kN/m²','μ1·C_E·C_t·qsk.'],
+    ['Carico per modulo',nf(snowPerMod,0)+' N','qs × area modulo.'],
+  ]);
+  const WZ={'1':[25,1000,0.40],'2':[25,750,0.45],'3':[27,500,0.37],'4':[28,500,0.36],'5':[28,750,0.40],'6':[28,500,0.37],'7':[28,500,0.37],'8':[28,750,0.45],'9':[31,500,0.50]};
+  const wz=gt('windZone')||'1', wp=WZ[wz]||WZ['1'], vb0=wp[0], a0=wp[1], ks=wp[2], wAs=g('windAs');
+  const ca=wAs<=a0?1:(1+ks*(wAs/a0-1)), vb=vb0*ca, qb=0.5*1.25*vb*vb;
+  const wCE=g('windCE')||2.0, wCP=g('windCP')||1.3, pWind=qb*wCE*wCP, windPerMod=pWind*modArea;
+  $('windOut').innerHTML=ro([
+    ['Velocità base v<sub>b</sub>',nf(vb,1)+' m/s','vb0·ca (altitudine).'],
+    ['Pressione cinetica q<sub>b</sub>',nf(qb,0)+' N/m²','½·ρ·vb² (ρ=1,25).'],
+    ['Pressione sul pannello',nf(pWind,0)+' N/m²','qb·c_e·c_p (indicativa).'],
+    ['Forza per modulo',nf(windPerMod,0)+' N','p × area modulo.'],
+  ]);
+  secStatus['mt']=mtOn?'wa':'ok'; secStatus['ombra']='ok';
+
+  const [clsName,clsReq]=classify(TKWp);
+  $('clsOut').innerHTML=`<div class="ro"><div class="k">Classificazione (CEI 0-21) <span class="help" data-tip="${HELP.cls.replace(/"/g,'&quot;')}">?</span></div><div class="v" style="font-size:15px">${clsName}</div><div class="hint" style="margin-top:3px">${clsReq}</div></div>`;
+  $('spiNote').innerHTML=`<b>Protezione di interfaccia (SPI/PI).</b> ${grid==='mt'?'Connessione MT → <b>CEI 0-16</b>.':'Connessione BT → <b>CEI 0-21</b>.'} Impianto <b>${clsName}</b> (${nf(TKWp,2)} kWp al POC): ${TKWp>20?'oltre 20 kW richiesto dispositivo di rincalzo al DDI e dichiarazione UTF; ':''}${TKWp>11.08?'oltre 11,08 kW obbligo trifase con SPI/DDI. ':''}RCD tipo <b>A</b> se l'inverter integra RCMU, altrimenti tipo <b>B</b>.`;
+
+  $('kpiKwp').innerHTML=nf(TKWp,2)+' <small>kWp'+(nSys>1?' · '+nSys+' sist.':'')+'</small>';
+  $('kpiMod').innerHTML=ni(TMod)+' <small>moduli</small>';
+  if($('iterHint')){ let iT,iS;
+    if(grid==='mt'){ iT='Iter ordinario TICA + connessione MT (CEI 0-16)'; iS='Domanda → preventivo → autorizzazioni → regolamento di esercizio con SPG/DG, telescatto e CCI, collaudi.'; }
+    else if(TKWp<=200){ iT='Probabile Modello Unico semplificato (≤ 200 kW)'; iS='Se il POD è attivo, i lavori sono "semplici" (TICA) e l\'area non è vincolata: Parte I → realizzazione → Parte II → attivazione.'; }
+    else { iT='Iter ordinario TICA (> 200 kW)'; iS='Domanda di connessione → preventivo del DSO → accettazione → autorizzazioni → realizzazione → collaudi → attivazione.'; }
+    $('iterHint').innerHTML=`<div class="ro"><div class="k">Iter probabile per questo impianto (${nf(TKWp,1)} kWp · ${grid==='mt'?'MT':'BT'})</div><div class="v" style="font-size:15px">${iT}</div><div class="hint" style="margin-top:3px">${iS}</div></div>`; }
+  $('kpiRatio').innerHTML=nf(dcac)+' <small>DC/AC'+(nSys>1?' (sist. attivo)':'')+'</small>';
+  $('kpiEn').innerHTML=ni(TEn)+' <small>kWh/a</small>';
+
+  const allV=[...invV,...strV,...cAll,...pAll];
+  const anyFail=allV.some(v=>!v.ok), anyWarn=allV.some(v=>v.ok&&v.warn);
+  const gstat=anyFail?'no':(anyWarn?'wa':'ok');
+  $('kpiStatus').innerHTML=`<span class="dot ${gstat}"></span>${anyFail?'Da correggere':(anyWarn?'Ok con avvisi':'Tutto conforme')}`;
+  Object.keys(secStatus).forEach(k=>{ const e=$('st-'+k); if(e) e.className='st '+secStatus[k]; });
+
+  // ---- RELAZIONE TECNICA ----
+  const RT=a=>a.map(r=>`<tr><td class="k">${r[0]}</td><td class="v">${r[1]}</td></tr>`).join('');
+  const bS=(ok,warn)=>ok?(warn?'<span class="badge wa">avviso</span>':'<span class="badge ok">conforme</span>'):'<span class="badge no">non conforme</span>';
+  const cn=city?city.n:$('loc').value, bU=gt('mCoefU'), bTxt=bU==='pct'?'V<sub>OC</sub>·[1+β/100·(T<sub>min</sub>−25)]':'V<sub>OC</sub> + β·(T<sub>min</sub>−25)';
+  const allRows=allV.map(v=>`<tr><td class="k">${v.name.replace(/<[^>]+>/g,'')}${v.rule?' · '+v.rule:''}</td><td class="v">${bS(v.ok,v.warn)}</td></tr>`).join('');
+  const strRows=window.__strings.map((s,i)=>`<tr><td class="k">Stringa ${i+1} · MPPT ${s.mppt}</td><td class="v">${s.mods} mod · Voc ${nf(s.mods*VocTmin,0)} V · Vmpp ${nf(s.mods*Vmp,0)} V</td></tr>`).join('');
+  const spiRows=thr.map(r=>`<tr><td class="k">${r[0]}</td><td class="v">${r[1]}${r[2]!=='—'?' = '+r[2]:''} · ${r[3]}</td></tr>`).join('');
+  const sysR=systems.map(s=>sysReport(s.vals,s.strings,s.name));
+  const perSysDetail=sysR.map(r=>r.html).join('');
+  const perSysEsiti=systems.map((s,i)=>`<tr><td class="k">${s.name}</td><td class="v">${sysR[i].ok?(sysR[i].warn?'<span class="badge wa">conforme con avvisi</span>':'<span class="badge ok">conforme</span>'):'<span class="badge no">da correggere</span>'}</td></tr>`).join('');
+  const relContent=`
+    <div class="note ${gstat==='no'?'warn':'solar'}" style="margin-top:0"><b>${$('projName').value}</b> — esito complessivo:
+      ${gstat==='no'?'<span class="badge no">verifiche da correggere</span>':(gstat==='wa'?'<span class="badge wa">conforme con avvisi</span>':'<span class="badge ok">tutto conforme</span>')} · ${new Date().toLocaleDateString('it-IT')}</div>
+    <div class="rep-sec"><h3>1 · Dati generali</h3><table class="rep">${RT([
+      ['Progetto',$('projName').value],['Località',cn],['Classificazione (CEI 0-21)',clsName+' — '+clsReq],
+      ['Connessione (POC unico)',grid==='mt'?'MT (CEI 0-16)':(grid==='bt1'?'BT monofase 230 V':'BT trifase 400 V')],
+      ['Potenza TOTALE impianto',nf(TKWp,2)+' kWp'],['Moduli · stringhe · inverter (totali)',ni(TMod)+' · '+ni(TStr)+' · '+ni(TInv)],
+      ['N° sistemi',ni(nSys)],
+    ])}</table>${nSys>1?`<table class="rep" style="margin-top:6px">${systems.map(s=>{const m=sysMetrics(s.vals,s.strings);return `<tr><td class="k">${s.name}</td><td class="v">${ni(m.totMod)} mod · ${nf(m.kWp,1)} kWp · Pac ${ni(m.Pac)} W · ${ni(m.energy)} kWh</td></tr>`;}).join('')}</table>`:''}</div>
+    ${nSys>1?perSysDetail+`<div class="rep-sec"><h3>Protezioni al POC e messa a terra</h3><table class="rep">${RT([['Interruttore generale POC','I<sub>n</sub> = '+ni(pocMcb)+' A (Σ I<sub>AC</sub> = '+nf(TIac,1)+' A)'],['Conduttore PE linea AC (§543)',nf(Spe,1)+' mm²'],['Doppio guasto a terra [5.2]','I<sub>cc</sub>·R<sub>eqp</sub> = '+nf(Vfault,1)+' V ≤ 120 V'],['SPD','Tipo '+(gt('lps')==='si'?'1+2':'2')]])}</table></div>`:`
+    <div class="rep-sec"><h3>2 · Componenti</h3><table class="rep">${RT([
+      ['Modulo','P '+nf(P,0)+' W · Vmpp '+nf(Vmp,1)+' V · Impp '+nf(Imp,2)+' A · Voc '+nf(Voc,1)+' V · Isc '+nf(Isc,2)+' A · β '+nf(bVoc,3)+(bU==='pct'?' %/°C':' V/°C')],
+      ['Inverter','Pdc '+ni(g('iPdc'))+' W · Pac '+ni(iPac)+' W · MPPT '+nf(g('iVmpptMin'),0)+'–'+nf(g('iVmpptMax'),0)+' V · Vdc,max '+nf(g('iVdcMax'),0)+' V · Idc,max '+nf(g('iIdcMax'),1)+' A · cosφ '+nf(cosf,2)],
+    ])}</table></div>
+    <div class="rep-sec"><h3>3 · Tensioni di dimensionamento</h3><table class="rep">${RT([
+      ['V<sub>OC</sub>(T<sub>min</sub>) = '+bTxt,'<b>'+nf(VocTmin,2)+' V</b> (a '+nf(tMin,0)+' °C)'],
+      ['V<sub>MPP</sub>(T<sub>max</sub>)',nf(VmpTmax,2)+' V (a '+nf(tMax,0)+' °C)'],
+      ['V<sub>MPP</sub>(T<sub>min</sub>)',nf(VmpTmin,2)+' V'],
+    ])}</table></div>
+    <div class="rep-sec"><h3>4 · Configurazione stringhe</h3><table class="rep">${RT([
+      ['N min = ⌈V<sub>MPPT,min</sub> / V<sub>MPP</sub>(T<sub>max</sub>)⌉','⌈'+nf(g('iVmpptMin'),0)+' / '+nf(VmpTmax,1)+'⌉ = <b>'+ni(nMin)+'</b>'],
+      ['N max tracking = ⌊V<sub>MPPT,max</sub> / V<sub>MPP</sub>(T<sub>min</sub>)⌋','⌊'+nf(g('iVmpptMax'),0)+' / '+nf(VmpTmin,1)+'⌋ = '+ni(nMaxTrack)],
+      ['N max assoluto = ⌊V<sub>DC,max</sub> / V<sub>OC</sub>(T<sub>min</sub>)⌋','⌊'+nf(g('iVdcMax'),0)+' / '+nf(VocTmin,1)+'⌋ = '+ni(nMaxHard)],
+      ['Range valido',ni(nMin)+' – '+ni(nMax)+' moduli/stringa'],
+    ])}${strRows}</table></div>
+    <div class="rep-sec"><h3>5 · Cavi</h3><table class="rep">${RT([
+      ['Portata stringa I<sub>z</sub> = I₀·K1·K2·K ≥ 1,25·I<sub>SC</sub>',nf(c1Iz,1)+' A ≥ '+nf(IdesStr,2)+' A'],
+      ['ΔU stringa = ρ·(L<sub>m</sub>+2·L<sub>q</sub>)·I<sub>mp</sub> / S / V<sub>str</sub>','0,021·('+nf(g('c1lm'),0)+'+2·'+nf(g('c1lq'),0)+')·'+nf(Imp,2)+' / '+nf(g('c1s'),1)+' / '+nf(nRef*Vmp,0)+' = <b>'+nf(duStr,2)+' %</b>'],
+      ['ΔU principale DC / AC / totale',nf(duMain,2)+' % / '+nf(duAc,2)+' % / <b>'+nf(duTot,2)+' %</b> (≤3%)'],
+      ['I²t cavo stringa: K²·S² (K='+Kc1+')',ni(K2S2str)+' A²s'],
+      ['I²t cavo AC: K²·S² (K='+Kc3+')',ni(K2S2ac)+' A²s'],
+    ])}</table></div>
+    <div class="rep-sec"><h3>6 · Protezioni e messa a terra</h3><table class="rep">${RT([
+      ['Protezione di stringa',install?('1,25·I<sub>SC</sub>='+nf(fuseMin,2)+' ≤ I<sub>n</sub> ≤ '+nf(fuseMax,2)+' → <b>'+devName+'</b>'):'non necessaria (x ≤ 3)'],
+      ['Sezionatore DC','U<sub>e</sub> ≥ 1,2·U<sub>OC</sub> = '+nf(UeAbb,0)+' V · I<sub>e</sub> ≥ 1,25·x·I<sub>SC</sub> = '+nf(Ie,1)+' A'],
+      ['Interruttore AC','I<sub>n</sub> = '+ni(mcbIn)+' A curva C (I<sub>AC</sub> '+nf(Iac,2)+' ≤ I<sub>n</sub> ≤ I<sub>z</sub>)'],
+      ['Conduttore PE linea AC (CEI 64-8 §543)',nf(Spe,1)+' mm²'],
+      ['Doppio guasto a terra [5.2]','I<sub>cc</sub>·R<sub>eqp</sub> = '+nf(Vfault,1)+' V ≤ 120 V'],
+    ])}</table></div>`}
+    <div class="rep-sec"><h3>7 · Protezione di interfaccia (SPI)</h3>
+      <table class="rep">${RT([['Configurazione',ddiCfg],['Tensione riferimento Vn',nf(VnSPI,0)+' V']])}</table>
+      <table class="rep" style="margin-top:6px">${spiRows}</table></div>
+    <div class="rep-sec"><h3>8 · Producibilità</h3><table class="rep">${RT([
+      ['E sistema attivo = kWp · H · PR',nf(kWp,2)+' · '+ni(irrTot)+' · '+nf(pr,2)+' = <b>'+ni(eYear)+' kWh/anno</b>'],
+      ['Resa specifica',ni(specYield)+' kWh/kWp'],['Energia TOTALE impianto','<b>'+ni(TEn)+' kWh/anno</b> ('+ni(TEn*co2f)+' kg CO₂ evitata)'],
+    ])}</table></div>
+    ${batInfo?`<div class="rep-sec"><h3>9 · Accumulo</h3><table class="rep">${RT([
+      ['Capacità utile',batInfo.usable+' kWh'],['C-rate',batInfo.crate+' C'],['Autoconsumo FV',batInfo.scPV+' %'],['Autosufficienza',batInfo.ssLoad+' %'],
+    ])}</table></div>`:''}
+    ${mtOn?`<div class="rep-sec"><h3>MT / Grandi impianti (CEI 0-16)</h3><table class="rep">${RT([
+      ['Trasformatore MT/BT','Sn '+ni(Sn)+' kVA · In BT '+nf(InBt,0)+' A · In MT '+nf(InMt,1)+' A'],
+      ['Protezione generale (PG)','51: 250 A / 500 ms · 50: 600 A ist. · omopolare 50/51N o 67N'],
+      ['Combiner box','x '+mbX+' · I<sub>cu</sub> ≥ '+nf(Icu1,1)+' A [4.5] · I<sub>z</sub> sottocampo ≥ '+nf(IzSub,1)+' A [4.7]'],
+      ['CCI','regolazione P/Q · telescatto · comunicazione DSO · monitoraggio'],
+    ])}</table></div>`:''}
+    ${rowsLayout?`<div class="rep-sec"><h3>Ombreggiamento tra le file</h3><table class="rep">${RT([
+      ['Passo minimo D = L·cosβ + L·sinβ/tan(α)',nf(pitch,2)+' m (α '+nf(aUse,1)+'°)'],['Distanza libera tra file',nf(gap,2)+' m'],['GCR',nf(GCR,2)],
+    ])}</table></div>`:''}
+    <div class="rep-sec"><h3>Carichi ambientali (NTC 2018)</h3><table class="rep">${RT([
+      ['Neve q<sub>s</sub> = μ1·C<sub>E</sub>·q<sub>sk</sub>',nf(qs,2)+' kN/m² ('+nf(snowPerMod,0)+' N/modulo)'],
+      ['Vento','v<sub>b</sub> '+nf(vb,1)+' m/s · q<sub>b</sub> '+nf(qb,0)+' N/m² · p '+nf(pWind,0)+' N/m² ('+nf(windPerMod,0)+' N/modulo)'],
+    ])}</table><div class="note" style="font-size:11px">Verifica strutturale di struttura/fissaggi/zavorre a cura di ingegnere abilitato.</div></div>
+    <div class="rep-sec"><h3>Riepilogo verifiche${nSys>1?' (per sistema)':''}</h3><table class="rep">${nSys>1?perSysEsiti:allRows}</table></div>
+    <div class="rep-sec"><h3>Riferimenti e firma</h3>
+      <div class="note" style="font-size:11.5px;margin-top:0">Metodo e formule: ABB QT10 "Impianti fotovoltaici" [3.1–3.5, 4.1–4.7, 2.10] e Quaderno Tecnico ABB 2026. Irraggiamento sul piano: modello Liu-Jordan/Erbs (stima; per dati puntuali usare PVGIS). Riferimenti normativi: CEI 82-25, CEI 64-8/7 Sez.712, IEC 62548, IEC 62257-7-1, IEC 60269-6, CEI-UNEL 35024/35026, CEI 0-21/0-16, CEI 81-10/81-28. Documento di supporto alla progettazione: le verifiche vanno confermate da un professionista abilitato con i dati reali di installazione.</div>
+      <table class="rep" style="margin-top:10px"><tr><td class="k">Data</td><td class="v">__________________</td></tr><tr><td class="k">Tecnico / firma</td><td class="v">__________________</td></tr></table>
+    </div>`;
+  window.__relHTML=relContent;
+  $('reportBody').innerHTML=`<div class="no-print" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <button class="hbtn pri" onclick="window.print()">🖨 Stampa / Salva PDF</button>
+      <button class="hbtn" onclick="downloadRelazione()">⬇ Scarica relazione (HTML)</button>
+    </div>`+relContent;
+  injectHelp();
+}
+
+const RELCSS=`<style>:root{--panel:#fff;--panel2:#f7f9fb;--ink:#16202b;--muted:#5d6b78;--line:#d7dee4;--line2:#e6ebef;--solar:#f2a100;--solar-d:#c9860a;--dc:#2d6cdf;--pass:#12805c}body{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#16202b;max-width:820px;margin:24px auto;padding:0 20px;font-size:13px;line-height:1.5}h1{font-size:20px;margin:0 0 4px}h3{font-size:14px;color:#2d6cdf;border-bottom:1px solid #e6ebef;padding-bottom:4px;margin:20px 0 8px}table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}td{padding:6px 8px;border-bottom:1px solid #eef1f4;vertical-align:top}td.k{color:#5d6b78;width:52%}td.v{text-align:right;font-family:ui-monospace,Menlo,monospace}.badge{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}.badge.ok{background:#e3f4ec;color:#12805c}.badge.no{background:#fbe9e9;color:#d34545}.badge.wa{background:#fbf1dd;color:#b8790a}.note{background:#f7f9fb;border-left:3px solid #2d6cdf;padding:10px 12px;border-radius:6px;color:#5d6b78;margin:12px 0}.note.warn{border-left-color:#b8790a}.hd{border-bottom:2px solid #16202b;padding-bottom:10px;margin-bottom:8px}sub{font-size:.75em}</style>`;
+function downloadRelazione(){ try{
+  const t=$('projName').value||'Relazione tecnica FV';
+  const doc='<!DOCTYPE html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+t+'</title>'+RELCSS+'</head><body><div class="hd"><h1>Relazione tecnica — Impianto fotovoltaico</h1><div style="color:#5d6b78">'+t+' · '+new Date().toLocaleDateString('it-IT')+'</div></div>'+(window.__relHTML||'')+'</body></html>';
+  const b=new Blob([doc],{type:'text/html;charset=utf-8'}), a=document.createElement('a');
+  a.href=URL.createObjectURL(b); a.download=t.replace(/[^\w\-]+/g,'_')+'.html'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+}catch(e){ alert('Download non disponibile in questa vista: usa "Stampa / Salva PDF".'); } }
+
+/* wiring */
+document.addEventListener('input',e=>{ if(e.target.matches('input,select')) compute(); });
+document.addEventListener('change',e=>{ if(e.target.matches('select,input[type=checkbox]')) compute(); });
+
+/* tooltip engine */
+(function(){
+  const tip=$('tip'); let pinned=null;
+  function show(el){ tip.innerHTML=el.dataset.tip; tip.style.display='block';
+    const r=el.getBoundingClientRect(), tw=Math.min(300,innerWidth-24);
+    tip.style.maxWidth=tw+'px'; let left=r.left+r.width/2-tw/2; left=Math.max(12,Math.min(left,innerWidth-tw-12));
+    tip.style.left=left+'px'; tip.style.top='0px';
+    const th=tip.offsetHeight; let top=r.bottom+8; if(top+th>innerHeight-8) top=r.top-th-8; tip.style.top=Math.max(8,top)+'px';
+  }
+  function hide(){ tip.style.display='none'; pinned=null; }
+  document.addEventListener('mouseover',e=>{ const h=e.target.closest('.help'); if(h&&!pinned) show(h); });
+  document.addEventListener('mouseout',e=>{ const h=e.target.closest('.help'); if(h&&!pinned) hide(); });
+  document.addEventListener('focusin',e=>{ const h=e.target.closest('.help'); if(h) show(h); });
+  document.addEventListener('focusout',()=>{ if(!pinned) hide(); });
+  document.addEventListener('click',e=>{ const h=e.target.closest('.help');
+    if(h){ e.preventDefault(); if(pinned===h){hide();} else {pinned=h; show(h);} }
+    else if(pinned && !e.target.closest('#tip')) hide(); });
+  window.addEventListener('scroll',()=>{ if(!pinned) hide(); },true);
+})();
+
+/* theme */
+(function(){ let t=null; try{t=localStorage.getItem('pv_theme');}catch(_){}
+  if(t) document.documentElement.setAttribute('data-theme',t);
+  $('themeBtn').addEventListener('click',()=>{
+    const cur=document.documentElement.getAttribute('data-theme');
+    const nx=cur==='dark'?'light':(cur==='light'?'dark':(matchMedia('(prefers-color-scheme:dark)').matches?'light':'dark'));
+    document.documentElement.setAttribute('data-theme',nx); try{localStorage.setItem('pv_theme',nx);}catch(_){}
+  });
+})();
+
+/* save / load */
+function snapshot(){ saveCur(); const o={shared:{},sys:window.__sys,cur:window.__cur};
+  document.querySelectorAll('input[id],select[id]').forEach(el=>{ if(SHARED.has(el.id)) o.shared[el.id]=el.type==='checkbox'?el.checked:el.value; }); return o; }
+function restore(o){ if(!o)return;
+  if(o.sys){ window.__sys=o.sys; window.__cur=Math.min(o.cur||0,o.sys.length-1);
+    if(o.shared) Object.keys(o.shared).forEach(k=>{ const el=$(k); if(el){ if(el.type==='checkbox') el.checked=o.shared[k]; else el.value=o.shared[k]; }});
+    loadCur(); renderSysbar(); compute(); return; }
+  if(o.strings&&Array.isArray(o.strings)) window.__strings=o.strings;
+  Object.keys(o).forEach(k=>{ if(k==='strings')return; const el=$(k); if(el){ if(el.type==='checkbox') el.checked=o[k]; else el.value=o[k]; }});
+  window.__sys=[{name:'Sistema 1',vals:collectPerSys(),strings:JSON.parse(JSON.stringify(window.__strings||[]))}]; window.__cur=0;
+  renderStrings(); renderSysbar(); compute(); }
+/* toast + salvataggio/apertura di progetti su file */
+function toast(msg,type){ const t=$('toast'); if(!t)return; t.textContent=msg; t.className='toast show '+(type||'ok'); clearTimeout(window.__tt); window.__tt=setTimeout(()=>t.className='toast',2600); }
+function projJSON(){ const o=snapshot(); o._tipo='FV project'; o._app='Dimensionamento fotovoltaico'; return JSON.stringify(o,null,2); }
+function projFname(){ return ((($('projName').value||'progetto_fv').trim().replace(/[^\w\-]+/g,'_'))||'progetto_fv')+'.fvsol'; }
+async function saveProjectFile(){ const blob=new Blob([projJSON()],{type:'application/json'}), fname=projFname();
+  if(window.__fh){ try{ const w=await window.__fh.createWritable(); await w.write(blob); await w.close(); toast('Salvato: '+window.__fh.name); return; }catch(_){ window.__fh=null; } }
+  if('showSaveFilePicker' in window){ try{ window.__fh=await window.showSaveFilePicker({suggestedName:fname,types:[{description:'Progetto fotovoltaico',accept:{'application/json':['.fvsol','.json']}}]});
+      const w=await window.__fh.createWritable(); await w.write(blob); await w.close(); toast('Salvato: '+window.__fh.name); return; }
+    catch(e){ if(e&&e.name==='AbortError') return; } }
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=fname; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000); toast('Scaricato: '+fname); }
+async function openProjectFile(){
+  if('showOpenFilePicker' in window){ try{ const [fh]=await window.showOpenFilePicker({types:[{description:'Progetto fotovoltaico',accept:{'application/json':['.fvsol','.json']}}]});
+      const f=await fh.getFile(); restore(JSON.parse(await f.text())); window.__fh=fh; toast('Caricato: '+fh.name); return; }
+    catch(e){ if(e&&e.name==='AbortError') return; } }
+  $('fileInput').click(); }
+$('fileInput').addEventListener('change',function(){ const f=this.files&&this.files[0]; if(!f)return; const r=new FileReader();
+  r.onload=e=>{ try{ restore(JSON.parse(e.target.result)); toast('Caricato: '+f.name); }catch(_){ toast('File non valido','err'); } }; r.readAsText(f); this.value=''; });
+$('openBtn').addEventListener('click',openProjectFile);
+$('saveFileBtn').addEventListener('click',saveProjectFile);
+/* autosalvataggio locale: ripristino automatico alla riapertura */
+let __asT; function autosave(){ clearTimeout(__asT); __asT=setTimeout(()=>{ try{ localStorage.setItem('pv_project',JSON.stringify(snapshot())); }catch(_){} },800); }
+document.addEventListener('input',autosave); document.addEventListener('change',autosave);
+$('jsonLoad').addEventListener('click',()=>{ try{ restore(JSON.parse($('jsonArea').value)); $('jsonModal').style.display='none'; }catch(_){ alert('JSON non valido.'); }});
+$('projName').addEventListener('input',compute);
+
+/* init */
+build(); renderStrings(); injectPickers(); injectHints(); initSystems();
+$('sysAdd').addEventListener('click',addSys);
+
+/* reference-table picker open/close */
+document.addEventListener('click',e=>{ const p=e.target.closest('.pick'); if(p){ e.preventDefault(); openPicker(p); } else if(!e.target.closest('#picker')&&!e.target.closest('.pick')) $('picker').style.display='none'; });
+window.addEventListener('scroll',()=>{ $('picker').style.display='none'; },true);
+
+/* wiring of dynamically-created elements (must run AFTER build) */
+function applyCity(){ const c=findCity($('loc').value); if(c){ $('lat').value=c.lat; $('lon').value=c.lon; $('alt').value=c.alt; } compute(); }
+$('loc').addEventListener('input',applyCity); $('loc').addEventListener('change',applyCity);
+$('grid').addEventListener('change',()=>{ if(gt('grid')==='mt') $('mtOn').checked=true; });
+$('iNmppt').addEventListener('change',()=>{ renderStrings(); compute(); });
+$('addStr').addEventListener('click',()=>{ const nMppt=Math.max(1,Math.round(g('iNmppt')));
+  const mppt=(window.__strings.length%nMppt)+1; window.__strings.push({mods:window.__strings[0]?window.__strings[0].mods:6,mppt}); renderStrings(); compute(); });
+$('pvgisBtn').addEventListener('click',()=>{ const url=`https://re.jrc.ec.europa.eu/api/v5_2/MRcalc?lat=${g('lat')}&lon=${g('lon')}&horirrad=1&angle=${g('tilt')}&aspect=${g('az')}&outputformat=csv`; window.open(url,'_blank','noopener'); });
+(function(){ let saved=null; try{saved=JSON.parse(localStorage.getItem('pv_project'));}catch(_){}
+  if(saved) restore(saved); else compute(); })();
+</script>
+</body>
+</html>

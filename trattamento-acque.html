@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dimensionamento trattamento acque — Addolcimento &amp; Osmosi</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--pr:#1a3a5c;--ac:#e8612c;--ac2:#2b8a6e;--sf:#f4f2ed;--cd:#faf9f7;--bd:#d4cfc7;--tx:#1c1a17;--mu:#7a7570;--dg:#c0392b;--ok:#27ae60;}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--sf);color:var(--tx);font-size:14px;}
+.app{max-width:1140px;margin:0 auto;padding:16px;}
+.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid var(--pr);flex-wrap:wrap;gap:10px;}
+.hdr-left{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;}
+.hdr h1{font-size:17px;font-weight:600;color:var(--pr);}
+.hdr .sub{font-size:11px;color:var(--mu);font-family:'IBM Plex Mono',monospace;}
+.hdr-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.prj-badge{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--mu);background:#ece9e3;border-radius:3px;padding:3px 8px;max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tabs{display:flex;border-bottom:1.5px solid var(--bd);margin-bottom:18px;flex-wrap:wrap;}
+.tab{padding:9px 20px;font-size:13.5px;border:none;background:none;cursor:pointer;color:var(--mu);border-bottom:2px solid transparent;margin-bottom:-1.5px;transition:all .15s;font-family:inherit;}
+.tab.active{color:var(--ac);border-bottom-color:var(--ac);font-weight:500;}
+.tab:hover:not(.active){color:var(--tx);}
+.panel{display:none;}.panel.active{display:block;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:760px){.g2{grid-template-columns:1fr;}}
+.card{background:var(--cd);border:1px solid var(--bd);border-radius:6px;padding:16px;margin-bottom:16px;}
+.ct{font-size:11px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.ct .idx{color:var(--ac);font-family:'IBM Plex Mono',monospace;}
+label{font-size:12px;color:var(--mu);display:flex;align-items:center;margin-bottom:4px;margin-top:10px;}
+.card > label:first-of-type,.frow:first-child label{margin-top:0;}
+input[type=text],input[type=number],input[type=date],select,textarea{width:100%;padding:7px 10px;border:1px solid var(--bd);border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:13px;background:#fff;color:var(--tx);outline:none;transition:border .15s;}
+textarea{font-family:'IBM Plex Sans',sans-serif;font-size:12px;resize:vertical;}
+input:focus,select:focus,textarea:focus{border-color:var(--pr);}
+.frow{display:grid;grid-template-columns:1fr 116px;gap:10px;align-items:center;}
+.frow label{margin:0;}
+.frow .uwrap{display:flex;align-items:center;gap:6px;}
+.frow .uwrap .u{font-size:11px;color:var(--mu);font-family:'IBM Plex Mono',monospace;min-width:34px;}
+.frow input,.frow select{padding:6px 8px;}
+.btn{padding:8px 16px;border:none;border-radius:4px;font-size:13px;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;transition:all .15s;font-weight:400;}
+.bp{background:var(--pr);color:#fff;}.bp:hover{background:#1e4a72;}
+.ba{background:var(--ac);color:#fff;}.ba:hover{background:#d4541f;}
+.bsave{background:#5b4a9e;color:#fff;}.bsave:hover{background:#4a3a8a;}
+.bopen{background:#fff;color:var(--pr);border:1px solid var(--pr);}.bopen:hover{background:#eef3f8;}
+.bd2{background:#fff;color:var(--dg);border:1px solid #e0b0ae;}.bd2:hover{background:#fdf0ef;}
+.bsm{padding:5px 10px;font-size:12px;}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;}
+.metric{background:#fff;border:1px solid var(--bd);border-radius:4px;padding:10px 12px;}
+.metric.hero{border-color:var(--ac);box-shadow:inset 0 0 0 1px var(--ac);}
+.mv{font-size:18px;font-family:'IBM Plex Mono',monospace;font-weight:500;color:var(--pr);}
+.mv .u{font-size:12px;color:var(--mu);}
+.ml{font-size:11px;color:var(--mu);margin-top:3px;display:flex;align-items:center;}
+.checks{margin-top:14px;display:flex;flex-direction:column;gap:8px;}
+.okbox,.wbox,.ebox,.ibox{padding:9px 12px;border-radius:0 4px 4px 0;font-size:12px;line-height:1.55;}
+.okbox{background:#eafaf0;border-left:3px solid var(--ok);color:#12633a;}
+.wbox{background:#fef9e7;border-left:3px solid #f39c12;color:#7e5a00;}
+.ebox{background:#fdecea;border-left:3px solid var(--dg);color:#7a231d;}
+.ibox{background:#e8f4f8;border-left:3px solid #2980b9;color:#1a4a6b;margin-top:12px;}
+.okbox b,.wbox b,.ebox b,.ibox b{font-weight:600;}
+.refbox{margin-top:6px;}
+.ref{font-size:11.5px;color:var(--mu);background:#fff;border:1px solid var(--bd);border-left:3px solid var(--pr);padding:3px 8px;border-radius:2px;display:inline-block;margin:2px 4px 2px 0;}
+.reflist{margin:10px 0 0;padding-left:16px;}
+.reflist li{font-size:12px;line-height:1.55;margin-bottom:6px;color:#3a3733;}
+.reflist li b{font-weight:600;}
+.q{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;min-width:15px;border-radius:50%;border:1px solid var(--pr);color:var(--pr);font-size:10px;font-weight:600;cursor:help;margin-left:6px;position:relative;line-height:1;}
+.q:focus{outline:2px solid var(--pr);outline-offset:1px;}
+.q .tip{display:none;position:absolute;z-index:40;left:50%;transform:translateX(-50%);top:150%;width:230px;max-width:72vw;background:var(--pr);color:#fff;font-size:11.5px;font-weight:400;line-height:1.45;padding:9px 11px;border-radius:5px;box-shadow:0 8px 24px rgba(0,0,0,.28);text-align:left;font-family:'IBM Plex Sans',sans-serif;}
+.q:hover .tip,.q:focus .tip{display:block;}
+.q.r .tip{left:auto;right:-2px;transform:none;}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--pr);color:#fff;padding:10px 18px;border-radius:5px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;font-family:'IBM Plex Mono',monospace;}
+.toast.show{opacity:1;}.toast.ok{background:var(--ok);}.toast.err{background:var(--dg);}
+.path-row{display:flex;gap:8px;align-items:center;margin-top:4px;}
+.path-row input{flex:1;}
+.path-info{font-size:11px;color:var(--mu);margin-top:6px;}
+.sbox{background:#f0eaf8;border-left:3px solid #7c5cbf;padding:9px 12px;border-radius:0 4px 4px 0;font-size:12px;color:#4a3070;line-height:1.55;}
+
+/* ===== REPORT (solo stampa) ===== */
+#report{display:none;}
+.rep-h1{font-size:18px;color:var(--pr);font-weight:600;margin-bottom:2px;}
+.rep-sub{font-size:11px;color:var(--mu);font-family:'IBM Plex Mono',monospace;margin-bottom:14px;}
+.rep-meta{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:11.5px;}
+.rep-meta td{padding:3px 8px;border:1px solid var(--bd);}
+.rep-meta td.k{background:#f4f2ed;color:var(--mu);width:130px;}
+.rep-sec{font-size:12px;font-weight:600;color:#fff;background:var(--pr);padding:5px 10px;margin:14px 0 0;text-transform:uppercase;letter-spacing:.6px;}
+.rep-t{width:100%;border-collapse:collapse;font-size:11.5px;}
+.rep-t td{padding:5px 10px;border:1px solid var(--bd);}
+.rep-t td.k{color:#3a3733;width:60%;}
+.rep-t td.v{font-family:'IBM Plex Mono',monospace;text-align:right;}
+.rep-chk{width:100%;border-collapse:collapse;font-size:11.5px;}
+.rep-chk td{padding:5px 10px;border:1px solid var(--bd);vertical-align:top;}
+.rep-chk td.e{width:96px;font-weight:600;}
+.rep-foot{margin-top:20px;display:flex;justify-content:space-between;font-size:11px;color:var(--mu);}
+.rep-firma{margin-top:26px;border-top:1px solid var(--bd);padding-top:4px;width:200px;text-align:center;font-size:11px;color:var(--mu);}
+
+@media print{
+  @page{margin:14mm;}
+  body{background:#fff;}
+  .app{display:none!important;}
+  #report{display:block!important;}
+  .toast{display:none!important;}
+}
+</style>
+
+<!-- ============================================================
+     LUCCHETTO CONDIVISO STUDIO (autonomo, nessun redirect)
+     Password condivisa con la raccolta, chiave localStorage 'studio_ok'.
+     Sbloccato una volta in questo browser, resta valido per tutte le
+     pagine finche' non si chiude / si preme "Esci" nel portale.
+     ============================================================ -->
+<div id="studiolock" style="position:fixed;inset:0;z-index:100000;background:linear-gradient(135deg,#12283f,#1a3a5c);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Sans',sans-serif;">
+  <div style="background:#faf9f7;border-radius:10px;padding:32px 30px;width:340px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.4);text-align:center;">
+    <div style="font-size:34px;margin-bottom:10px;">&#128274;</div>
+    <h2 style="color:#1a3a5c;font-size:16px;font-weight:500;margin:0 0 6px;">Accesso riservato</h2>
+    <p style="font-size:12px;color:#7a7570;margin:0 0 18px;">Inserire la password per accedere al foglio.</p>
+    <input type="password" id="studiolock-pwd" placeholder="Password" autocomplete="current-password"
+      style="width:100%;padding:9px 10px;border:1px solid #d4cfc7;border-radius:4px;font-family:'IBM Plex Mono',monospace;background:#fff;color:#1c1a17;outline:none;text-align:center;font-size:15px;letter-spacing:2px;margin-bottom:12px;box-sizing:border-box;"
+      onkeydown="if(event.key==='Enter')studioSblocca()" autofocus>
+    <div id="studiolock-err" style="color:#c0392b;font-size:12px;height:16px;margin-bottom:6px;"></div>
+    <button type="button" onclick="studioSblocca()"
+      style="width:100%;padding:9px 16px;border:none;border-radius:4px;font-size:13px;cursor:pointer;background:#1a3a5c;color:#fff;font-family:'IBM Plex Sans',sans-serif;">Sblocca</button>
+    <div style="margin-top:14px;"><a href="index.html" style="font-size:11px;color:#7a7570;text-decoration:none;">&#8592; Torna al portale</a></div>
+  </div>
+</div>
+<script>
+(function(){
+  var PASSWORD='system1';
+  function hide(){
+    var l=document.getElementById('studiolock'); if(l) l.style.display='none';
+    var a=document.getElementById('appwrap');    if(a) a.style.display='block';
+  }
+  window.studioSblocca=function(){
+    var i=document.getElementById('studiolock-pwd');
+    if(i && i.value===PASSWORD){ try{localStorage.setItem('studio_ok','1');}catch(e){} hide(); }
+    else{ var e=document.getElementById('studiolock-err'); if(e) e.textContent='Password errata.'; if(i){ i.value=''; i.focus(); } }
+  };
+  try{ if(localStorage.getItem('studio_ok')==='1'){ hide(); } }catch(e){}
+})();
+</script>
+
+</head>
+<body>
+
+<div class="app">
+  <div class="hdr">
+    <div class="hdr-left">
+      <h1>Dimensionamento trattamento acque</h1>
+      <span class="sub">D.Lgs 18/2023 · UNI 8065:2019 · DM 25/2012</span>
+    </div>
+    <div class="hdr-right">
+      <span class="prj-badge" id="prj-badge">Nessun progetto</span>
+      <button class="btn bopen bsm" onclick="apriProgetto()">&#128193; Apri</button>
+      <button class="btn bsave bsm" onclick="salvaProgetto()">&#128190; Salva</button>
+      <button class="btn ba bsm" onclick="stampaReport()">&#128424; Stampa / PDF</button>
+    </div>
+  </div>
+
+  <!-- COMMESSA -->
+  <div class="card">
+    <div class="ct">Dati commessa</div>
+    <div class="g2">
+      <div>
+        <div class="frow"><label for="c-numero">Numero commessa</label><input type="text" id="c-numero" placeholder="es. 2024-0042" oninput="updateBadge()"></div>
+        <label for="c-progetto" style="margin-top:10px;">Riferimento progetto</label><input type="text" id="c-progetto" placeholder="es. Marina — impianto di trattamento" oninput="updateBadge()">
+        <label for="c-cliente">Cliente / committente</label><input type="text" id="c-cliente" placeholder="Nome cliente">
+        <label for="c-ubicazione">Ubicazione</label><input type="text" id="c-ubicazione" placeholder="Comune / sito">
+      </div>
+      <div>
+        <label for="c-progettista">Progettista</label><input type="text" id="c-progettista" placeholder="Nome e cognome / studio">
+        <div class="frow" style="margin-top:10px;"><label for="c-data">Data elaborazione</label><input type="date" id="c-data"></div>
+        <div class="frow" style="margin-top:10px;"><label for="c-revisione">Revisione</label><input type="text" id="c-revisione" value="Rev. 0"></div>
+        <label for="c-note">Note</label><textarea id="c-note" rows="2" placeholder="Note libere..."></textarea>
+      </div>
+    </div>
+    <div class="path-row" style="margin-top:12px;">
+      <input type="text" id="path-display" readonly placeholder="Nessun file aperto" style="background:#f4f2ed;color:var(--mu);">
+      <button class="btn bopen bsm" onclick="apriProgetto()">&#128193; Apri</button>
+      <button class="btn bsave bsm" onclick="salvaProgetto()">&#128190; Salva</button>
+      <button class="btn bp bsm" onclick="salvaComeProgetto()">Salva come…</button>
+      <button class="btn bd2 bsm" onclick="nuovoProgetto()">&#10022; Nuovo</button>
+    </div>
+    <div class="path-info" id="path-info">File <b>.acq</b>: contiene i dati commessa e tutti i parametri di addolcimento e osmosi. Riapribile in qualsiasi momento.</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="tab-soft" onclick="showSys('soft',this)">Addolcimento</button>
+    <button class="tab" id="tab-ro" onclick="showSys('ro',this)">Osmosi inversa</button>
+  </div>
+
+  <!-- ============ ADDOLCIMENTO ============ -->
+  <div id="panel-soft" class="panel active">
+    <div class="g2">
+      <div class="card">
+        <div class="ct"><span class="idx">A.</span>Acqua e consumi</div>
+        <div class="frow"><label>Durezza totale in ingresso<span class="q" tabindex="0">?<span class="tip">Durezza totale dell'acqua grezza, da analisi. 1 &deg;F = 10 mg/L di CaCO&#8323;.</span></span></label><div class="uwrap"><input type="number" id="s-hin" value="35" step="1" min="0"><span class="u">&deg;F</span></div></div>
+        <div class="frow" style="margin-top:10px;"><label>Durezza desiderata in uscita<span class="q" tabindex="0">?<span class="tip">Durezza al punto di consegna, ottenuta miscelando acqua addolcita (&asymp;0 &deg;F) con acqua grezza (by-pass).</span></span></label><div class="uwrap"><input type="number" id="s-hout" value="15" step="1" min="0"><span class="u">&deg;F</span></div></div>
+        <div class="frow" style="margin-top:10px;"><label>Consumo giornaliero<span class="q" tabindex="0">?<span class="tip">Volume medio di acqua addolcita consumato in un giorno.</span></span></label><div class="uwrap"><input type="number" id="s-vday" value="12" step="0.5" min="0"><span class="u">m&sup3;/g</span></div></div>
+        <div class="frow" style="margin-top:10px;"><label>Portata di punta<span class="q" tabindex="0">?<span class="tip">Portata massima istantanea richiesta. Verifica che non superi la portata nominale dell'addolcitore.</span></span></label><div class="uwrap"><input type="number" id="s-qp" value="3" step="0.1" min="0"><span class="u">m&sup3;/h</span></div></div>
+      </div>
+      <div class="card">
+        <div class="ct"><span class="idx">B.</span>Dati addolcitore (scheda tecnica)</div>
+        <div class="frow"><label>Capacit&agrave; di scambio<span class="q" tabindex="0">?<span class="tip">Dato di targa: volume d'acqua trattabile &times; durezza rimossa, per ciclo. Es. 450 m&sup3;&middot;&deg;f.</span></span></label><div class="uwrap"><input type="number" id="s-cap" value="450" step="10" min="1"><span class="u">m&sup3;&middot;&deg;f</span></div></div>
+        <div class="frow" style="margin-top:10px;"><label>Volume della resina<span class="q" tabindex="0">?<span class="tip">Volume di resina dell'addolcitore, come indicato in scheda tecnica (parametro, non calcolato).</span></span></label><div class="uwrap"><input type="number" id="s-vres" value="100" step="5" min="0"><span class="u">L</span></div></div>
+        <div class="frow" style="margin-top:10px;"><label>Frequenza di rigenerazione<span class="q" tabindex="0">?<span class="tip">Ogni quanti giorni si rigenera la resina. Obiettivo di progetto: 3 giorni.</span></span></label><div class="uwrap"><input type="number" id="s-freq" value="3" step="1" min="1"><span class="u">giorni</span></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ct">Risultati e verifiche — addolcimento</div>
+      <div class="mgrid" id="s-metrics"></div>
+      <div class="checks" id="s-checks"></div>
+    </div>
+
+    <div class="card">
+      <div class="ct">Riferimenti normativi</div>
+      <div class="refbox">
+        <span class="ref">D.Lgs 18/2023 — acque destinate al consumo umano</span>
+        <span class="ref">DM 25/2012 — apparecchiature trattamento acque potabili</span>
+        <span class="ref">UNI 8065:2019 — impianti termici civili</span>
+        <span class="ref">DM 26/06/2015 — requisiti minimi</span>
+        <span class="ref">UNI EN 973 — sale rigenerante</span>
+        <span class="ref">D.Lgs 152/2006 — scarichi</span>
+      </div>
+      <ul class="reflist">
+        <li><b>Uso potabile:</b> il D.Lgs 18/2023 raccomanda valori minimi di Ca, Mg, durezza e residuo fisso per le acque addolcite (evitare durezze troppo basse, acqua aggressiva). Intervallo consigliato 15–50 &deg;F.</li>
+        <li><b>Impianti termici (UNI 8065:2019):</b> addolcimento obbligatorio per potenza &gt; 100 kW con durezza &gt; 15 &deg;F; durezza di impianto 5–15 &deg;F. Non sostituisce il condizionamento chimico.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============ OSMOSI ============ -->
+  <div id="panel-ro" class="panel">
+    <div class="g2">
+      <div class="card">
+        <div class="ct"><span class="idx">A.</span>Fonte e qualit&agrave; dell'acqua</div>
+        <label>Tipo di acqua<span class="q" tabindex="0">?<span class="tip">Imposta i valori tipici di flux, permeabilit&agrave;, recupero, reiezione e recupero energia. Modificabili.</span></span></label>
+        <select id="r-tipo" onchange="applyPreset();recalc();">
+          <option value="pozzo">Pozzo / falda (salmastra)</option>
+          <option value="rete">Acquedotto / rete</option>
+          <option value="superficiale">Superficiale (fiume/lago)</option>
+          <option value="mare" selected>Acqua di mare</option>
+        </select>
+        <div class="frow" style="margin-top:10px;"><label>Salinit&agrave; alimento (TDS)<span class="q" tabindex="0">?<span class="tip">Solidi disciolti totali. In assenza di analisi: TDS &asymp; conducibilit&agrave; [&micro;S/cm] &times; 0,64.</span></span></label><div class="uwrap"><input type="number" id="r-tds" value="37000" step="100" min="0"><span class="u">mg/L</span></div></div>
+        <div class="frow" style="margin-top:10px;"><label>Temperatura di progetto<span class="q" tabindex="0">?<span class="tip">Temperatura minima dell'acqua. A bassa T serve pi&ugrave; pressione (TCF &asymp; 1,03^(25&minus;T)).</span></span></label><div class="uwrap"><input type="number" id="r-temp" value="15" step="1" min="1"><span class="u">&deg;C</span></div></div>
+        <div class="frow" style="margin-top:10px;"><label>Reiezione salina membrana<span class="q" tabindex="0">?<span class="tip">Frazione di sali trattenuti (da scheda). Mare 99–99,7%, salmastra 98–99,5%.</span></span></label><div class="uwrap"><input type="number" id="r-rej" value="99.5" step="0.1" min="80" max="99.9"><span class="u">%</span></div></div>
+      </div>
+      <div class="card">
+        <div class="ct"><span class="idx">B.</span>Produzione richiesta</div>
+        <div class="frow"><label>Produzione di permeato<span class="q" tabindex="0">?<span class="tip">Produzione giornaliera richiesta di acqua osmotizzata.</span></span></label><div class="uwrap"><input type="number" id="r-vperm" value="200" step="5" min="0"><span class="u">m&sup3;/g</span></div></div>
+        <div class="frow" style="margin-top:10px;"><label>Ore di esercizio<span class="q" tabindex="0">?<span class="tip">Ore effettive/giorno, escludendo flussaggi e lavaggi (tipico 20–22 h).</span></span></label><div class="uwrap"><input type="number" id="r-hours" value="22" step="0.5" min="1" max="24"><span class="u">h/g</span></div></div>
+        <div class="frow" style="margin-top:10px;"><label>Recupero di progetto (Y)<span class="q" tabindex="0">?<span class="tip">Permeato &divide; alimento. Mare 35–45%, salmastra 50–80%.</span></span></label><div class="uwrap"><input type="number" id="r-rec" value="40" step="1" min="10" max="90"><span class="u">%</span></div></div>
+      </div>
+    </div>
+
+    <div class="g2">
+      <div class="card">
+        <div class="ct"><span class="idx">C.</span>Membrane e pompa</div>
+        <div class="frow"><label>Flusso di progetto (flux)<span class="q" tabindex="0">?<span class="tip">Permeato per m&sup2;. Mare 12–17, salmastra 18–24 L/m&sup2;h.</span></span></label><div class="uwrap"><input type="number" id="r-flux" value="14" step="0.5" min="5"><span class="u">L/m&sup2;h</span></div></div>
+        <div class="frow" style="margin-top:10px;"><label>Superficie per elemento<span class="q" tabindex="0">?<span class="tip">Area attiva di un elemento (scheda). 8&Prime; &asymp; 37–41 m&sup2;; 4&Prime; &asymp; 7,6 m&sup2;.</span></span></label><div class="uwrap"><input type="number" id="r-area" value="41" step="0.1" min="1"><span class="u">m&sup2;</span></div></div>
+        <div class="frow" style="margin-top:10px;"><label>Elementi per vessel<span class="q" tabindex="0">?<span class="tip">Membrane in serie per pressure vessel (tipico 6–8).</span></span></label><div class="uwrap"><input type="number" id="r-elv" value="6" step="1" min="1"><span class="u">n</span></div></div>
+        <div class="frow" style="margin-top:10px;"><label>Permeabilit&agrave; membrana<span class="q" tabindex="0">?<span class="tip">Flux &divide; pressione netta. Mare &asymp; 1, salmastra &asymp; 3–5 L/m&sup2;h&middot;bar.</span></span></label><div class="uwrap"><input type="number" id="r-permx" value="1" step="0.1" min="0.3"><span class="u">LMH/bar</span></div></div>
+        <div class="frow" style="margin-top:10px;"><label>Rendimento pompa AP<span class="q" tabindex="0">?<span class="tip">Rendimento idraulico della pompa ad alta pressione.</span></span></label><div class="uwrap"><input type="number" id="r-eta" value="75" step="1" min="30" max="92"><span class="u">%</span></div></div>
+        <div class="frow" style="margin-top:10px;"><label>Recupero energia (ERD)<span class="q" tabindex="0">?<span class="tip">Efficienza del recupero energia dal concentrato. 0 = assente. Mare 90–96%.</span></span></label><div class="uwrap"><input type="number" id="r-erd" value="92" step="1" min="0" max="98"><span class="u">%</span></div></div>
+      </div>
+      <div class="card">
+        <div class="ct"><span class="idx">D.</span>Scaling e boro (opzionale)</div>
+        <div class="frow"><label>pH alimento<span class="q" tabindex="0">?<span class="tip">pH dell'acqua di alimento (analisi). Per l'indice di Langelier del concentrato.</span></span></label><div class="uwrap"><input type="number" id="r-ph" value="8" step="0.1" min="0" max="14"><span class="u">pH</span></div></div>
+        <div class="frow" style="margin-top:10px;"><label>Durezza calcica<span class="q" tabindex="0">?<span class="tip">Durezza dovuta al solo calcio. &times;10 = mg/L CaCO&#8323;. Mare &asymp; 100 &deg;F.</span></span></label><div class="uwrap"><input type="number" id="r-ca" value="100" step="1" min="0"><span class="u">&deg;F</span></div></div>
+        <div class="frow" style="margin-top:10px;"><label>Alcalinit&agrave; totale<span class="q" tabindex="0">?<span class="tip">Alcalinit&agrave; totale. &times;10 = mg/L CaCO&#8323;. Mare &asymp; 12 &deg;F.</span></span></label><div class="uwrap"><input type="number" id="r-alk" value="12" step="1" min="0"><span class="u">&deg;F</span></div></div>
+        <div class="frow" style="margin-top:10px;"><label>Boro alimento<span class="q" tabindex="0">?<span class="tip">Boro nell'alimento. Mare tipico 4–5 mg/L.</span></span></label><div class="uwrap"><input type="number" id="r-boro" value="5" step="0.1" min="0"><span class="u">mg/L</span></div></div>
+        <div class="frow" style="margin-top:10px;"><label>Reiezione boro 1&deg; pass.<span class="q" tabindex="0">?<span class="tip">Reiezione a pH naturale (boro come acido borico neutro). SWRO 85–92%.</span></span></label><div class="uwrap"><input type="number" id="r-rb1" value="88" step="1" min="0" max="99"><span class="u">%</span></div></div>
+        <div class="frow" style="margin-top:10px;"><label>Reiezione boro 2&deg; pass.<span class="q" tabindex="0">?<span class="tip">Reiezione ad alto pH (~9,5–10,5): il boro diventa borato e viene trattenuto. &gt; 93%.</span></span></label><div class="uwrap"><input type="number" id="r-rb2" value="95" step="1" min="0" max="99.9"><span class="u">%</span></div></div>
+        <div class="frow" style="margin-top:10px;"><label>Limite boro potabile<span class="q" tabindex="0">?<span class="tip">D.Lgs 18/2023: boro 1,5 mg/L.</span></span></label><div class="uwrap"><input type="number" id="r-blim" value="1.5" step="0.1" min="0"><span class="u">mg/L</span></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ct">Risultati e verifiche — osmosi inversa</div>
+      <div class="mgrid" id="r-metrics"></div>
+      <div class="checks" id="r-checks"></div>
+      <div class="ibox">Stime da modello semplificato (bilancio di massa, Van 't Hoff con media logaritmica e polarizzazione, ERD a scambiatore di pressione). Da confermare con il software del costruttore membrane e l'analisi chimica completa.</div>
+    </div>
+
+    <div class="card">
+      <div class="ct">Riferimenti normativi</div>
+      <div class="refbox">
+        <span class="ref">D.Lgs 18/2023 — acque destinate al consumo umano</span>
+        <span class="ref">DM 25/2012 — apparecchiature trattamento acque potabili</span>
+        <span class="ref">D.Lgs 152/2006 — scarichi (concentrato)</span>
+      </div>
+      <ul class="reflist">
+        <li>Il permeato &egrave; aggressivo e povero di sali: per uso potabile prevedere <b>rimineralizzazione/miscelazione</b> (durezza, Ca, Mg, alcalinit&agrave;). Verificare i materiali a contatto (DM 25/2012).</li>
+        <li>Boro: limite potabile <b>1,5 mg/L</b> (D.Lgs 18/2023); se superato, secondo passaggio ad alto pH.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="file-input" accept=".acq,.json" style="display:none" onchange="leggiFileInput(this)">
+<div class="toast" id="toast"></div>
+<div id="report"></div>
+
+<script>
+(function(){
+  "use strict";
+  var activeSys='soft', fileHandle=null, lastSoft=null, lastRO=null;
+  var g=function(id){return document.getElementById(id);};
+  var val=function(id){var v=parseFloat(g(id).value);return isFinite(v)?v:0;};
+  var fmt=function(x,d){d=(d===undefined)?1:d;return isFinite(x)?x.toLocaleString('it-IT',{minimumFractionDigits:d,maximumFractionDigits:d}):'\u2013';};
+  var q=function(t){return '<span class="q r" tabindex="0">?<span class="tip">'+t+'</span></span>';};
+  var metric=function(label,v,unit,dec,hero,tip){
+    return '<div class="metric'+(hero?' hero':'')+'"><div class="mv">'+fmt(v,dec)+(unit?' <span class="u">'+unit+'</span>':'')+'</div><div class="ml">'+label+(tip?q(tip):'')+'</div></div>';
+  };
+  var box=function(t,h,m){var c={ok:'okbox',warn:'wbox',err:'ebox'}[t];return '<div class="'+c+'"><b>'+h+'</b> '+m+'</div>';};
+  var boxes=function(list){return list.map(function(f){return box(f.t,f.h,f.m);}).join('');};
+
+  (function(){g('c-data').value=new Date().toISOString().slice(0,10);})();
+
+  window.showSys=function(sys,btn){
+    activeSys=sys;
+    g('panel-soft').classList.toggle('active',sys==='soft');
+    g('panel-ro').classList.toggle('active',sys==='ro');
+    document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+    if(btn) btn.classList.add('active'); else g(sys==='soft'?'tab-soft':'tab-ro').classList.add('active');
+  };
+
+  // ---------- ADDOLCIMENTO ----------
+  function calcSoft(){
+    var Hin=val('s-hin'),Hout=val('s-hout'),Vday=val('s-vday'),Qp=val('s-qp'),
+        Cap=val('s-cap'),Vres=val('s-vres'),N=val('s-freq');
+    var dH=Math.max(Hin-Hout,0);
+    var fBypass=Hin>0?Math.min(Math.max(Hout/Hin,0),1):0;
+    var Qsoft=Qp*(1-fBypass);
+    var need=dH*Vday*N;
+    var Vcycle=dH>0?Cap/dH:0;
+    var auto=Vday>0?Vcycle/Vday:0;
+    var year=auto>0?365/auto:0;
+
+    var m='';
+    m+=metric('Capacit&agrave; di scambio necessaria',need,'m&sup3;&middot;&deg;f',0,true,'&Delta; durezza &times; consumo giornaliero &times; giorni. Scegli un addolcitore con capacit&agrave; &ge; a questo valore.');
+    m+=metric('Durezza da rimuovere (&Delta;)',dH,'&deg;F',1,false,'Durezza ingresso &minus; durezza uscita.');
+    m+=metric('By-pass (miscelazione)',fBypass*100,'%',1,false,'Durezza uscita &divide; durezza ingresso.');
+    m+=metric('Portata addolcita',Qsoft,'m&sup3;/h',2,false,'Portata di punta &times; (1 &minus; by-pass).');
+    m+=metric('Volume trattato per ciclo',Vcycle,'m&sup3;',1,false,'Capacit&agrave; di scambio &divide; &Delta; durezza.');
+    m+=metric('Autonomia effettiva',auto,'giorni',1,false,'Volume per ciclo &divide; consumo giornaliero.');
+    m+=metric('Rigenerazioni/anno',year,'n',0,false,'365 &divide; autonomia effettiva.');
+    g('s-metrics').innerHTML=m;
+
+    var f=[];
+    if(dH<=0) f.push({t:'err',h:'Nessuna rimozione.',m:'La durezza in uscita &egrave; &ge; a quella in ingresso: rivedi i valori.'});
+    else if(Cap>=need) f.push({t:'ok',h:'Capacit&agrave; adeguata.',m:'L\'addolcitore ('+fmt(Cap,0)+' m&sup3;&middot;&deg;f) copre il fabbisogno per rigenerazione ogni '+fmt(N,0)+' gg (autonomia '+fmt(auto,1)+' gg).'});
+    else f.push({t:'warn',h:'Capacit&agrave; insufficiente.',m:'Servono almeno '+fmt(need,0)+' m&sup3;&middot;&deg;f per '+fmt(N,0)+' gg. Con l\'addolcitore scelto l\'autonomia scende a '+fmt(auto,1)+' gg.'});
+    g('s-checks').innerHTML=boxes(f);
+
+    lastSoft={inp:{Hin:Hin,Hout:Hout,Vday:Vday,Qp:Qp,Cap:Cap,Vres:Vres,N:N},
+              out:{need:need,dH:dH,bypass:fBypass*100,Qsoft:Qsoft,Vcycle:Vcycle,auto:auto,year:year},checks:f};
+  }
+
+  // ---------- OSMOSI ----------
+  var PRESET={
+    pozzo:{tds:1500,rej:98.5,rec:70,flux:20,perm:4,erd:0,ph:7.5,ca:30,alk:25,boro:0.5},
+    rete:{tds:800,rej:98.5,rec:75,flux:22,perm:4.5,erd:0,ph:7.5,ca:25,alk:20,boro:0.2},
+    superficiale:{tds:500,rej:98,rec:60,flux:15,perm:3.5,erd:0,ph:7.8,ca:20,alk:15,boro:0.1},
+    mare:{tds:37000,rej:99.5,rec:40,flux:14,perm:1,erd:92,ph:8,ca:100,alk:12,boro:5}
+  };
+  var REC={pozzo:[50,80],rete:[55,85],superficiale:[45,65],mare:[35,45]};
+  var FLX={pozzo:[18,24],rete:[18,26],superficiale:[12,18],mare:[12,17]};
+  window.applyPreset=function(){
+    var p=PRESET[g('r-tipo').value];if(!p)return;
+    g('r-tds').value=p.tds;g('r-rej').value=p.rej;g('r-rec').value=p.rec;g('r-flux').value=p.flux;
+    g('r-permx').value=p.perm;g('r-erd').value=p.erd;g('r-ph').value=p.ph;g('r-ca').value=p.ca;
+    g('r-alk').value=p.alk;g('r-boro').value=p.boro;
+  };
+
+  function calcRO(){
+    var tipo=g('r-tipo').value;
+    var TDS=val('r-tds'),T=val('r-temp'),R=val('r-rej')/100,Vperm=val('r-vperm'),hours=val('r-hours'),
+        Y=val('r-rec')/100,J=val('r-flux'),Ael=val('r-area'),elv=val('r-elv'),Aw=val('r-permx'),
+        eta=val('r-eta')/100,erd=val('r-erd')/100;
+    var Qp=hours>0?Vperm/hours:0,Qfeed=Y>0?Qp/Y:0,Qconc=Qfeed-Qp;
+    var CF=(Y<1)?(1-Y*(1-R))/(1-Y):0,Cconc=TDS*CF;
+    var Cavg=(Y>0&&Y<1)?TDS*Math.log(1/(1-Y))/Y:TDS,beta=1.1,Cperm=Cavg*(1-R);
+    var K=0.0008,piAvg=K*Cavg*beta,dPi=piAvg-K*Cperm;
+    var TCF=Math.pow(1.03,25-T),NDP=Aw>0?(J/Aw)*TCF:0,dPloss=1.5,Pfeed=NDP+dPi+dPloss;
+    var Atot=J>0?Qp*1000/J:0,Nel=Ael>0?Math.ceil(Atot/Ael):0,Nvessel=elv>0?Math.ceil(Nel/elv):0;
+    var Pgross=eta>0?Qfeed*Pfeed/(36*eta):0,Enet;
+    if(erd>0){var Php=eta>0?Qp*Pfeed/(36*eta):0,Pb=eta>0?Qconc*(Pfeed*(1-erd)+dPloss)/(36*eta):0;Enet=Php+Pb;}else Enet=Pgross;
+    var Prec=Math.max(Pgross-Enet,0),SEC=Qp>0?Enet/Qp:0;
+
+    function log10(x){return Math.log(x)/Math.LN10;}
+    var pHf=val('r-ph'),CaF=val('r-ca')*10,AlkF=val('r-alk')*10;
+    var CaC=CaF*CF,AlkC=AlkF*CF,pHc=pHf+(CF>0?log10(CF):0),LSI=NaN;
+    if(CaC>0&&AlkC>0&&Cconc>0){
+      var A=(log10(Cconc)-1)/10,Bt=-13.12*log10(T+273)+34.55,Cc=log10(CaC)-0.4,Dd=log10(AlkC);
+      LSI=pHc-((9.3+A+Bt)-(Cc+Dd));
+    }
+    var Bf=val('r-boro'),Rb1=val('r-rb1')/100,Rb2=val('r-rb2')/100,Blim=val('r-blim');
+    var Bp1=Bf*(1-Rb1),Bp2=Bp1*(1-Rb2),f2=0,Bfin=Bp1;
+    if(Bf>0&&Bp1>Blim){if(Bp2>=Blim){f2=1;Bfin=Bp2;}else{f2=(Bp1-Blim)/(Bp1-Bp2);Bfin=Blim;}}
+
+    var m='';
+    m+=metric('Elementi di membrana',Nel,'elem.',0,true,'Superficie totale &divide; superficie per elemento (per eccesso).');
+    m+=metric('Vessel',Nvessel,'n',0,false,'Elementi &divide; elementi per vessel (per eccesso).');
+    m+=metric('Superficie di membrana',Atot,'m&sup2;',0,false,'Portata permeato &divide; flux.');
+    m+=metric('Portata permeato',Qp,'m&sup3;/h',2,false,'Produzione giornaliera &divide; ore di esercizio.');
+    m+=metric('Portata alimento',Qfeed,'m&sup3;/h',2,false,'Permeato &divide; recupero.');
+    m+=metric('Portata concentrato',Qconc,'m&sup3;/h',2,false,'Alimento &minus; permeato.');
+    m+=metric('Fattore di concentrazione',CF,'&times;',2,false,'(1 &minus; Y&middot;(1&minus;R)) &divide; (1 &minus; Y).');
+    m+=metric('TDS concentrato',Cconc,'mg/L',0,false,'TDS alimento &times; fattore di concentrazione.');
+    m+=metric('TDS permeato',Cperm,'mg/L',0,false,'&asymp; TDS medio alimento &times; (1 &minus; reiezione).');
+    m+=metric('Pressione osmotica media',piAvg,'bar',1,false,'&asymp; 0,8 bar / 1000 mg/L, con polarizzazione 1,1.');
+    m+=metric('Pressione di alimento',Pfeed,'bar',1,false,'Pressione netta (flux&divide;permeabilit&agrave;&times;TCF) + &Delta;&pi; + perdite.');
+    m+=metric('Potenza assorbita (netta)',Enet,'kW',1,false,'Al netto del recupero ERD.');
+    m+=metric('Risparmio da ERD',Prec,'kW',1,false,'Potenza senza recupero &minus; potenza netta.');
+    m+=metric('Consumo specifico (SEC)',SEC,'kWh/m&sup3;',2,false,'Energia netta &divide; permeato.');
+    m+=metric('LSI concentrato',LSI,'',2,false,'Indice di Langelier del concentrato. &gt; 0 = incrostante.');
+    m+=metric('Boro permeato 1&deg; pass.',Bf>0?Bp1:NaN,'mg/L',2,false,'Boro alimento &times; (1 &minus; reiezione 1&deg; pass.).');
+    m+=metric('Boro al 2&deg; passaggio',f2*100,'%',0,false,'Frazione di permeato da ritrattare per rientrare nel limite.');
+    m+=metric('Boro finale (miscelato)',Bf>0?Bfin:NaN,'mg/L',2,false,'Boro dell\'acqua prodotta dopo miscelazione.');
+    g('r-metrics').innerHTML=m;
+
+    var f=[];
+    var rr=REC[tipo],fl=FLX[tipo],Yp=Y*100;
+    if(Yp<rr[0]) f.push({t:'warn',h:'Recupero basso.',m:'Per questa fonte tipico '+rr[0]+'&ndash;'+rr[1]+'%: pi&ugrave; scarto.'});
+    else if(Yp>rr[1]) f.push({t:'err',h:'Recupero elevato: rischio scaling.',m:'Oltre '+rr[1]+'% aumenta la precipitazione nel concentrato. Verificare LSI/antiscalante.'});
+    else f.push({t:'ok',h:'Recupero coerente con la fonte.',m:'Entro '+rr[0]+'&ndash;'+rr[1]+'% tipico.'});
+    if(J<fl[0]||J>fl[1]) f.push({t:'warn',h:'Flux fuori dal tipico.',m:'Consigliato '+fl[0]+'&ndash;'+fl[1]+' L/m&sup2;h (impostato '+fmt(J,1)+').'});
+    if(tipo==='mare'&&erd===0) f.push({t:'warn',h:'Recupero energia assente.',m:'Nelle dissalazioni marine l\'ERD dimezza circa il consumo.'});
+    if(T<12) f.push({t:'warn',h:'Acqua fredda.',m:'A '+fmt(T,0)+' &deg;C il fabbisogno di pressione cresce (&asymp; '+fmt(TCF,2)+'&times; sul NDP).'});
+    if(Cperm>500) f.push({t:'warn',h:'Permeato salino.',m:'TDS permeato &gt; 500 mg/L: valutare doppio passaggio o maggiore reiezione.'});
+    if(isFinite(LSI)){
+      if(LSI>0){var mm='Concentrato incrostante (LSI '+(LSI>0?'+':'')+fmt(LSI,2)+'): prevedere antiscalante e/o ridurre il recupero.';if(tipo==='mare')mm+=' Per l\'acqua di mare l\'indice corretto &egrave; lo Stiff-Davis; l\'LSI &egrave; solo indicativo.';f.push({t:'warn',h:'Rischio scaling (LSI).',m:mm});}
+      else f.push({t:'ok',h:'Concentrato non incrostante.',m:'LSI '+fmt(LSI,2)+' (&le; 0). Verificare solfati e silice.'});
+    } else f.push({t:'warn',h:'LSI non calcolabile.',m:'Inserisci pH, durezza calcica e alcalinit&agrave; dell\'alimento.'});
+    if(Bf>0){
+      if(Bp1<=Blim) f.push({t:'ok',h:'Boro: singolo passaggio sufficiente.',m:'Permeato '+fmt(Bp1,2)+' mg/L &le; '+fmt(Blim,1)+' mg/L (D.Lgs 18/2023).'});
+      else if(Bfin<=Blim&&f2<1) f.push({t:'warn',h:'Boro: serve 2&deg; passaggio parziale.',m:'1&deg; passaggio '+fmt(Bp1,2)+' mg/L. Ritrattare il '+fmt(f2*100,0)+'% del permeato ad alto pH (~9,5–10,5), poi miscelare.'});
+      else f.push({t:'err',h:'Boro: un 2&deg; passaggio non basta.',m:'Anche col 2&deg; passaggio completo si resta &gt; '+fmt(Blim,1)+' mg/L: aumentare pH/reiezione.'});
+    }
+    f.push({t:'ok',h:'Rimineralizzazione consigliata.',m:'Per uso potabile ripristinare durezza e alcalinit&agrave; del permeato (D.Lgs 18/2023).'});
+    g('r-checks').innerHTML=boxes(f);
+
+    lastRO={tipo:tipo,
+      inp:{TDS:TDS,T:T,R:val('r-rej'),Vperm:Vperm,hours:hours,Y:Yp,J:J,Ael:Ael,elv:elv,Aw:Aw,eta:val('r-eta'),erd:val('r-erd'),pH:pHf,Ca:val('r-ca'),Alk:val('r-alk'),Bf:Bf,Rb1:val('r-rb1'),Rb2:val('r-rb2'),Blim:Blim},
+      out:{Nel:Nel,Nvessel:Nvessel,Atot:Atot,Qp:Qp,Qfeed:Qfeed,Qconc:Qconc,CF:CF,Cconc:Cconc,Cperm:Cperm,piAvg:piAvg,Pfeed:Pfeed,Enet:Enet,Prec:Prec,SEC:SEC,LSI:LSI,Bp1:Bp1,Bp2:Bp2,f2:f2*100,Bfin:Bfin},checks:f};
+  }
+
+  window.recalc=function(){calcSoft();calcRO();};
+
+  /* ============ SALVA / APRI PROGETTO ============ */
+  var IDS=['c-numero','c-progetto','c-cliente','c-ubicazione','c-progettista','c-data','c-revisione','c-note',
+    's-hin','s-hout','s-vday','s-qp','s-cap','s-vres','s-freq',
+    'r-tipo','r-tds','r-temp','r-rej','r-vperm','r-hours','r-rec','r-flux','r-area','r-elv','r-permx','r-eta','r-erd','r-ph','r-ca','r-alk','r-boro','r-rb1','r-rb2','r-blim'];
+  function raccogliStato(){var o={_tipo:'ACQUA project',_ver:1,sistema:activeSys,dati:{}};IDS.forEach(function(id){var el=g(id);if(el)o.dati[id]=el.value;});return o;}
+  function ripristinaStato(s){
+    if(!s||s._tipo!=='ACQUA project'){toast('File non valido.','err');return false;}
+    IDS.forEach(function(id){if(s.dati&&s.dati[id]!==undefined&&g(id))g(id).value=s.dati[id];});
+    if(s.sistema)showSys(s.sistema);
+    updateBadge();recalc();return true;
+  }
+  function nomeFile(){
+    var num=(g('c-numero').value.trim()||'').replace(/[^a-z0-9_\-]/gi,'_');
+    var prj=(g('c-progetto').value.trim()||'').replace(/[^a-z0-9_\-]/gi,'_').slice(0,30);
+    return([num,prj].filter(Boolean).join('_')||'progetto_trattamento_acque')+'.acq';
+  }
+  window.salvaProgetto=async function(){
+    var blob=new Blob([JSON.stringify(raccogliStato(),null,2)],{type:'application/json'});
+    if(fileHandle){try{var w=await fileHandle.createWritable();await w.write(blob);await w.close();toast('\u2713 Salvato: '+fileHandle.name,'ok');return;}catch(e){fileHandle=null;}}
+    await salvaComeProgetto();
+  };
+  window.salvaComeProgetto=async function(){
+    var blob=new Blob([JSON.stringify(raccogliStato(),null,2)],{type:'application/json'}),fname=nomeFile();
+    if('showSaveFilePicker' in window){
+      try{fileHandle=await window.showSaveFilePicker({suggestedName:fname,types:[{description:'Progetto trattamento acque',accept:{'application/json':['.acq','.json']}}]});
+        var w=await fileHandle.createWritable();await w.write(blob);await w.close();
+        g('path-display').value=fileHandle.name;g('path-info').textContent='Salvato: '+fileHandle.name;toast('\u2713 Salvato: '+fileHandle.name,'ok');
+      }catch(e){if(e.name!=='AbortError')toast('Errore salvataggio.','err');}
+    } else {
+      var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;a.click();
+      toast('\u2713 Scaricato: '+fname,'ok',4000);g('path-display').value='Download: '+fname;
+    }
+  };
+  window.apriProgetto=async function(){
+    if('showOpenFilePicker' in window){
+      try{var arr=await window.showOpenFilePicker({types:[{description:'Progetto trattamento acque',accept:{'application/json':['.acq','.json']}}]});
+        var fh=arr[0];fileHandle=fh;var file=await fh.getFile(),stato=JSON.parse(await file.text());
+        if(ripristinaStato(stato)){g('path-display').value=fh.name;g('path-info').textContent='Aperto: '+fh.name;toast('\u2713 Caricato: '+fh.name,'ok');}
+      }catch(e){if(e.name!=='AbortError')toast('Errore apertura.','err');}
+    } else g('file-input').click();
+  };
+  window.leggiFileInput=function(input){
+    var file=input.files[0];if(!file)return;
+    var r=new FileReader();
+    r.onload=function(e){try{var s=JSON.parse(e.target.result);if(ripristinaStato(s)){g('path-display').value=file.name;toast('\u2713 Caricato: '+file.name,'ok');}}catch(ex){toast('File non valido.','err');}};
+    r.readAsText(file);input.value='';
+  };
+  window.nuovoProgetto=function(){
+    if(!confirm('Nuovo progetto? I dati non salvati andranno persi.'))return;
+    fileHandle=null;
+    IDS.forEach(function(id){var el=g(id);if(!el)return;if(el.tagName==='SELECT')el.selectedIndex=el.id==='r-tipo'?3:0;else if(el.type==='date')el.value=new Date().toISOString().slice(0,10);else el.value='';});
+    g('c-revisione').value='Rev. 0';
+    // ripristina i default numerici
+    var DEF={'s-hin':35,'s-hout':15,'s-vday':12,'s-qp':3,'s-cap':450,'s-vres':100,'s-freq':3,
+      'r-temp':15,'r-hours':22,'r-area':41,'r-elv':6,'r-eta':75,'r-rb1':88,'r-rb2':95,'r-blim':1.5};
+    Object.keys(DEF).forEach(function(k){g(k).value=DEF[k];});
+    applyPreset();g('path-display').value='';updateBadge();recalc();toast('Nuovo progetto.','ok');
+  };
+
+  window.updateBadge=function(){
+    var num=g('c-numero').value.trim(),prj=g('c-progetto').value.trim();
+    g('prj-badge').textContent=(num||prj)?((num?num+' — ':'')+prj||'Progetto senza nome'):'Nessun progetto';
+  };
+  window.toast=function(msg,tipo,dur){tipo=tipo||'ok';dur=dur||2800;var t=g('toast');t.textContent=msg;t.className='toast '+tipo+' show';setTimeout(function(){t.className='toast';},dur);};
+
+  /* ============ REPORT / STAMPA ============ */
+  function esitoLabel(t){return {ok:['Conforme','#1b7a43'],warn:['Attenzione','#8a5a00'],err:['Non conforme','#a3231d']}[t];}
+  function metaTable(){
+    var C={num:g('c-numero').value,prj:g('c-progetto').value,cli:g('c-cliente').value,ubi:g('c-ubicazione').value,pro:g('c-progettista').value,dat:g('c-data').value,rev:g('c-revisione').value,note:g('c-note').value};
+    function r(k,v){return '<tr><td class="k">'+k+'</td><td>'+(v||'&mdash;')+'</td></tr>';}
+    return '<table class="rep-meta">'+r('Commessa',C.num)+r('Progetto',C.prj)+r('Cliente',C.cli)+r('Ubicazione',C.ubi)+r('Progettista',C.pro)+r('Data',C.dat)+r('Revisione',C.rev)+(C.note?r('Note',C.note):'')+'</table>';
+  }
+  function tbl(rows){return '<table class="rep-t">'+rows.map(function(x){return '<tr><td class="k">'+x[0]+'</td><td class="v">'+x[1]+'</td></tr>';}).join('')+'</table>';}
+  function chkTbl(checks){return '<table class="rep-chk">'+checks.map(function(c){var e=esitoLabel(c.t);return '<tr><td class="e" style="color:'+e[1]+'">'+e[0]+'</td><td><b>'+strip(c.h)+'</b> '+strip(c.m)+'</td></tr>';}).join('')+'</table>';}
+  function strip(s){return s.replace(/<[^>]+>/g,'');}
+
+  function reportSoft(){
+    var d=lastSoft;if(!d)return'';
+    var i=d.inp,o=d.out;
+    var inp=[['Durezza totale in ingresso',fmt(i.Hin,1)+' °F'],['Durezza desiderata in uscita',fmt(i.Hout,1)+' °F'],
+      ['Consumo giornaliero',fmt(i.Vday,1)+' m³/g'],['Portata di punta',fmt(i.Qp,2)+' m³/h'],
+      ['Capacità di scambio addolcitore',fmt(i.Cap,0)+' m³·°f'],['Volume della resina',fmt(i.Vres,0)+' L'],
+      ['Frequenza di rigenerazione',fmt(i.N,0)+' giorni']];
+    var out=[['Capacità di scambio necessaria',fmt(o.need,0)+' m³·°f'],['Durezza da rimuovere (Δ)',fmt(o.dH,1)+' °F'],
+      ['By-pass (miscelazione)',fmt(o.bypass,1)+' %'],['Portata addolcita',fmt(o.Qsoft,2)+' m³/h'],
+      ['Volume trattato per ciclo',fmt(o.Vcycle,1)+' m³'],['Autonomia effettiva',fmt(o.auto,1)+' giorni'],
+      ['Rigenerazioni/anno',fmt(o.year,0)]];
+    return '<div class="rep-h1">Relazione di dimensionamento — Addolcimento</div>'+
+      '<div class="rep-sub">Scambio ionico su resina cationica · D.Lgs 18/2023 · UNI 8065:2019 · DM 25/2012</div>'+
+      metaTable()+
+      '<div class="rep-sec">Dati di progetto</div>'+tbl(inp)+
+      '<div class="rep-sec">Risultati di calcolo</div>'+tbl(out)+
+      '<div class="rep-sec">Verifiche</div>'+chkTbl(d.checks)+
+      '<div class="rep-sec">Riferimenti normativi</div><table class="rep-t"><tr><td>D.Lgs 18/2023 (acque potabili) · DM 25/2012 (apparecchiature) · UNI 8065:2019 (impianti termici, durezza 5–15 °F, addolcimento &gt;100 kW e &gt;15 °F) · DM 26/06/2015 · UNI EN 973 (sale) · D.Lgs 152/2006 (scarichi salamoia).</td></tr></table>'+
+      repFoot();
+  }
+  function reportRO(){
+    var d=lastRO;if(!d)return'';
+    var i=d.inp,o=d.out,TIPO={pozzo:'Pozzo/falda salmastra',rete:'Acquedotto/rete',superficiale:'Superficiale',mare:'Acqua di mare'}[d.tipo];
+    var inp=[['Tipo di acqua',TIPO],['Salinità alimento (TDS)',fmt(i.TDS,0)+' mg/L'],['Temperatura di progetto',fmt(i.T,0)+' °C'],
+      ['Reiezione salina membrana',fmt(i.R,1)+' %'],['Produzione di permeato',fmt(i.Vperm,0)+' m³/g'],['Ore di esercizio',fmt(i.hours,1)+' h/g'],
+      ['Recupero di progetto (Y)',fmt(i.Y,0)+' %'],['Flux di progetto',fmt(i.J,1)+' L/m²h'],['Superficie per elemento',fmt(i.Ael,1)+' m²'],
+      ['Elementi per vessel',fmt(i.elv,0)],['Permeabilità membrana',fmt(i.Aw,1)+' LMH/bar'],['Rendimento pompa AP',fmt(i.eta,0)+' %'],
+      ['Recupero energia (ERD)',fmt(i.erd,0)+' %'],['pH / Durezza Ca / Alcalinità',fmt(i.pH,1)+' · '+fmt(i.Ca,0)+' °F · '+fmt(i.Alk,0)+' °F'],
+      ['Boro alimento / limite',fmt(i.Bf,2)+' / '+fmt(i.Blim,1)+' mg/L']];
+    var out=[['Elementi di membrana',fmt(o.Nel,0)],['Vessel',fmt(o.Nvessel,0)],['Superficie di membrana totale',fmt(o.Atot,0)+' m²'],
+      ['Portata permeato',fmt(o.Qp,2)+' m³/h'],['Portata alimento',fmt(o.Qfeed,2)+' m³/h'],['Portata concentrato',fmt(o.Qconc,2)+' m³/h'],
+      ['Fattore di concentrazione',fmt(o.CF,2)+' ×'],['TDS concentrato',fmt(o.Cconc,0)+' mg/L'],['TDS permeato (stimato)',fmt(o.Cperm,0)+' mg/L'],
+      ['Pressione osmotica media',fmt(o.piAvg,1)+' bar'],['Pressione di alimento richiesta',fmt(o.Pfeed,1)+' bar'],
+      ['Potenza assorbita (netta)',fmt(o.Enet,1)+' kW'],['Risparmio da ERD',fmt(o.Prec,1)+' kW'],['Consumo specifico (SEC)',fmt(o.SEC,2)+' kWh/m³'],
+      ['LSI concentrato',isFinite(o.LSI)?(o.LSI>0?'+':'')+fmt(o.LSI,2):'n.d.'],['Boro permeato 1° passaggio',fmt(o.Bp1,2)+' mg/L'],
+      ['Frazione al 2° passaggio',fmt(o.f2,0)+' %'],['Boro finale (miscelato)',fmt(o.Bfin,2)+' mg/L']];
+    return '<div class="rep-h1">Relazione di dimensionamento — Osmosi inversa</div>'+
+      '<div class="rep-sub">Dissalazione/desalinizzazione a membrana · D.Lgs 18/2023 · DM 25/2012 · D.Lgs 152/2006</div>'+
+      metaTable()+
+      '<div class="rep-sec">Dati di progetto</div>'+tbl(inp)+
+      '<div class="rep-sec">Risultati di calcolo</div>'+tbl(out)+
+      '<div class="rep-sec">Verifiche</div>'+chkTbl(d.checks)+
+      '<div class="rep-sec">Note</div><table class="rep-t"><tr><td>Stime da modello semplificato (bilancio di massa, Van \'t Hoff con media logaritmica e polarizzazione, ERD a scambiatore di pressione). Da confermare con il software del costruttore membrane e l\'analisi chimica completa. Per uso potabile prevedere rimineralizzazione del permeato (D.Lgs 18/2023).</td></tr></table>'+
+      repFoot();
+  }
+  function repFoot(){
+    return '<div class="rep-foot"><div>'+(g('c-progettista').value||'')+'</div><div>'+(g('c-data').value||'')+' · '+(g('c-revisione').value||'')+'</div></div>'+
+      '<div class="rep-firma">Timbro e firma</div>';
+  }
+  window.stampaReport=function(){
+    recalc();
+    g('report').innerHTML=(activeSys==='soft')?reportSoft():reportRO();
+    window.print();
+  };
+
+  /* init */
+  document.querySelectorAll('input[type="number"], select').forEach(function(el){
+    el.addEventListener('input',recalc);el.addEventListener('change',recalc);
+  });
+  updateBadge();recalc();
+})();
+</script>
+</body>
+</html>

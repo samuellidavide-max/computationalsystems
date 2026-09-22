@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dimensionamento canali d'aria — Reti aerauliche</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--pr:#1a3a5c;--ac:#e8612c;--ac2:#2b8a6e;--sf:#f4f2ed;--cd:#faf9f7;--bd:#d4cfc7;--tx:#1c1a17;--mu:#7a7570;--dg:#c0392b;--ok:#27ae60;}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--sf);color:var(--tx);font-size:14px;}
+.app{max-width:1140px;margin:0 auto;padding:16px;}
+.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid var(--pr);flex-wrap:wrap;gap:10px;}
+.hdr-left{display:flex;align-items:baseline;gap:12px;}
+.hdr h1{font-size:17px;font-weight:500;color:var(--pr);}
+.hdr .sub{font-size:11px;color:var(--mu);font-family:'IBM Plex Mono',monospace;}
+.hdr-right{display:flex;align-items:center;gap:8px;}
+.prj-badge{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--mu);background:#ece9e3;border-radius:3px;padding:3px 8px;max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tabs{display:flex;border-bottom:1.5px solid var(--bd);margin-bottom:20px;}
+.tab{padding:8px 18px;font-size:13px;border:none;background:none;cursor:pointer;color:var(--mu);border-bottom:2px solid transparent;margin-bottom:-1.5px;transition:all .15s;}
+.tab.active{color:var(--ac);border-bottom-color:var(--ac);font-weight:500;}
+.tab:hover:not(.active){color:var(--tx);}
+.panel{display:none;}.panel.active{display:block;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.card{background:var(--cd);border:1px solid var(--bd);border-radius:6px;padding:16px;}
+.ct{font-size:11px;font-weight:500;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;}
+label{font-size:12px;color:var(--mu);display:block;margin-bottom:4px;margin-top:10px;}
+label:first-child{margin-top:0;}
+input[type=text],input[type=number],input[type=date],select,textarea{width:100%;padding:7px 10px;border:1px solid var(--bd);border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:13px;background:#fff;color:var(--tx);outline:none;transition:border .15s;}
+textarea{font-family:'IBM Plex Sans',sans-serif;font-size:12px;resize:vertical;}
+input:focus,select:focus,textarea:focus{border-color:var(--pr);}
+.btn{padding:8px 16px;border:none;border-radius:4px;font-size:13px;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;transition:all .15s;font-weight:400;}
+.bp{background:var(--pr);color:#fff;}.bp:hover{background:#1e4a72;}
+.ba{background:var(--ac);color:#fff;}.ba:hover{background:#d4541f;}
+.bg{background:#217346;color:#fff;}.bg:hover{background:#1a5c38;}
+.bd2{background:#fff;color:var(--dg);border:1px solid #e0b0ae;}.bd2:hover{background:#fdf0ef;}
+.bsave{background:#5b4a9e;color:#fff;}.bsave:hover{background:#4a3a8a;}
+.bopen{background:#fff;color:var(--pr);border:1px solid var(--pr);}.bopen:hover{background:#eef3f8;}
+.bsm{padding:5px 10px;font-size:12px;}
+.circ-block{border-radius:6px;margin-bottom:16px;overflow:hidden;}
+.circ-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;color:#fff;font-size:13px;font-weight:500;}
+.circ-nome{display:flex;align-items:center;gap:10px;}
+.circ-actions{display:flex;gap:6px;}
+.el-row{background:#fff;border:1px solid var(--bd);border-radius:5px;padding:12px;margin-bottom:8px;}
+.el-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.el-tag{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.7px;padding:2px 7px;border-radius:3px;}
+.tag-ogg{background:#e6f2ee;color:var(--ac2);}
+.el-name{font-size:13px;font-weight:500;font-family:'IBM Plex Mono',monospace;color:var(--tx);}
+.fg{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:8px;}
+.fi{display:flex;align-items:center;gap:6px;font-size:12px;}
+.fi input{width:44px;padding:3px 5px;font-size:12px;}
+.metric{background:#fff;border:1px solid var(--bd);border-radius:4px;padding:10px 12px;}
+.mv{font-size:18px;font-family:'IBM Plex Mono',monospace;font-weight:500;color:var(--pr);}
+.ml{font-size:11px;color:var(--mu);margin-top:2px;}
+.badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:11px;font-family:'IBM Plex Mono',monospace;}
+.bok{background:#d4edda;color:#155724;}.bwn{background:#fff3cd;color:#856404;}.ber{background:#f8d7da;color:#721c24;}
+.ibox{background:#e8f4f8;border-left:3px solid #2980b9;padding:10px 12px;border-radius:0 4px 4px 0;font-size:12px;color:#1a4a6b;margin-top:12px;line-height:1.6;}
+.wbox{background:#fef9e7;border-left:3px solid #f39c12;padding:10px 12px;border-radius:0 4px 4px 0;font-size:12px;color:#7e5a00;margin-top:8px;}
+.sbox{background:#f0eaf8;border-left:3px solid #7c5cbf;padding:10px 12px;border-radius:0 4px 4px 0;font-size:12px;color:#4a3070;margin-top:8px;}
+.vbar{height:6px;border-radius:3px;background:var(--bd);margin-top:4px;}
+.vfill{height:6px;border-radius:3px;}
+.rtable{width:100%;border-collapse:collapse;font-size:12px;}
+.rtable th{background:var(--pr);color:#fff;padding:7px 10px;text-align:left;font-weight:500;font-size:11px;}
+.rtable td{padding:7px 10px;border-bottom:1px solid var(--bd);font-family:'IBM Plex Mono',monospace;}
+.rtable tr:hover td{background:#f0ede8;}
+.circ-result{border-radius:8px;margin-bottom:16px;overflow:hidden;}
+.circ-result-hdr{padding:12px 16px;color:#fff;display:flex;justify-content:space-between;align-items:center;}
+.critico-banner{background:#f1c40f;color:#5a4000;font-size:12px;font-weight:500;padding:5px 16px;text-align:center;letter-spacing:.3px;}
+.sumbox-final{background:var(--pr);color:#fff;border-radius:8px;padding:20px;margin-top:16px;}
+.sr{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.1);font-size:13px;}
+.sr:last-child{border-bottom:none;font-size:15px;font-weight:500;margin-top:8px;padding-top:10px;border-top:1px solid rgba(255,255,255,.3);}
+.sv{font-family:'IBM Plex Mono',monospace;}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--pr);color:#fff;padding:10px 18px;border-radius:5px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;font-family:'IBM Plex Mono',monospace;}
+.toast.show{opacity:1;}.toast.ok{background:var(--ok);}.toast.err{background:var(--dg);}
+.path-row{display:flex;gap:8px;align-items:center;margin-top:4px;}
+.path-row input{flex:1;}
+.path-info{font-size:11px;color:var(--mu);margin-top:4px;}
+.shape-seg{display:inline-flex;border:1px solid var(--bd);border-radius:4px;overflow:hidden;}
+.shape-seg button{padding:5px 12px;font-size:12px;border:none;background:#fff;color:var(--mu);cursor:pointer;font-family:'IBM Plex Sans',sans-serif;}
+.shape-seg button.on{background:var(--pr);color:#fff;font-weight:500;}
+/* LOCK SCREEN */
+#lock{position:fixed;inset:0;background:linear-gradient(135deg,#12283f,#1a3a5c);z-index:10000;display:flex;align-items:center;justify-content:center;}
+#lock .box{background:var(--cd);border-radius:10px;padding:32px 30px;width:340px;box-shadow:0 20px 60px rgba(0,0,0,.4);text-align:center;}
+#lock h2{color:var(--pr);font-size:16px;font-weight:500;margin-bottom:6px;}
+#lock p{font-size:12px;color:var(--mu);margin-bottom:18px;}
+#lock input{width:100%;padding:9px 10px;border:1px solid var(--bd);border-radius:4px;font-family:'IBM Plex Mono',monospace;background:#fff;color:var(--tx);outline:none;text-align:center;font-size:15px;letter-spacing:2px;margin-bottom:12px;}
+#lock input:focus{border-color:var(--pr);}
+#lock .err{color:var(--dg);font-size:12px;height:16px;margin-bottom:6px;}
+#lock .lk{font-size:34px;margin-bottom:10px;}
+</style>
+
+<!-- ============================================================
+     LUCCHETTO CONDIVISO STUDIO (autonomo, nessun redirect)
+     Password condivisa con la raccolta, chiave localStorage 'studio_ok'.
+     Sbloccato una volta in questo browser, resta valido per tutte le
+     pagine finche' non si chiude / si preme "Esci" nel portale.
+     ============================================================ -->
+<div id="studiolock" style="position:fixed;inset:0;z-index:100000;background:linear-gradient(135deg,#12283f,#1a3a5c);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Sans',sans-serif;">
+  <div style="background:#faf9f7;border-radius:10px;padding:32px 30px;width:340px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.4);text-align:center;">
+    <div style="font-size:34px;margin-bottom:10px;">&#128274;</div>
+    <h2 style="color:#1a3a5c;font-size:16px;font-weight:500;margin:0 0 6px;">Accesso riservato</h2>
+    <p style="font-size:12px;color:#7a7570;margin:0 0 18px;">Inserire la password per accedere al foglio.</p>
+    <input type="password" id="studiolock-pwd" placeholder="Password" autocomplete="current-password"
+      style="width:100%;padding:9px 10px;border:1px solid #d4cfc7;border-radius:4px;font-family:'IBM Plex Mono',monospace;background:#fff;color:#1c1a17;outline:none;text-align:center;font-size:15px;letter-spacing:2px;margin-bottom:12px;box-sizing:border-box;"
+      onkeydown="if(event.key==='Enter')studioSblocca()" autofocus>
+    <div id="studiolock-err" style="color:#c0392b;font-size:12px;height:16px;margin-bottom:6px;"></div>
+    <button type="button" onclick="studioSblocca()"
+      style="width:100%;padding:9px 16px;border:none;border-radius:4px;font-size:13px;cursor:pointer;background:#1a3a5c;color:#fff;font-family:'IBM Plex Sans',sans-serif;">Sblocca</button>
+    <div style="margin-top:14px;"><a href="index.html" style="font-size:11px;color:#7a7570;text-decoration:none;">&#8592; Torna al portale</a></div>
+  </div>
+</div>
+<script>
+(function(){
+  var PASSWORD='system1';
+  function hide(){
+    var l=document.getElementById('studiolock'); if(l) l.style.display='none';
+    var a=document.getElementById('appwrap');    if(a) a.style.display='block';
+  }
+  window.studioSblocca=function(){
+    var i=document.getElementById('studiolock-pwd');
+    if(i && i.value===PASSWORD){ try{localStorage.setItem('studio_ok','1');}catch(e){} hide(); }
+    else{ var e=document.getElementById('studiolock-err'); if(e) e.textContent='Password errata.'; if(i){ i.value=''; i.focus(); } }
+  };
+  try{ if(localStorage.getItem('studio_ok')==='1'){ hide(); } }catch(e){}
+})();
+</script>
+
+</head>
+<body>
+
+<!-- L'accesso è gestito dal portale index.html: se non sbloccato, questo foglio rimanda al portale. -->
+
+<div class="app" id="appwrap">
+<div class="hdr">
+  <div class="hdr-left">
+    <h1>Dimensionamento canali d'aria — Reti aerauliche</h1>
+    <span class="sub">UNI 10339 · UNI EN 16798 · ASHRAE Fundamentals</span>
+  </div>
+  <div class="hdr-right">
+    <span class="prj-badge" id="prj-badge">Nessun progetto</span>
+    <button class="btn bopen bsm" onclick="apriProgetto()">📂 Apri</button>
+    <button class="btn bsave bsm" onclick="salvaProgetto()">💾 Salva</button>
+  </div>
+</div>
+<div class="tabs">
+  <button class="tab active" onclick="showTab('commessa',this)">Commessa</button>
+  <button class="tab" onclick="showTab('config',this)">Configurazione</button>
+  <button class="tab" onclick="showTab('tratti',this)">Elementi rete</button>
+  <button class="tab" onclick="showTab('risultati',this)">Risultati &amp; sommario</button>
+</div>
+
+<!-- COMMESSA -->
+<div id="panel-commessa" class="panel active">
+  <div class="g2">
+    <div class="card">
+      <div class="ct">Dati commessa</div>
+      <label>Numero commessa</label><input type="text" id="c-numero" placeholder="es. 2024-0042" oninput="updateBadge()">
+      <label>Riferimento progetto</label><input type="text" id="c-progetto" placeholder="es. Uffici Rossi — Impianto di ventilazione" oninput="updateBadge()">
+      <label>Cliente / Committente</label><input type="text" id="c-cliente" placeholder="Nome cliente">
+      <label>Indirizzo cantiere</label><input type="text" id="c-indirizzo" placeholder="Via, Comune">
+    </div>
+    <div class="card">
+      <div class="ct">Dati elaborato</div>
+      <label>Progettista</label><input type="text" id="c-progettista" placeholder="Nome e cognome / studio">
+      <label>Data elaborazione</label><input type="date" id="c-data">
+      <label>Revisione</label><input type="text" id="c-revisione" value="Rev. 0">
+      <label>Note / descrizione</label><textarea id="c-note" rows="3" placeholder="Note libere..."></textarea>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px;">
+    <div class="ct">Gestione file di progetto</div>
+    <div class="g2">
+      <div>
+        <label>File progetto corrente</label>
+        <div class="path-row">
+          <input type="text" id="path-display" readonly placeholder="Nessun file aperto" style="background:#f4f2ed;color:var(--mu);">
+          <button class="btn bopen bsm" onclick="apriProgetto()">📂 Apri</button>
+        </div>
+        <div class="path-info" id="path-info">Apri un file .aer esistente o salva il progetto corrente.</div>
+      </div>
+      <div>
+        <label>Azioni</label>
+        <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">
+          <button class="btn bsave" onclick="salvaProgetto()">💾 Salva</button>
+          <button class="btn bp bsm" onclick="salvaComeProgetto()">💾 Salva come...</button>
+          <button class="btn bd2 bsm" onclick="nuovoProgetto()">✦ Nuovo</button>
+        </div>
+        <div class="sbox" style="margin-top:10px;">File <b>.aer</b>: contiene tutti i parametri, i percorsi e gli elementi. Riapribile in qualsiasi momento.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIG -->
+<div id="panel-config" class="panel">
+  <div class="g2">
+    <div class="card">
+      <div class="ct">Condizioni dell'aria</div>
+      <label>Tipo di rete</label>
+      <select id="imp-tipo" onchange="updateAirProps()">
+        <option value="mandata">Mandata / immissione</option>
+        <option value="ripresa">Ripresa / estrazione</option>
+        <option value="espulsione">Espulsione</option>
+        <option value="presa">Presa aria esterna</option>
+      </select>
+      <label>Temperatura aria (°C)</label>
+      <input type="number" id="temp-aria" value="20" step="1" onchange="updateAirProps()">
+      <label>Altitudine sito (m s.l.m.)</label>
+      <input type="number" id="altitudine" value="0" step="10" onchange="updateAirProps()">
+      <div id="fluid-info" class="ibox"></div>
+    </div>
+    <div class="card">
+      <div class="ct">Materiale del canale</div>
+      <label>Materiale</label>
+      <select id="mat-tipo" onchange="updateMaterial()">
+        <option value="zincato_spiro">Lamiera zincata — spiro / graffata elicoidale</option>
+        <option value="zincato_long">Lamiera zincata — graffatura long. / flangiata</option>
+        <option value="alluminio">Alluminio</option>
+        <option value="inox">Acciaio inox</option>
+        <option value="pvc">PVC / materiale plastico liscio</option>
+        <option value="pannello">Pannello sandwich (alluminio+poliuretano)</option>
+        <option value="fibra">Fibra minerale / pannello preisolato ruvido</option>
+        <option value="flessibile">Condotto flessibile (steso)</option>
+      </select>
+      <div id="mat-info" class="ibox"></div>
+      <label style="margin-top:12px;">Rugosità assoluta ε (mm)</label>
+      <input type="number" id="rugosita" value="0.09" step="0.01">
+      <label>Limiti velocità raccomandati</label>
+      <div class="g2" style="margin-top:4px;">
+        <div><label style="margin:0;font-size:11px;">Min (m/s)</label><input type="number" id="vel-min" value="2.0" step="0.1"></div>
+        <div><label style="margin:0;font-size:11px;">Max (m/s)</label><input type="number" id="vel-max" value="8.0" step="0.1"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px;">
+    <div class="ct">Parametri di calcolo</div>
+    <div class="g3">
+      <div><label>Perdita di carico specifica target (Pa/m)</label><input type="number" id="pdc-target" value="1.0" step="0.1"><div style="font-size:11px;color:var(--mu);margin-top:4px;">Metodo a perdita costante — tipico 0,8÷1,2 Pa/m</div></div>
+      <div><label>Coefficiente perdite localizzate globale ξ</label><input type="number" id="coeff-loc" value="1.5" step="0.1"><div style="font-size:11px;color:var(--mu);margin-top:4px;">Attivo solo con metodo "globale"</div></div>
+      <div><label>Metodo perdite localizzate</label>
+        <select id="metodo-loc">
+          <option value="dettaglio">Raccordi dettagliati per tratto</option>
+          <option value="globale">Coefficiente globale ξ</option>
+        </select>
+      </div>
+    </div>
+    <div class="ibox" style="margin-top:14px;">
+      <b>Velocità raccomandate (indicative):</b> residenziale — principali 3÷5 m/s, derivazioni 2÷3 m/s, terminali 1,5÷2,5 m/s · uffici/commerciale — principali 5÷8 m/s, derivazioni 3÷5 m/s · industriale 8÷12 m/s. Velocità elevate riducono gli ingombri ma aumentano perdite e rumore.
+    </div>
+  </div>
+</div>
+
+<!-- ELEMENTI RETE -->
+<div id="panel-tratti" class="panel">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+    <div style="font-size:13px;color:var(--mu);">Gestisci i percorsi aeraulici (dal ventilatore al terminale) e i relativi tratti di canale e componenti</div>
+    <button class="btn bp" onclick="addCircuito()">+ Aggiungi percorso</button>
+  </div>
+  <div id="circuiti-container"></div>
+  <div id="no-circ" style="text-align:center;padding:48px;color:var(--mu);font-size:13px;">Nessun percorso. Clicca "+ Aggiungi percorso" per iniziare.</div>
+</div>
+
+<!-- RISULTATI -->
+<div id="panel-risultati" class="panel">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+    <div style="font-size:13px;color:var(--mu);">Calcolo separato per percorso — identificazione del percorso critico per la selezione del ventilatore</div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn ba" onclick="calcola()">Calcola tutto</button>
+      <button class="btn bg bsm" onclick="esportaExcel()" id="btn-excel" style="display:none;">↓ Esporta Excel</button>
+    </div>
+  </div>
+  <div id="risultati-content"><div style="text-align:center;padding:48px;color:var(--mu);font-size:13px;">Configura i percorsi e premi "Calcola tutto"</div></div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+<input type="file" id="file-input" accept=".aer,.json" style="display:none" onchange="leggiFileInput(this)">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+/* ============================================================
+   CONTROLLO ACCESSO — l'autenticazione avviene sul portale
+   (index.html). Qui non si chiede la password: se l'utente si è
+   già sbloccato nel portale, il foglio si mostra; altrimenti
+   viene rimandato al portale per il login.
+   ============================================================ */
+/* Controllo accesso gestito dal lucchetto autonomo in testa alla pagina. */
+
+/* ============================================================
+   DATI DI BASE
+   ============================================================ */
+// Diametri nominali canali circolari (spiro) — EN 1506, mm
+const DIAM_CIRC=[80,100,125,150,160,180,200,224,250,280,315,355,400,450,500,560,630,710,800,900,1000,1120,1250];
+// Dimensioni standard canali rettangolari, mm
+const DIM_RETT=[100,150,200,250,300,350,400,450,500,550,600,700,800,900,1000,1100,1200,1400,1600,1800,2000];
+
+// Materiali e rugosità assoluta ε (mm) — rif. ASHRAE Fundamentals cap. Duct Design
+const MAT={
+  zincato_spiro:{nome:'Lamiera zincata (spiro)',rug:0.09,note:'Canale spiro/graffato elicoidale. Rugosità media. Uso più comune per circolari.'},
+  zincato_long:{nome:'Lamiera zincata (graffata long.)',rug:0.15,note:'Graffatura longitudinale / giunti flangiati ogni ~1,2 m. Tipico rettangolari.'},
+  alluminio:{nome:'Alluminio',rug:0.04,note:'Superficie liscia. Leggero, resistente a corrosione.'},
+  inox:{nome:'Acciaio inox',rug:0.03,note:'Superficie molto liscia. Ambienti igienici / cucine.'},
+  pvc:{nome:'PVC / plastica liscia',rug:0.02,note:'Molto liscio. Ambienti corrosivi, aspirazione.'},
+  pannello:{nome:'Pannello sandwich Al+PU',rug:0.15,note:'Canale in pannello preisolato (superficie in alluminio).'},
+  fibra:{nome:'Fibra minerale / pannello ruvido',rug:0.9,note:'Superficie interna ruvida (lana minerale, silenziamento). Perdite elevate.'},
+  flessibile:{nome:'Condotto flessibile (steso)',rug:3.0,note:'Elevata rugosità anche se ben teso. Limitare a tratti brevi terminali.'}
+};
+
+// Coefficienti perdite localizzate ξ — valori rappresentativi di progetto.
+// Da verificare con abachi ASHRAE / dati costruttore per progetti critici.
+const RACC=[
+  {id:'c90r',l:'Curva 90° raggio largo (R/D≥1,5)',k:0.20},
+  {id:'c90m',l:'Curva 90° raggio medio (R/D≈1)',k:0.33},
+  {id:'c90g',l:'Curva 90° a gomito (senza alette)',k:1.20},
+  {id:'c90a',l:'Curva 90° con alette deflettrici',k:0.20},
+  {id:'c45',l:'Curva 45°',k:0.15},
+  {id:'tp',l:'Derivazione a T — passante',k:0.20},
+  {id:'td',l:'Derivazione a T — derivato',k:1.00},
+  {id:'rid',l:'Riduzione graduale',k:0.15},
+  {id:'all',l:'Allargamento graduale',k:0.30},
+  {id:'ser',l:'Serranda di regolazione (aperta)',k:0.30},
+  {id:'ing',l:'Imbocco / ingresso',k:0.50},
+  {id:'sbo',l:'Sbocco / uscita libera',k:1.00},
+  {id:'gri',l:'Griglia / transizione',k:0.50},
+  {id:'alt',l:'Altro (ξ=1)',k:1.00}
+];
+const PALETTE=[
+  {hdr:'#1a3a5c',brd:'#b3cde0',bg:'#f0f4f8'},
+  {hdr:'#6b3a8a',brd:'#c9a5e0',bg:'#f7f0fd'},
+  {hdr:'#2b6e5a',brd:'#8ecfb8',bg:'#f0faf6'},
+  {hdr:'#8a4a1a',brd:'#e0a870',bg:'#fdf5ee'},
+  {hdr:'#1a5c7a',brd:'#7ac8e0',bg:'#edf7fb'},
+  {hdr:'#5c1a4a',brd:'#d88abd',bg:'#fceef7'}
+];
+
+let circuiti=[], ccnt=0, ecnt=0, ultimoCalc=null, fileHandle=null;
+
+/* ============================================================
+   PROPRIETA' ARIA
+   ============================================================ */
+function pressAltitude(h){return 101325*Math.pow(1-2.25577e-5*h,5.2559);} // Pa
+function densitaAria(Tc,P){return P/(287.05*(273.15+Tc));}                // kg/m³ (gas ideale, aria secca)
+function viscositaAria(Tc){var T=273.15+Tc;return 1.716e-5*(383.55/(T+110.4))*Math.pow(T/273.15,1.5);} // Pa·s (Sutherland)
+function airProps(){
+  var Tc=parseFloat(document.getElementById('temp-aria').value); if(isNaN(Tc))Tc=20;
+  var h=parseFloat(document.getElementById('altitudine').value)||0;
+  var P=pressAltitude(h);
+  return {Tc:Tc, P:P, rho:densitaAria(Tc,P), mu:viscositaAria(Tc)};
+}
+function toMca(Pa){return Pa/9.81;} // mm colonna d'acqua (≈ mm c.a.)
+
+/* ============================================================
+   INFO BOX
+   ============================================================ */
+function updateAirProps(){
+  var tipo=document.getElementById('imp-tipo').value;
+  var pr=airProps();
+  var nomi={mandata:'Mandata / immissione',ripresa:'Ripresa / estrazione',espulsione:'Espulsione',presa:'Presa aria esterna'};
+  document.getElementById('fluid-info').innerHTML=
+    '<b>'+nomi[tipo]+'</b><br>'+
+    'T aria: <b>'+pr.Tc.toFixed(1)+' °C</b> &nbsp;·&nbsp; '+
+    'p atm: <b>'+(pr.P/1000).toFixed(2)+' kPa</b><br>'+
+    'ρ: <b>'+pr.rho.toFixed(4)+' kg/m³</b> &nbsp;·&nbsp; '+
+    'μ: <b>'+(pr.mu*1e6).toFixed(3)+' µPa·s</b>';
+  renderCircuiti();
+}
+function updateMaterial(){
+  var mk=document.getElementById('mat-tipo').value, m=MAT[mk];
+  document.getElementById('rugosita').value=m.rug;
+  document.getElementById('mat-info').innerHTML=m.note+'<br>Rugosità assoluta ε = <b>'+m.rug+' mm</b>';
+}
+
+/* ============================================================
+   PERCORSI ed ELEMENTI
+   ============================================================ */
+function addCircuito(){ccnt++;circuiti.push({id:ccnt,nome:'Percorso '+ccnt,elementi:[]});renderCircuiti();}
+function removeCircuito(cid){if(!confirm('Eliminare il percorso e tutti i suoi elementi?'))return;circuiti=circuiti.filter(function(c){return c.id!==cid;});renderCircuiti();}
+function addElementoA(cid,tipo){
+  var circ=circuiti.find(function(c){return c.id===cid;}); if(!circ)return; ecnt++;
+  if(tipo==='tratto'){
+    var e={id:ecnt,tipo:'tratto',forma:'circ',nome:'Tratto '+ecnt,portata:'',lunghezza:'',dCirc:'',aRett:'',bRett:'',racc:{}};
+    RACC.forEach(function(r){e.racc[r.id]=0;});
+    circ.elementi.push(e);
+  }else{
+    circ.elementi.push({id:ecnt,tipo:'componente',nome:'Componente '+ecnt,descrizione:'',pdcPa:''});
+  }
+  renderCircuiti();
+}
+function removeElementoDa(cid,eid){var circ=circuiti.find(function(c){return c.id===cid;});if(!circ)return;circ.elementi=circ.elementi.filter(function(e){return e.id!==eid;});renderCircuiti();}
+function setForma(cid,eid,forma){var c=circuiti.find(function(x){return x.id===cid;});if(!c)return;var e=c.elementi.find(function(x){return x.id===eid;});if(e){e.forma=forma;renderCircuiti();}}
+
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function renderCircuiti(){
+  var cont=document.getElementById('circuiti-container'), no=document.getElementById('no-circ');
+  if(!circuiti.length){cont.innerHTML='';no.style.display='block';return;}
+  no.style.display='none';
+  cont.innerHTML=circuiti.map(function(c,ci){
+    var pal=PALETTE[ci%PALETTE.length];
+    var elemHTML=c.elementi.map(function(e){return e.tipo==='tratto'?renderTratto(c.id,e,pal):renderComponente(c.id,e);}).join('');
+    return '<div class="circ-block" style="border:2px solid '+pal.brd+';">'+
+      '<div class="circ-header" style="background:'+pal.hdr+';">'+
+        '<div class="circ-nome">'+
+          '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:14px;">≋</span>'+
+          '<input type="text" value="'+escH(c.nome)+'" style="background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.4);color:#fff;font-family:\'IBM Plex Mono\',monospace;font-size:13px;font-weight:500;width:200px;outline:none;padding:2px 4px;" '+
+            'onchange="circuiti.find(function(x){return x.id==='+c.id+'}).nome=this.value">'+
+          '<span style="font-size:11px;opacity:.65;">'+c.elementi.length+' elemento'+(c.elementi.length!==1?'i':'')+'</span>'+
+        '</div>'+
+        '<div class="circ-actions">'+
+          '<button class="btn bsm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);" onclick="addElementoA('+c.id+',\'tratto\')">+ Tratto canale</button>'+
+          '<button class="btn bsm" style="background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.25);" onclick="addElementoA('+c.id+',\'componente\')">⬡ Componente</button>'+
+          '<button class="btn bsm" style="background:rgba(200,50,50,.35);color:#fff;border:1px solid rgba(255,100,100,.4);" onclick="removeCircuito('+c.id+')">✕</button>'+
+        '</div>'+
+      '</div>'+
+      '<div style="background:'+pal.bg+';padding:12px;">'+
+        (elemHTML||'<div style="text-align:center;padding:20px;color:'+pal.hdr+';opacity:.5;font-size:13px;">Nessun elemento — aggiungi un tratto di canale o un componente</div>')+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function upd(cid,eid,field){ // helper stringa per onchange che aggiorna il modello
+  return '(function(){var c=circuiti.find(function(x){return x.id==='+cid+'});if(c){var el=c.elementi.find(function(x){return x.id==='+eid+'});if(el)el.'+field+'=this.value;}}).call(this)';
+}
+
+function renderTratto(cid,e,pal){
+  var isC=e.forma==='circ';
+  // opzioni diametro circolare
+  var dOpts=DIAM_CIRC.map(function(d){return '<option value="'+d+'"'+(e.dCirc==d?' selected':'')+'>Ø'+d+' mm</option>';}).join('');
+  var raccHTML=RACC.map(function(r){
+    return '<div class="fi"><input type="number" min="0" step="1" value="'+(e.racc[r.id]||0)+'" style="width:44px;padding:3px 5px;font-size:12px;" '+
+      'onchange="(function(){var c=circuiti.find(function(x){return x.id==='+cid+'});if(c){var el=c.elementi.find(function(x){return x.id==='+e.id+'});if(el)el.racc[\''+r.id+'\']=parseInt(this.value)||0;}}).call(this)">'+
+      '<span style="flex:1;font-size:12px;">'+r.l+' <span style="color:var(--mu)">ξ='+r.k+'</span></span></div>';
+  }).join('');
+
+  var dimFields = isC ?
+    ('<div><label>Diametro suggerito (auto)</label>'+
+       '<input type="text" id="dsug-'+e.id+'" value="—" readonly style="background:#f0ede8;color:var(--pr);font-weight:500;"></div>'+
+     '<div><label>Diametro da adottare</label>'+
+       '<select id="dad-'+e.id+'" onchange="'+upd(cid,e.id,'dCirc')+'">'+
+         '<option value="">— auto (usa suggerito) —</option>'+dOpts+'</select></div>')
+    :
+    ('<div><label>Base a — suggerita (auto)</label>'+
+       '<input type="text" id="asug-'+e.id+'" value="—" readonly style="background:#f0ede8;color:var(--pr);font-weight:500;"></div>'+
+     '<div><label>Base a — adottata (mm)</label>'+
+       '<input type="number" value="'+(e.aRett||'')+'" placeholder="auto" step="10" min="50" onchange="'+upd(cid,e.id,'aRett')+'"></div>'+
+     '<div><label>Altezza b — adottata (mm) <span style="font-size:10px;color:var(--mu)">(vincolo controsoffitto)</span></label>'+
+       '<input type="number" value="'+(e.bRett||'')+'" placeholder="auto" step="10" min="50" onchange="'+upd(cid,e.id,'bRett')+'"></div>');
+
+  return '<div class="el-row" id="er-'+e.id+'" style="border-left:4px solid '+pal.hdr+';">'+
+    '<div class="el-hdr">'+
+      '<div style="display:flex;align-items:center;gap:8px;">'+
+        '<span class="el-tag" style="background:'+pal.brd+'30;color:'+pal.hdr+';">▰ Tratto canale</span>'+
+        '<span class="el-name" id="en-'+e.id+'">'+escH(e.nome)+'</span>'+
+      '</div>'+
+      '<div style="display:flex;gap:6px;align-items:center;">'+
+        '<span class="shape-seg">'+
+          '<button class="'+(isC?'on':'')+'" onclick="setForma('+cid+','+e.id+',\'circ\')">● Circolare</button>'+
+          '<button class="'+(!isC?'on':'')+'" onclick="setForma('+cid+','+e.id+',\'rett\')">▭ Rettangolare</button>'+
+        '</span>'+
+        '<button class="btn bsm" style="color:var(--ac2);border:1px solid var(--ac2);" onclick="calcolaSingoloDa('+cid+','+e.id+')">↗ Calcola</button>'+
+        '<button class="btn bd2 bsm" onclick="removeElementoDa('+cid+','+e.id+')">✕</button>'+
+      '</div>'+
+    '</div>'+
+    '<div class="g3">'+
+      '<div><label>Nome tratto</label><input type="text" value="'+escH(e.nome)+'" '+
+        'onchange="(function(){var c=circuiti.find(function(x){return x.id==='+cid+'});if(c){var el=c.elementi.find(function(x){return x.id==='+e.id+'});if(el){el.nome=this.value;var sp=document.getElementById(\'en-'+e.id+'\');if(sp)sp.textContent=this.value;}}}).call(this)"></div>'+
+      '<div><label>Portata d\'aria (m³/h)</label><input type="number" value="'+e.portata+'" placeholder="es. 1800" onchange="'+upd(cid,e.id,'portata')+'"></div>'+
+      '<div><label>Lunghezza (m)</label><input type="number" value="'+e.lunghezza+'" placeholder="es. 12" step="0.5" onchange="'+upd(cid,e.id,'lunghezza')+'"></div>'+
+      dimFields+
+    '</div>'+
+    '<details style="margin-top:10px;"><summary style="font-size:12px;color:var(--mu);cursor:pointer;user-select:none;">▸ Raccordi e perdite localizzate</summary>'+
+      '<div class="fg" style="margin-top:8px;">'+raccHTML+'</div></details>'+
+    '<div id="ri-'+e.id+'" style="margin-top:10px;"></div>'+
+  '</div>';
+}
+
+function renderComponente(cid,e){
+  var pdcNum=parseFloat(e.pdcPa)||0;
+  var convTxt=pdcNum>0?
+    'ΔP = <b>'+pdcNum.toFixed(0)+' Pa</b> = <b>'+(pdcNum/10).toFixed(2)+' daPa</b> = <b>'+toMca(pdcNum).toFixed(2)+' mm c.a.</b>':
+    'Inserire la perdita di carico dal datasheet del componente (filtro, batteria, silenziatore, recuperatore, serranda tagliafuoco, diffusore...).';
+  return '<div class="el-row" id="er-'+e.id+'" style="border-left:4px solid var(--ac2);">'+
+    '<div class="el-hdr">'+
+      '<div style="display:flex;align-items:center;gap:8px;">'+
+        '<span class="el-tag tag-ogg">⬡ Componente</span>'+
+        '<span class="el-name" id="en-'+e.id+'">'+escH(e.nome)+'</span>'+
+      '</div>'+
+      '<button class="btn bd2 bsm" onclick="removeElementoDa('+cid+','+e.id+')">✕</button>'+
+    '</div>'+
+    '<div class="g3">'+
+      '<div><label>Nome componente</label><input type="text" value="'+escH(e.nome)+'" placeholder="es. Filtro, Batteria, Silenziatore..." '+
+        'onchange="(function(){var c=circuiti.find(function(x){return x.id==='+cid+'});if(c){var el=c.elementi.find(function(x){return x.id==='+e.id+'});if(el){el.nome=this.value;var sp=document.getElementById(\'en-'+e.id+'\');if(sp)sp.textContent=this.value;}}}).call(this)"></div>'+
+      '<div><label>Descrizione / modello</label><input type="text" value="'+escH(e.descrizione||'')+'" placeholder="rif. datasheet" onchange="'+upd(cid,e.id,'descrizione')+'"></div>'+
+      '<div><label>Perdita di carico (Pa) <span style="font-size:10px;color:var(--mu)">da datasheet</span></label>'+
+        '<input type="number" value="'+(e.pdcPa||'')+'" placeholder="es. 150" min="0" step="1" '+
+        'onchange="(function(){var c=circuiti.find(function(x){return x.id==='+cid+'});if(c){var el=c.elementi.find(function(x){return x.id==='+e.id+'});if(el)el.pdcPa=parseFloat(this.value)||0;}}).call(this)"></div>'+
+    '</div>'+
+    '<div style="font-size:11px;color:var(--mu);margin-top:8px;background:#f7f3ef;border-radius:4px;padding:6px 10px;">'+convTxt+'</div>'+
+  '</div>';
+}
+
+/* ============================================================
+   CALCOLO
+   ============================================================ */
+function frCW(Re,rr){ // Colebrook-White; rr = ε/Dh (adimensionale)
+  if(Re<2300) return 64/Re;
+  var f=0.02;
+  for(var i=0;i<80;i++){var fn=1/Math.pow(-2*Math.log10(rr/3.71+2.51/(Re*Math.sqrt(f))),2);if(Math.abs(fn-f)<1e-11)break;f=fn;}
+  return Math.max(0.008,f);
+}
+function ductGeom(forma,dims){ // dims in mm → uscite in m
+  if(forma==='circ'){var D=dims.D/1000;return {A:Math.PI*D*D/4,Dh:D,Deq:D,P:Math.PI*D};}
+  var a=dims.a/1000,b=dims.b/1000;var A=a*b,P=2*(a+b),Dh=2*a*b/(a+b);
+  var Deq=1.30*Math.pow(a*b,0.625)/Math.pow(a+b,0.250); // Huebscher (ASHRAE)
+  return {A:A,Dh:Dh,Deq:Deq,P:P};
+}
+function paMOf(Q,g,rho,mu,rug){ // Pa/m per una geometria
+  var v=Q/g.A, Re=rho*v*g.Dh/mu, f=frCW(Re,(rug/1000)/g.Dh);
+  return {v:v,Re:Re,f:f,paM:f*(1/g.Dh)*(rho*v*v/2)};
+}
+function suggestCirc(Q,rug,rho,mu,vmax,target){
+  var chosen=DIAM_CIRC.length-1;
+  for(var i=0;i<DIAM_CIRC.length;i++){
+    var g=ductGeom('circ',{D:DIAM_CIRC[i]});
+    var r=paMOf(Q,g,rho,mu,rug);
+    if(r.v>vmax) continue;            // troppo piccolo → velocità eccessiva
+    chosen=i;
+    if(r.paM<=target) break;          // primo che soddisfa il target di attrito
+  }
+  return DIAM_CIRC[chosen];
+}
+function suggestRett(Q,rug,rho,mu,vmax,target,fixedB){
+  var Hs = (fixedB&&fixedB>0)?[fixedB]:DIM_RETT;
+  var pool=[];
+  for(var bi=0;bi<Hs.length;bi++){var b=Hs[bi];
+    for(var ai=0;ai<DIM_RETT.length;ai++){var a=DIM_RETT[ai];
+      if(a<b) continue;               // base ≥ altezza
+      if(a/b>4) continue;             // rapporto di forma ≤ 4:1
+      var g=ductGeom('rett',{a:a,b:b});
+      var r=paMOf(Q,g,rho,mu,rug);
+      if(r.v>vmax) continue;
+      pool.push({a:a,b:b,area:a*b,paM:r.paM});
+    }
+  }
+  if(!pool.length){ // nessuna combinazione entro vmax: prendi la più grande possibile
+    var bb=(fixedB&&fixedB>0)?fixedB:DIM_RETT[DIM_RETT.length-1];
+    return {a:DIM_RETT[DIM_RETT.length-1],b:bb};
+  }
+  var ok=pool.filter(function(p){return p.paM<=target;});
+  var arr=ok.length?ok:pool;
+  arr.sort(function(x,y){return x.area-y.area;});
+  return {a:arr[0].a,b:arr[0].b};
+}
+
+function calcTratto(e){
+  var pr=airProps(), rho=pr.rho, mu=pr.mu;
+  var rug=parseFloat(document.getElementById('rugosita').value); if(isNaN(rug))rug=0.09;
+  var vmin=parseFloat(document.getElementById('vel-min').value)||2.0;
+  var vmax=parseFloat(document.getElementById('vel-max').value)||8.0;
+  var target=parseFloat(document.getElementById('pdc-target').value)||1.0;
+  var metodo=document.getElementById('metodo-loc').value;
+  var cLoc=parseFloat(document.getElementById('coeff-loc').value)||1.5;
+  var Qm3h=parseFloat(e.portata); if(!Qm3h||Qm3h<=0)return{err:'Portata non valida'};
+  var Q=Qm3h/3600, L=parseFloat(e.lunghezza)||0;
+
+  var dims, sug, dimTxt, sugTxt;
+  if(e.forma==='circ'){
+    var Dsug=suggestCirc(Q,rug,rho,mu,vmax,target);
+    var Duse=(e.dCirc!==''&&e.dCirc!=null&&!isNaN(parseFloat(e.dCirc)))?parseFloat(e.dCirc):Dsug;
+    dims={D:Duse}; sug={D:Dsug}; dimTxt='Ø'+Duse+' mm'; sugTxt='Ø'+Dsug+' mm';
+  }else{
+    var aIn=parseFloat(e.aRett), bIn=parseFloat(e.bRett);
+    var fixedB=(!isNaN(bIn)&&bIn>0)?bIn:null;
+    var sr=suggestRett(Q,rug,rho,mu,vmax,target,fixedB);
+    var a=(!isNaN(aIn)&&aIn>0)?aIn:sr.a;
+    var b=(!isNaN(bIn)&&bIn>0)?bIn:sr.b;
+    if(!a||!b)return{err:'Dimensioni non valide'};
+    dims={a:a,b:b}; sug=sr; dimTxt=a+'×'+b+' mm'; sugTxt=sr.a+'×'+sr.b+' mm';
+  }
+
+  var g=ductGeom(e.forma,dims);
+  var v=Q/g.A, Re=rho*v*g.Dh/mu, f=frCW(Re,(rug/1000)/g.Dh);
+  var pv=rho*v*v/2, paM=f*(1/g.Dh)*pv, pdist=paM*L;
+  var xi=0;
+  if(metodo==='dettaglio'){RACC.forEach(function(r){xi+=(e.racc[r.id]||0)*r.k;});}else{xi=cLoc;}
+  var ploc=xi*pv, ptot=pdist+ploc;
+  var stato='ok'; if(v<vmin)stato='bassa'; else if(v>vmax)stato='alta';
+  return {forma:e.forma,dimTxt:dimTxt,sugTxt:sugTxt,A:g.A,Dh:g.Dh,Deq:g.Deq,v:v,Re:Re,f:f,pv:pv,
+    paM:paM,pdist:pdist,ploc:ploc,ptot:ptot,xi:xi,stato:stato,vmin:vmin,vmax:vmax,Qm3h:Qm3h,L:L,dims:dims,sug:sug};
+}
+
+function calcolaSingoloDa(cid,eid){
+  var circ=circuiti.find(function(c){return c.id===cid;}); if(!circ)return;
+  var e=circ.elementi.find(function(x){return x.id===eid;}); if(!e||e.tipo!=='tratto')return;
+  var r=calcTratto(e);
+  var riEl=document.getElementById('ri-'+eid);
+  if(r.err){if(riEl)riEl.innerHTML='<div class="wbox">'+r.err+'</div>';return;}
+  // aggiorna campo suggerito
+  if(e.forma==='circ'){var s=document.getElementById('dsug-'+eid);if(s)s.value=r.sugTxt;}
+  else{var s2=document.getElementById('asug-'+eid);if(s2)s2.value=r.sug.a+'×'+r.sug.b+' mm';}
+  var col=r.stato==='ok'?'var(--ok)':r.stato==='bassa'?'#e67e22':'var(--dg)';
+  var stTxt=r.stato==='ok'?'✓ Velocità OK':r.stato==='bassa'?'⚠ Velocità bassa':'⚠ Velocità elevata';
+  var vp=Math.min(100,(r.v/r.vmax)*100);
+  var deqTxt=r.forma==='rett'?' · Dₑq='+(r.Deq*1000).toFixed(0)+'mm':'';
+  if(riEl)riEl.innerHTML=
+    '<div style="background:#f0f7f4;border:1px solid #b2d8c8;border-radius:4px;padding:10px;">'+
+      '<div class="g3" style="gap:8px;">'+
+        '<div class="metric"><div class="mv" style="color:'+col+'">'+r.v.toFixed(2)+' <span style="font-size:12px;color:var(--mu)">m/s</span></div>'+
+          '<div class="ml">'+stTxt+' · Re '+Math.round(r.Re)+'</div>'+
+          '<div class="vbar"><div class="vfill" style="width:'+vp.toFixed(1)+'%;background:'+col+';"></div></div></div>'+
+        '<div class="metric"><div class="mv">'+r.paM.toFixed(2)+' <span style="font-size:12px;color:var(--mu)">Pa/m</span></div>'+
+          '<div class="ml">Dₕ='+(r.Dh*1000).toFixed(0)+'mm'+deqTxt+' · f='+r.f.toFixed(4)+'</div></div>'+
+        '<div class="metric"><div class="mv" style="color:var(--ac)">'+r.ptot.toFixed(1)+' <span style="font-size:12px;color:var(--mu)">Pa</span></div>'+
+          '<div class="ml">= '+toMca(r.ptot).toFixed(2)+' mm c.a. · '+(r.ptot/10).toFixed(2)+' daPa</div></div>'+
+      '</div>'+
+      '<div style="font-size:11px;color:var(--mu);margin-top:8px;display:flex;gap:14px;flex-wrap:wrap;">'+
+        '<span>Distribuite: <b>'+r.pdist.toFixed(1)+' Pa</b></span>'+
+        '<span>Localizzate ξ='+r.xi.toFixed(2)+': <b>'+r.ploc.toFixed(1)+' Pa</b></span>'+
+        '<span>Press. dinamica: <b>'+r.pv.toFixed(1)+' Pa</b></span>'+
+        '<span>Dim. adottata: <b>'+r.dimTxt+'</b>'+(r.dimTxt!==r.sugTxt?' <span style="color:var(--ac);font-size:10px;">[sug. '+r.sugTxt+']</span>':'')+'</span>'+
+      '</div>'+
+    '</div>';
+}
+
+function calcola(){
+  if(!circuiti.length){document.getElementById('risultati-content').innerHTML='<div class="wbox">Nessun percorso definito.</div>';return;}
+  var mk=document.getElementById('mat-tipo').value, m=MAT[mk];
+  var imp=document.getElementById('imp-tipo').value;
+  var impN={mandata:'Mandata',ripresa:'Ripresa',espulsione:'Espulsione',presa:'Presa aria esterna'};
+  var pr=airProps();
+  var risCircuiti=[];
+
+  circuiti.forEach(function(circ,ci){
+    var pal=PALETTE[ci%PALETTE.length];
+    var pdcTot=0, rows='', warns=[], recs=[];
+    circ.elementi.forEach(function(e,idx){
+      if(e.tipo==='tratto'){
+        var r=calcTratto(e);
+        if(r.err){rows+='<tr><td colspan="11" style="color:var(--dg);">'+escH(e.nome)+': '+r.err+'</td></tr>';return;}
+        pdcTot+=r.ptot;
+        var bcl=r.stato==='ok'?'bok':r.stato==='bassa'?'bwn':'ber';
+        var btx=r.stato==='ok'?'OK':r.stato==='bassa'?'V bassa':'V alta';
+        if(r.stato!=='ok')warns.push(escH(e.nome)+': v='+r.v.toFixed(2)+' m/s');
+        var formaTxt=r.forma==='circ'?'Circolare':'Rettangolare';
+        var deqNote=r.forma==='rett'?'<br><span style="font-size:10px;color:var(--mu)">Dₑq='+(r.Deq*1000).toFixed(0)+'mm</span>':'';
+        rows+='<tr>'+
+          '<td><span class="badge" style="background:'+pal.brd+'30;color:'+pal.hdr+';font-size:10px;">▰</span></td>'+
+          '<td style="font-weight:500;">'+escH(e.nome)+'<br><span style="font-size:10px;color:var(--mu)">'+formaTxt+'</span></td>'+
+          '<td>'+r.Qm3h.toFixed(0)+'</td><td>'+r.L.toFixed(1)+'</td>'+
+          '<td>'+r.dimTxt+'<br><span style="font-size:10px;color:var(--mu)">Dₕ='+(r.Dh*1000).toFixed(0)+'mm'+(r.dimTxt!==r.sugTxt?' ⚡':'')+'</span>'+deqNote+'</td>'+
+          '<td>'+r.v.toFixed(2)+'</td><td>'+Math.round(r.Re)+'</td><td>'+r.paM.toFixed(2)+'</td>'+
+          '<td>'+r.ptot.toFixed(1)+'</td><td>'+toMca(r.ptot).toFixed(2)+'</td>'+
+          '<td><span class="badge '+bcl+'">'+btx+'</span></td>'+
+        '</tr>';
+        recs.push({idx:idx+1,tipo:'Tratto',nome:e.nome,forma:formaTxt,Qm3h:r.Qm3h,L:r.L,dim:r.dimTxt,dimSug:r.sugTxt,
+          Dh:r.Dh*1000,Deq:r.Deq*1000,v:r.v,Re:Math.round(r.Re),f:r.f,paM:r.paM,
+          pdist:r.pdist,ploc:r.ploc,xi:r.xi,pcomp:0,ptot:r.ptot,stato:btx});
+      }else{
+        var pdcPa=parseFloat(e.pdcPa)||0; pdcTot+=pdcPa;
+        rows+='<tr style="background:#f9f9f6;">'+
+          '<td><span class="badge" style="background:#e6f2ee;color:var(--ac2);font-size:10px;">⬡</span></td>'+
+          '<td style="font-weight:500;">'+escH(e.nome)+'</td>'+
+          '<td colspan="5" style="color:var(--mu);font-size:12px;">'+(e.descrizione||'—')+'</td>'+
+          '<td>'+pdcPa.toFixed(1)+'</td><td>'+toMca(pdcPa).toFixed(2)+'</td>'+
+          '<td><span class="badge" style="background:#e6f2ee;color:var(--ac2);">Comp.</span></td>'+
+        '</tr>';
+        recs.push({idx:idx+1,tipo:'Componente',nome:e.nome,forma:'—',Qm3h:'—',L:'—',dim:'—',dimSug:'—',
+          Dh:'—',Deq:'—',v:'—',Re:'—',f:'—',paM:'—',pdist:0,ploc:0,xi:'—',pcomp:pdcPa,ptot:pdcPa,stato:'Componente'});
+      }
+    });
+    risCircuiti.push({circ:circ,ci:ci,pal:pal,rows:rows,warns:warns,recs:recs,
+      pdcPa:pdcTot,pdcMca:toMca(pdcTot),pdcDaPa:pdcTot/10});
+  });
+
+  var maxPdc=Math.max.apply(null,risCircuiti.map(function(r){return r.pdcPa;}));
+  var html='';
+  risCircuiti.forEach(function(rc){
+    var isCrit=circuiti.length>1&&Math.abs(rc.pdcPa-maxPdc)<0.001;
+    var critBanner=isCrit?'<div class="critico-banner">⭐ PERCORSO CRITICO — perdita di carico massima → usare questo per la selezione del ventilatore</div>':'';
+    var outlineStyle=isCrit?'outline:3px solid #f1c40f;outline-offset:-3px;':'';
+    var pbarW=maxPdc>0?(rc.pdcPa/maxPdc*100):100;
+    html+='<div class="circ-result" style="border:2px solid '+rc.pal.brd+';">'+
+      critBanner+
+      '<div class="circ-result-hdr" style="background:'+rc.pal.hdr+';'+outlineStyle+'">'+
+        '<div style="display:flex;align-items:center;gap:12px;">'+
+          '<span style="font-family:\'IBM Plex Mono\',monospace;">≋ '+escH(rc.circ.nome)+'</span>'+
+          '<span style="font-size:12px;opacity:.7;">'+rc.recs.length+' elemento'+(rc.recs.length!==1?'i':'')+'</span>'+
+        '</div>'+
+        '<div style="display:flex;align-items:center;gap:20px;">'+
+          '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:15px;font-weight:500;">'+rc.pdcPa.toFixed(1)+' Pa</span>'+
+          '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:13px;opacity:.8;">'+rc.pdcMca.toFixed(2)+' mm c.a.</span>'+
+        '</div>'+
+      '</div>'+
+      '<div style="background:'+rc.pal.bg+';padding:4px 16px;">'+
+        '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;">'+
+          '<div style="flex:1;height:6px;background:rgba(0,0,0,.1);border-radius:3px;">'+
+            '<div style="width:'+pbarW.toFixed(1)+'%;height:6px;background:'+rc.pal.hdr+';border-radius:3px;opacity:.7;"></div>'+
+          '</div>'+
+          '<span style="font-size:11px;color:'+rc.pal.hdr+';font-family:\'IBM Plex Mono\',monospace;min-width:40px;">'+pbarW.toFixed(0)+'%</span>'+
+        '</div>'+
+      '</div>'+
+      '<div style="padding:12px;background:#fff;">'+
+        (rc.warns.length?'<div class="wbox" style="margin-bottom:8px;">⚠ '+rc.warns.join(' · ')+'</div>':'')+
+        '<div style="overflow-x:auto;">'+
+          '<table class="rtable"><thead><tr>'+
+            '<th style="width:24px;"></th><th>Elemento</th><th>Q (m³/h)</th><th>L (m)</th><th>Dimensione</th>'+
+            '<th>v (m/s)</th><th>Re</th><th>J (Pa/m)</th><th>ΔP (Pa)</th><th>ΔP (mm c.a.)</th><th>Stato</th>'+
+          '</tr></thead>'+
+          '<tbody>'+(rc.rows||'<tr><td colspan="11" style="color:var(--mu);text-align:center;padding:16px;">Nessun elemento valido</td></tr>')+'</tbody>'+
+          '</table>'+
+        '</div>'+
+        '<div style="display:flex;justify-content:flex-end;gap:24px;margin-top:8px;padding:8px 10px;background:'+rc.pal.bg+';border-radius:4px;font-size:12px;font-family:\'IBM Plex Mono\',monospace;color:'+rc.pal.hdr+';">'+
+          '<span>Totale: <b>'+rc.pdcPa.toFixed(1)+' Pa</b></span>'+
+          '<span><b>'+rc.pdcDaPa.toFixed(2)+' daPa</b></span>'+
+          '<span><b>'+rc.pdcMca.toFixed(2)+' mm c.a.</b></span>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  });
+
+  var sorted=risCircuiti.slice().sort(function(a,b){return b.pdcPa-a.pdcPa;});
+  var critico=sorted[0];
+  html+='<div class="sumbox-final">'+
+    '<div style="font-size:11px;color:rgba(255,255,255,.45);margin-bottom:14px;text-transform:uppercase;letter-spacing:.8px;">'+
+      'Sommario — '+impN[imp]+' · '+m.nome+' · aria '+pr.Tc.toFixed(1)+'°C · ρ='+pr.rho.toFixed(3)+' kg/m³'+
+    '</div>'+
+    sorted.map(function(rc,i){
+      return '<div class="sr" style="'+(i===0?'color:#f1c40f;':'')+'">'+
+        '<span>'+(i===0?'⭐ ':'')+escH(rc.circ.nome)+(i===0?' — percorso critico':'')+'</span>'+
+        '<span class="sv">'+rc.pdcPa.toFixed(1)+' Pa &nbsp;/&nbsp; '+rc.pdcMca.toFixed(2)+' mm c.a.</span>'+
+      '</div>';
+    }).join('')+
+    '<div class="sr">'+
+      '<span>Ventilatore — prevalenza minima (+15% sul percorso critico)</span>'+
+      '<span class="sv" style="color:#7ec8a0;">≥ '+(critico.pdcPa*1.15).toFixed(0)+' Pa &nbsp;/&nbsp; '+(critico.pdcMca*1.15).toFixed(1)+' mm c.a.</span>'+
+    '</div>'+
+  '</div>'+
+  '<div class="ibox">Metodo: Darcy-Weisbach con diametro idraulico Dₕ=4A/P e fattore di attrito di Colebrook-White · 1 mm c.a. = 9,81 Pa · Il termine gravitazionale ρg·Δz è trascurabile per aria isoterma ed è omesso (valutare a parte l\'effetto camino per canali verticali con forti ΔT). Per i rettangolari è indicato anche il diametro equivalente Dₑq (Huebscher). Il percorso critico è quello con la maggiore perdita di carico totale.</div>';
+
+  document.getElementById('risultati-content').innerHTML=html;
+  document.getElementById('btn-excel').style.display='inline-block';
+
+  ultimoCalc={risCircuiti:risCircuiti,critNome:critico.circ.nome,critPa:critico.pdcPa,critMca:critico.pdcMca,
+    mat:m.nome,imp:impN[imp],Tc:pr.Tc,rho:pr.rho,mu:pr.mu,P:pr.P,commessa:raccogliStato().commessa};
+}
+
+/* ============================================================
+   STATO / FILE
+   ============================================================ */
+function raccogliStato(){
+  return{_version:1,_tipo:'AeroCalc project',
+    commessa:{numero:v('c-numero'),progetto:v('c-progetto'),cliente:v('c-cliente'),indirizzo:v('c-indirizzo'),
+      progettista:v('c-progettista'),data:v('c-data'),revisione:v('c-revisione'),note:v('c-note')},
+    config:{impTipo:v('imp-tipo'),tempAria:v('temp-aria'),altitudine:v('altitudine'),matTipo:v('mat-tipo'),
+      rugosita:v('rugosita'),velMin:v('vel-min'),velMax:v('vel-max'),pdcTarget:v('pdc-target'),
+      coeffLoc:v('coeff-loc'),metodoLoc:v('metodo-loc')},
+    circuiti:circuiti,ccnt:ccnt,ecnt:ecnt};
+}
+function v(id){return document.getElementById(id).value;}
+function ripristinaStato(s){
+  if(!s||s._tipo!=='AeroCalc project'){toast('File non valido.','err');return false;}
+  var c=s.commessa||{};
+  ['numero','progetto','cliente','indirizzo','progettista','data','revisione','note'].forEach(function(k){var el=document.getElementById('c-'+k);if(el)el.value=c[k]||'';});
+  if(!c.revisione)document.getElementById('c-revisione').value='Rev. 0';
+  var cf=s.config||{};
+  document.getElementById('imp-tipo').value=cf.impTipo||'mandata';
+  document.getElementById('temp-aria').value=cf.tempAria||20;
+  document.getElementById('altitudine').value=cf.altitudine||0;
+  document.getElementById('mat-tipo').value=cf.matTipo||'zincato_spiro';
+  document.getElementById('rugosita').value=cf.rugosita||0.09;
+  document.getElementById('vel-min').value=cf.velMin||2.0;
+  document.getElementById('vel-max').value=cf.velMax||8.0;
+  document.getElementById('pdc-target').value=cf.pdcTarget||1.0;
+  document.getElementById('coeff-loc').value=cf.coeffLoc||1.5;
+  document.getElementById('metodo-loc').value=cf.metodoLoc||'dettaglio';
+  circuiti=s.circuiti||[]; ccnt=s.ccnt||0; ecnt=s.ecnt||0;
+  // reintegra eventuali chiavi raccordi mancanti
+  circuiti.forEach(function(ci){ci.elementi.forEach(function(e){if(e.tipo==='tratto'){if(!e.racc)e.racc={};RACC.forEach(function(r){if(e.racc[r.id]===undefined)e.racc[r.id]=0;});if(!e.forma)e.forma='circ';}});});
+  updateBadge(); updateAirProps(); updateMaterial(); renderCircuiti();
+  return true;
+}
+function nomeFile(){
+  var num=(document.getElementById('c-numero').value.trim()||'').replace(/[^a-z0-9_\-]/gi,'_');
+  var prj=(document.getElementById('c-progetto').value.trim()||'').replace(/[^a-z0-9_\-]/gi,'_').slice(0,30);
+  return([num,prj].filter(Boolean).join('_')||'progetto_aeraulico')+'.aer';
+}
+async function salvaProgetto(){
+  var json=JSON.stringify(raccogliStato(),null,2),blob=new Blob([json],{type:'application/json'});
+  if(fileHandle){try{var w=await fileHandle.createWritable();await w.write(blob);await w.close();toast('✓ Salvato: '+fileHandle.name,'ok');return;}catch(e){fileHandle=null;}}
+  await salvaComeProgetto();
+}
+async function salvaComeProgetto(){
+  var json=JSON.stringify(raccogliStato(),null,2),blob=new Blob([json],{type:'application/json'}),fname=nomeFile();
+  if('showSaveFilePicker' in window){
+    try{fileHandle=await window.showSaveFilePicker({suggestedName:fname,types:[{description:'File AeroCalc',accept:{'application/json':['.aer','.json']}}]});
+      var w=await fileHandle.createWritable();await w.write(blob);await w.close();
+      document.getElementById('path-display').value=fileHandle.name;
+      document.getElementById('path-info').textContent='Salvato: '+fileHandle.name;
+      toast('✓ Salvato: '+fileHandle.name,'ok');
+    }catch(e){if(e.name!=='AbortError')toast('Errore salvataggio.','err');}
+  } else {
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;a.click();
+    toast('✓ Scaricato: '+fname,'ok',4000);
+    document.getElementById('path-display').value='Download: '+fname;
+  }
+}
+async function apriProgetto(){
+  if('showOpenFilePicker' in window){
+    try{var arr=await window.showOpenFilePicker({types:[{description:'File AeroCalc',accept:{'application/json':['.aer','.json']}}]});
+      var fh=arr[0];fileHandle=fh;var file=await fh.getFile(),testo=await file.text(),stato=JSON.parse(testo);
+      if(ripristinaStato(stato)){document.getElementById('path-display').value=fh.name;document.getElementById('path-info').textContent='Aperto: '+fh.name;toast('✓ Caricato: '+fh.name,'ok');}
+    }catch(e){if(e.name!=='AbortError')toast('Errore apertura.','err');}
+  } else {document.getElementById('file-input').click();}
+}
+function leggiFileInput(input){
+  var file=input.files[0];if(!file)return;
+  var r=new FileReader();
+  r.onload=function(e){try{var s=JSON.parse(e.target.result);if(ripristinaStato(s)){document.getElementById('path-display').value=file.name;toast('✓ Caricato: '+file.name,'ok');}}catch(ex){toast('File non valido.','err');}};
+  r.readAsText(file);input.value='';
+}
+function nuovoProgetto(){
+  if(!confirm('Nuovo progetto? I dati non salvati andranno persi.'))return;
+  fileHandle=null;circuiti=[];ccnt=0;ecnt=0;
+  ['c-numero','c-progetto','c-cliente','c-indirizzo','c-progettista','c-note'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('c-revisione').value='Rev. 0';
+  document.getElementById('c-data').value=new Date().toISOString().slice(0,10);
+  document.getElementById('path-display').value='';
+  document.getElementById('imp-tipo').value='mandata';
+  document.getElementById('temp-aria').value=20;document.getElementById('altitudine').value=0;
+  document.getElementById('mat-tipo').value='zincato_spiro';document.getElementById('pdc-target').value=1.0;
+  document.getElementById('vel-min').value=2.0;document.getElementById('vel-max').value=8.0;
+  document.getElementById('coeff-loc').value=1.5;document.getElementById('metodo-loc').value='dettaglio';
+  updateBadge();updateAirProps();updateMaterial();renderCircuiti();toast('Nuovo progetto.','ok');
+}
+
+/* ============================================================
+   BADGE / TOAST / TAB
+   ============================================================ */
+function toast(msg,tipo,dur){tipo=tipo||'ok';dur=dur||2800;var t=document.getElementById('toast');t.textContent=msg;t.className='toast '+tipo+' show';setTimeout(function(){t.className='toast';},dur);}
+function updateBadge(){
+  var num=document.getElementById('c-numero').value.trim(),prj=document.getElementById('c-progetto').value.trim();
+  document.getElementById('prj-badge').textContent=(num||prj)?((num?num+' — ':'')+prj)||'Progetto senza nome':'Nessun progetto';
+}
+function showTab(n,btn){
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
+  document.getElementById('panel-'+n).classList.add('active');
+  btn.classList.add('active');
+  if(n==='tratti')renderCircuiti();
+}
+
+/* ============================================================
+   EXCEL
+   ============================================================ */
+function esportaExcel(){
+  if(!ultimoCalc)return;
+  var d=ultimoCalc,wb=XLSX.utils.book_new(),C=d.commessa||{};
+  var now=new Date(),dataStr=now.getDate().toString().padStart(2,'0')+'/'+(now.getMonth()+1).toString().padStart(2,'0')+'/'+now.getFullYear();
+  d.risCircuiti.forEach(function(rc){
+    var H=['N°','Tipo','Elemento','Forma','Q (m³/h)','L (m)','Dim. adott.','Dim. sugg.','Dₕ (mm)','Dₑq (mm)','v (m/s)','Re','f','J (Pa/m)','ΔP dist. (Pa)','ξ','ΔP loc. (Pa)','ΔP comp. (Pa)','ΔP tot. (Pa)','ΔP tot. (mm c.a.)','Stato'];
+    var DR=rc.recs.map(function(r){
+      var nn=function(x){return x==='—'?'':x;};
+      return [r.idx,r.tipo,r.nome,nn(r.forma),nn(r.Qm3h),nn(r.L),nn(r.dim),nn(r.dimSug),
+        r.Dh==='—'?'':parseFloat(r.Dh.toFixed(1)),r.Deq==='—'?'':parseFloat(r.Deq.toFixed(1)),
+        r.v==='—'?'':parseFloat(r.v.toFixed(3)),nn(r.Re),r.f==='—'?'':parseFloat(r.f.toFixed(5)),
+        r.paM==='—'?'':parseFloat(r.paM.toFixed(3)),parseFloat(r.pdist.toFixed(2)),nn(r.xi==='—'?'':parseFloat((r.xi).toFixed(2))),
+        parseFloat(r.ploc.toFixed(2)),parseFloat(r.pcomp.toFixed(2)),parseFloat(r.ptot.toFixed(2)),
+        parseFloat((r.ptot/9.81).toFixed(3)),r.stato];
+    });
+    DR.push([]);DR.push(['','','TOTALE '+rc.circ.nome,'','','','','','','','','','','','','','','',parseFloat(rc.pdcPa.toFixed(2)),parseFloat(rc.pdcMca.toFixed(3)),'']);
+    var ws=XLSX.utils.aoa_to_sheet([H].concat(DR));
+    ws['!cols']=[{wch:4},{wch:12},{wch:20},{wch:13},{wch:9},{wch:7},{wch:13},{wch:13},{wch:9},{wch:9},{wch:9},{wch:8},{wch:9},{wch:10},{wch:13},{wch:7},{wch:12},{wch:13},{wch:12},{wch:15},{wch:11}];
+    var sn=rc.circ.nome.slice(0,28).replace(/[:\\\/\?\*\[\]]/g,'');
+    XLSX.utils.book_append_sheet(wb,ws,sn);
+  });
+  var sorted=d.risCircuiti.slice().sort(function(a,b){return b.pdcPa-a.pdcPa;});
+  var S=[['RELAZIONE DI CALCOLO — DIMENSIONAMENTO CANALI D\'ARIA (RETE AERAULICA)'],[''],
+    ['DATI COMMESSA'],['Numero commessa:',C.numero||'—'],['Riferimento progetto:',C.progetto||'—'],
+    ['Cliente:',C.cliente||'—'],['Indirizzo:',C.indirizzo||'—'],['Progettista:',C.progettista||'—'],
+    ['Data:',C.data||dataStr],['Revisione:',C.revisione||'Rev. 0'],['Note:',C.note||''],[''],
+    ['METODO DI CALCOLO'],['Attrito distribuito:','Darcy-Weisbach · fattore di attrito Colebrook-White'],
+    ['Diametro non circolari:','Diametro idraulico Dₕ=4A/P (indicato anche Dₑq Huebscher)'],
+    ['Perdite localizzate:','ΔP = ξ · ρv²/2 (pressione dinamica)'],[''],
+    ['ARIA'],['Tipo rete:',d.imp],['Materiale:',d.mat],['T aria (°C):',d.Tc.toFixed(1)],
+    ['Pressione atm. (Pa):',Math.round(d.P)],['Densità ρ (kg/m³):',d.rho.toFixed(4)],['Viscosità μ (µPa·s):',(d.mu*1e6).toFixed(3)],[''],
+    ['CONFRONTO PERCORSI'],['Percorso','ΔP tot. (Pa)','ΔP tot. (mm c.a.)','N° elementi','Critico?']].concat(
+    sorted.map(function(rc,i){return[rc.circ.nome,parseFloat(rc.pdcPa.toFixed(2)),parseFloat(rc.pdcMca.toFixed(3)),rc.recs.length,i===0?'SÌ':''];})).concat([
+    [''],['VENTILATORE'],
+    ['Percorso critico:',d.critNome],
+    ['Prevalenza min. (Pa):',parseFloat((d.critPa*1.15).toFixed(1))],
+    ['Prevalenza min. (mm c.a.):',parseFloat((d.critMca*1.15).toFixed(2))],
+    ['Margine:','15%'],[''],
+    ['NOTE'],['mm c.a. = ΔP[Pa] / 9,81','Termine gravitazionale (effetto camino) trascurato per aria isoterma'],
+    ['Coeff. ξ raccordi:','Valori rappresentativi — verificare con abachi ASHRAE / dati costruttore']
+  ]);
+  var ws2=XLSX.utils.aoa_to_sheet(S);
+  ws2['!cols']=[{wch:30},{wch:22},{wch:18},{wch:12},{wch:10}];
+  ws2['!merges']=[{s:{r:0,c:0},e:{r:0,c:4}}];
+  XLSX.utils.book_append_sheet(wb,ws2,'Sommario commessa');
+  var num=(C.numero||'').replace(/[^a-z0-9_\-]/gi,'_');
+  var fname=(num?num+'_':'')+'calcolo_aeraulico_'+now.getFullYear()+(now.getMonth()+1).toString().padStart(2,'0')+now.getDate().toString().padStart(2,'0')+'.xlsx';
+  XLSX.writeFile(wb,fname);
+  toast('✓ Excel: '+fname,'ok');
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+document.getElementById('c-data').value=new Date().toISOString().slice(0,10);
+updateAirProps(); updateMaterial(); updateBadge();
+</script>
+</body>
+</html>
