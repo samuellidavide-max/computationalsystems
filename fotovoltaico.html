@@ -326,7 +326,7 @@ section.card{border-radius:6px;padding:22px 26px}
     <div class="htop">
       <div class="brand">
         <div class="mark" aria-hidden="true"><svg viewBox="0 0 34 34" width="34" height="34"><rect width="34" height="34" rx="5" fill="var(--dc)"/><g stroke="#fff" stroke-opacity=".85" stroke-width="1.2" fill="none"><rect x="8" y="7" width="18" height="20"/><line x1="14" y1="7" x2="14" y2="27"/><line x1="20" y1="7" x2="20" y2="27"/><line x1="8" y1="13.7" x2="26" y2="13.7"/><line x1="8" y1="20.3" x2="26" y2="20.3"/></g></svg></div>
-        <div><b>Dimensionamento fotovoltaico</b><span>Stringhe · cavi · protezioni · producibilità — CEI 82-25 · CEI 64-8 Sez. 712 · CEI 0-21 / 0-16</span></div>
+        <div><b>Dimensionamento fotovoltaico</b><span>CEI 82-25 · CEI 64-8 · CEI 0-21 / 0-16</span></div>
       </div>
       <input class="proj-name" id="projName" value="Impianto residenziale 4,5 kWp" aria-label="Nome progetto">
       <button class="hbtn open no-print" id="openBtn" title="Apri progetto da file">Apri</button>
@@ -529,7 +529,7 @@ const HELP={
  c2io:"Portata I₀ cavo principale DC.",
  c2k:"Declassamento totale (K1·K2) cavo principale.",
  c2l:"Lunghezza cavo principale DC (×2).",
- c2ns:"Stringhe // sul cavo (y): <code>Ib=y·1,25·ISC</code>.",
+ c2ns:"Stringhe in parallelo sul cavo (y): <code>Ib=y·1,25·ISC</code>.",
  c2udc:"V nom. DC cavo principale. ≥ VOC max stringa.",
  c3s:"Sezione cavo AC (mm²).",
  c3type:"Cavo lato AC (non solare). FG16(O)R16 (EPR/XLPE, 90 °C) tipico per posa fissa interrata/incassata; N07V-K (PVC, 70 °C) in tubo; H07RN-F (gomma) per posa mobile. Determina il coefficiente K per la verifica I²t e la portata di riferimento.",
@@ -547,7 +547,7 @@ const HELP={
  duDcLim:"Limite ΔU DC. Buona pratica 1–2% (anziché 4%) per limitare le perdite Joule.",
  duAcLim:"Limite ΔU AC (~1%). Totale DC+AC ≤ 3%.",
 
- protType:"Fusibile gPV (IEC 60269-6): compatto, per corto circuito e corrente inversa. Interruttore magnetotermico: protegge e seziona; con >3 stringhe // è opportuno il termomagnetico (non solo magnetico).",
+ protType:"Fusibile gPV (IEC 60269-6): compatto, per corto circuito e corrente inversa. Interruttore magnetotermico: protegge e seziona; con più di 3 stringhe in parallelo è opportuno il termomagnetico (non solo magnetico).",
  protForce:"Installa la protezione di stringa anche se non strettamente necessaria (uniformità di quadro o scelta progettuale).",
  lps:"LPS esterno (parafulmine). Con LPS → SPD Tipo 1; senza → Tipo 2. CEI 81-10/81-28.",
  spdDist:"Distanza campo→inverter. Se >10 m: SPD alle due estremità del cavo DC.",
@@ -736,7 +736,7 @@ const SECTIONS=[
      <div class="f calc"><label>K totale (K1·K2)</label><input id="c2k" value="1" inputmode="decimal"></div>
      <div class="f calc"><label>V nom. DC cavo <span class="u">V</span></label><input id="c2udc" value="1500" inputmode="decimal"></div>
      <div class="f"><label>Lunghezza <span class="u">m</span></label><input id="c2l" value="2" inputmode="decimal"></div>
-     <div class="f"><label>Stringhe // sul cavo (y)</label><input id="c2ns" value="1" inputmode="numeric"></div>
+     <div class="f"><label>Stringhe in parallelo sul cavo (y)</label><input id="c2ns" value="1" inputmode="numeric"></div>
    </div>
    <div class="readout" id="c2sug"></div>
    <div class="verifs" id="c2v"></div>
@@ -899,7 +899,7 @@ const SECTIONS=[
      <div class="grp">Combiner box (quadri di parallelo stringhe)</div>
      <div class="grid">
        <div class="f"><label>Stringhe per combiner (x)</label><input id="mbX" value="12" inputmode="numeric"></div>
-       <div class="f"><label>Stringhe già in // (y)</label><input id="mbY" value="1" inputmode="numeric"></div>
+       <div class="f"><label>Stringhe già in parallelo (y)</label><input id="mbY" value="1" inputmode="numeric"></div>
        <div class="f"><label>N° combiner box</label><input id="mbN" value="8" inputmode="numeric"></div>
      </div>
      <div class="readout" id="mbOut"></div>
@@ -1401,7 +1401,7 @@ function sysReport(v,strings,name){
      ['Stringhe (range '+ni(nMin)+'–'+ni(nMax)+')',strList||'—'],
      ['DC/AC · I<sub>AC</sub>',nf(dcac,2)+' · '+nf(Iac,2)+' A'],
      ['Cavi','I<sub>z</sub> stringa '+nf(c1Iz,1)+' A · ΔU tot '+nf(duTot,2)+' %'],
-     ['Protezione di stringa',install?(devName+' · sezionatore U<sub>e</sub> ≥ '+nf(UeAbb,0)+' V · I<sub>e</sub> ≥ '+nf(Ie,1)+' A'):'non necessaria (max '+x+' stringa/e // per MPPT)'],
+     ['Protezione di stringa',install?(devName+' · sezionatore U<sub>e</sub> ≥ '+nf(UeAbb,0)+' V · I<sub>e</sub> ≥ '+nf(Ie,1)+' A'):'non necessaria (max '+x+' stringa/e in parallelo per MPPT)'],
      ['Producibilità',nf(kWp,2)+' kWp · '+ni(energy)+' kWh/anno'],
     ])}</table>
     <table class="rep" style="margin-top:6px">${vrows}</table></div>`}; }
@@ -1544,9 +1544,9 @@ function schData(){
     let rowsMT=null;
     if(mt&&all.length){
       if(arch==='string'){ const x=Math.max(1,...mppts.map(m=>m.x)), need=mppts.some(m=>m.need);
-        rowsMT=[{k:'*',tag:mppts.length>1?'MPPT 1…'+mppts.length:'MPPT1',st:pick(all),x,need,In:need?nextStd(1.25*Isc,stdP):0,Ue:1.2*maxAll*Voc,VocMax:maxAll*VocT,Ie:1.25*x*Isc,xLabel:'fino a '+x+' str. // per MPPT'}]; }
+        rowsMT=[{k:'*',tag:mppts.length>1?'MPPT 1…'+mppts.length:'MPPT1',st:pick(all),x,need,In:need?nextStd(1.25*Isc,stdP):0,Ue:1.2*maxAll*Voc,VocMax:maxAll*VocT,Ie:1.25*x*Isc,xLabel:'fino a '+x+' stringhe parallele per MPPT'}]; }
       else { const x=mbX, need=needX(x), st=[]; for(let i=1;i<=Math.min(x,3);i++) st.push({i:(x>3&&i===3)?x:i,n:maxAll});
-        rowsMT=[{k:'CB',tag:'CB x'+mbN,st,x,need,In:need?nextStd(1.25*Isc,stdP):0,Ue:1.2*maxAll*Voc,VocMax:maxAll*VocT,Ie:1.25*x*Isc,cb:true,xLabel:'n. '+x+' stringhe // per CB'}]; }
+        rowsMT=[{k:'CB',tag:'CB x'+mbN,st,x,need,In:need?nextStd(1.25*Isc,stdP):0,Ue:1.2*maxAll*Voc,VocMax:maxAll*VocT,Ie:1.25*x*Isc,cb:true,xLabel:'n. '+x+' stringhe parallele per CB'}]; }
     }
     const nInv=Math.max(1,Math.round(nn('nInv')||1)),Pac=nn('iPac'),Vac=nn('iVac')||230,cosf=nn('iCosf')||1;
     const Iac=grid==='bt1'?Pac/(Vac*cosf):Pac/(Math.sqrt(3)*400*cosf);
@@ -1672,7 +1672,7 @@ function schBuild(){
       });
       if(m.need) tx(58,ys[0]-(s.ptype==='fuse'?3:4.5),protT(s,m),1.4,'c','b');
       if(ys.length>1) ln(66,ys[0],66,ys[ys.length-1],'FV-CC');
-      if(m.x>3||m.xLabel) tx(67.5,(ys[1]||ys[0])+6,m.xLabel||('n. '+m.x+' stringhe //'),1.4,'l','m');
+      if(m.x>3||m.xLabel) tx(67.5,(ys[1]||ys[0])+6,m.xLabel||('n. '+m.x+' stringhe parallele'),1.4,'l','m');
       const yc=r.yc;
       if(box){
         ln(66,yc,74,yc,'FV-CC'); ins('FV_IMS',80,yc); ln(86,yc,118,yc,'FV-CC');
@@ -1799,9 +1799,8 @@ function schBuild(){
   const legOrder=['FV_PV','FV_FUS','FV_IMS','FV_SEZ','FV_SPD','FV_INV','FV_DCDC','FV_BAT','FV_INTD','FV_INT','FV_CONT','FV_BOB','FV_KWH','FV_SPI','FV_SPG','FV_TRAFO','FV_TA','FV_TV','FV_UPS','FV_PULS'].filter(n=>used.has(n));
   const perCol=7, colW=57;
   legOrder.slice(0,21).forEach((n,i)=>{ const col=Math.floor(i/perCol), row=i%perCol, lx=240+col*colW, ly=211.5+row*6.3;
-    const sc=({FV_INV:.3,FV_DCDC:.3,FV_SPI:.3,FV_SPG:.3,FV_UPS:.36,FV_SPD:.36,FV_BAT:.5,FV_PV:.5,FV_KWH:.5,FV_TRAFO:.45,FV_TV:.45,FV_PULS:.45,FV_TA:.8,FV_BOB:.8})[n]||.6;
-    const oyy=n==='FV_SPD'?ly-2.6:(n==='FV_BAT'||n==='FV_TV'?ly-2.3:(n==='FV_INTD'?ly+1.4:(n==='FV_PULS'?ly+1.6:ly)));
-    f.ins(n,lx+6,oyy,0,'FV-SIMBOLI',sc); f.tx(lx+12.5,ly,SCH_LEG[n],1.25,'l','m'); });
+    const bb=schBlkBox(n), sc=Math.min(.6,4.6/Math.max(.1,bb.y1-bb.y0),10/Math.max(.1,bb.x1-bb.x0));
+    f.ins(n,lx+6-sc*(bb.x0+bb.x1)/2,ly-sc*(bb.y0+bb.y1)/2,0,'FV-SIMBOLI',sc); f.tx(lx+12.5,ly,SCH_LEG[n],1.25,'l','m'); });
   const cg=[['Committente',gt('schCli')||'-'],['Ubicazione',gt('schAddr')||($('loc')?$('loc').value:'-')]];
   cg.forEach((r,i)=>{ const yy=257+i*6; f.ln(238,yy+6,410,yy+6,'FV-CARTIGLIO'); f.tx(240,yy+2.2,r[0],1.3,'l','m'); f.tx(262,yy+3.5,r[1],2,'l','m'); });
   f.tx(240,271,'Oggetto',1.3,'l','m'); f.tx(262,271.8,'SCHEMA ELETTRICO UNIFILARE - IMPIANTO FOTOVOLTAICO '+nf(d.TKWp,2)+' kWp',2.3,'l','m');
@@ -1811,6 +1810,9 @@ function schBuild(){
   cells.forEach(r=>{ if(r[2]>238) f.ln(r[2],277,r[2],287,'FV-CARTIGLIO'); f.tx(r[2]+2,279.5,r[0],1.3,'l','m'); f.tx(r[2]+2,284,r[1],r[0]==='Progettista'?2:2.2,'l','m'); });
   return {ents:C.concat(F),used,d};
 }
+function schBlkBox(n){ let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; const u=(x,y)=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);};
+  (SCH_BLK[n]||[]).forEach(e=>{ if(e.t==='l'){u(...e.a);u(...e.b);} else if(e.t==='p') e.pts.forEach(p=>u(...p)); else if(e.t==='c'){u(e.p[0]-e.r,e.p[1]-e.r);u(e.p[0]+e.r,e.p[1]+e.r);} else if(e.t==='x'){const w=e.s.length*e.h*.3;u(e.p[0]-w,e.p[1]-e.h/2);u(e.p[0]+w,e.p[1]+e.h/2);} });
+  return {x0,y0,x1,y1}; }
 function schWrap(t,n){ const w=t.split(' '),o=[];let l=''; w.forEach(x=>{ if((l+' '+x).trim().length>n){o.push(l.trim());l=x;} else l+=' '+x; }); if(l.trim())o.push(l.trim()); return o; }
 function schBBox(E){ let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; const u=(x,y)=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);};
   E.forEach(e=>{ if(e.a){u(...e.a);u(...e.b);} if(e.pts) e.pts.forEach(p=>u(...p)); if(e.t==='i'){u(e.p[0]-10,e.p[1]-10);u(e.p[0]+10,e.p[1]+10);} if(e.t==='x'){ const w=e.s.length*e.h*.55; u(e.p[0]-(e.al==='c'?w/2:e.al==='r'?w:0),e.p[1]-e.h); u(e.p[0]+(e.al==='c'?w/2:e.al==='l'?w:0),e.p[1]+e.h);} });
@@ -1964,9 +1966,9 @@ function compute(){
   Object.keys(mpptCount).forEach(k=>{
     const cnt=mpptCount[k], I=cnt*Isc; if(cnt>maxStrPerMppt)maxStrPerMppt=cnt;
     strV.push({name:`MPPT ${k} — I ≤ I max MPPT`,rule:`${cnt}× I_SC`,ref:'',ok:I<=ImpptMax,val:`<span class="a">${nf(I,1)} A</span> <span class="lim">≤ ${nf(ImpptMax,1)} A</span>`});
-    const set=new Set(mpptMods[k]); if(set.size>1) strV.push({name:`MPPT ${k} — stringhe // con moduli diversi`,rule:'sconsigliato (mismatch)',ref:'',ok:true,warn:true,val:''});
+    const set=new Set(mpptMods[k]); if(set.size>1) strV.push({name:`MPPT ${k} — stringhe in parallelo con moduli diversi`,rule:'sconsigliato (mismatch)',ref:'',ok:true,warn:true,val:''});
   });
-  $('mpptAgg').innerHTML=ro(Object.keys(mpptCount).sort().map(k=>['MPPT '+k, mpptCount[k]+(mpptCount[k]>1?' stringhe //':' stringa')+' · '+nf(mpptCount[k]*Isc,1)+' A','Stringhe in parallelo su questo MPPT: le correnti si sommano (n·ISC).']).concat([['Moduli totali',ni(totMod),'Somma dei moduli di tutte le stringhe.'],['Stringhe totali',ni(totStrings),'']]));
+  $('mpptAgg').innerHTML=ro(Object.keys(mpptCount).sort().map(k=>['MPPT '+k, mpptCount[k]+(mpptCount[k]>1?' stringhe parallele':' stringa')+' · '+nf(mpptCount[k]*Isc,1)+' A','Stringhe in parallelo su questo MPPT: le correnti si sommano (n·ISC).']).concat([['Moduli totali',ni(totMod),'Somma dei moduli di tutte le stringhe.'],['Stringhe totali',ni(totStrings),'']]));
   $('strVerif').innerHTML=verifHTML(strV);
   secStatus['stringhe']=strV.every(v=>v.ok)?(strV.some(v=>v.warn)?'wa':'ok'):'no';
 
@@ -2024,7 +2026,7 @@ function compute(){
   ];
   $('c2v').innerHTML=verifHTML(c2v);
   const c3par=Math.max(1,Math.round(g('c3par')||1)), c3Iz=g('c3io')*g('c3k')*c3par, IdesAc=1.25*Iac;
-  const c3v=[{name:'Portata AC I<sub>z</sub> ≥ 1,25·I<sub>AC</sub>',rule:c3par>1?c3par+' conduttori // per fase':'',ref:'CEI 64-8',ok:c3Iz>=IdesAc,val:`<span class="a">${nf(c3Iz,1)} A</span> <span class="lim">≥ ${nf(IdesAc,2)} A</span>`}];
+  const c3v=[{name:'Portata AC I<sub>z</sub> ≥ 1,25·I<sub>AC</sub>',rule:c3par>1?c3par+' conduttori in parallelo per fase':'',ref:'CEI 64-8',ok:c3Iz>=IdesAc,val:`<span class="a">${nf(c3Iz,1)} A</span> <span class="lim">≥ ${nf(IdesAc,2)} A</span>`}];
   $('c3v').innerHTML=verifHTML(c3v);
 
   const rhoDc=g('rhoDc'), rhoAc=g('rhoAc'), nRef=maxN||6, Vstr=nRef*Vmp||1;
@@ -2096,7 +2098,7 @@ function compute(){
   let reason = install ? (needed?(revNeeded?'corrente inversa > '+nf(kRev,1)+'·ISC':'protezione del cavo dal cortocircuito'):'scelta progettuale (forzato)')
     : (x<=1 ? 'nessuna corrente inversa' : 'I inversa ≤ '+nf(kRev,1)+'·ISC');
   $('fuseOut').innerHTML=ro([
-    ['Stringhe // per MPPT (x)',x<=1?(totStrings<=1?'1 (stringa singola)':'1 per MPPT'):ni(x),parDesc+'. Il parallelo che conta è quello sullo stesso ingresso MPPT: stringhe su MPPT diversi sono indipendenti e non si scambiano corrente inversa.'],
+    ['Stringhe parallele per MPPT (x)',x<=1?(totStrings<=1?'1 (stringa singola)':'1 per MPPT'):ni(x),parDesc+'. Il parallelo che conta è quello sullo stesso ingresso MPPT: stringhe su MPPT diversi sono indipendenti e non si scambiano corrente inversa.'],
     ['Protezione di stringa',install?'installata':'non necessaria','Serve se la corrente inversa (x−1)·1,25·ISC supera '+nf(kRev,1)+'·ISC (x≥4) o se il cavo va protetto da corto circuito. Puoi comunque forzarla.'],
     ['Dispositivo',install?devName:'—','Fusibile gPV (IEC 60269-6) o interruttore magnetotermico (integra il sezionamento).'],
     ['Motivo',reason],
@@ -2108,7 +2110,7 @@ function compute(){
     if(type==='fuse') fuseV.push({name:'Fusibile gPV: 1,25·I<sub>SC</sub> ≤ I<sub>n</sub> ≤ 2·I<sub>SC</sub> e ≤ I fus. modulo',ref:'IEC 60269-6 / IEC 62548',ok:okDev,val:`<span class="a">${ni(In)} A</span> <span class="lim">in ${nf(fuseMin,1)}–${nf(fuseMax,1)} A</span>`});
     else fuseV.push({name:'Magnetotermico: I<sub>termica</sub> ≥ 1,25·I<sub>SC</sub>',ref:'IEC 62548',ok:okDev,val:`<span class="a">${ni(In)} A</span> <span class="lim">≥ ${nf(fuseMin,2)} A</span>`});
     if(x>=2) fuseV.push({name:'Potere d\'interruzione I<sub>cu</sub> ≥ (x−1)·1,25·I<sub>SC</sub>',ref:'IEC 62548',ok:true,warn:true,val:`<span class="a">≥ ${nf(Iinv,2)} A</span>`});
-    if(type==='mcb' && x>3) fuseV.push({name:'Con >3 stringhe // usare interruttore termomagnetico',rule:'non solo magnetico',ref:'buona pratica',ok:true,warn:true,val:''});
+    if(type==='mcb' && x>3) fuseV.push({name:'Con più di 3 stringhe in parallelo usare interruttore termomagnetico',rule:'non solo magnetico',ref:'buona pratica',ok:true,warn:true,val:''});
     if(force && !needed) fuseV.push({name:'Installazione per scelta progettuale',rule:'non richiesta dalla norma',ref:'',ok:true,warn:true,val:''});
   }else{
     fuseV.push({name:`Protezione di stringa non richiesta`,rule:x<=1?(totStrings<=1?'stringa singola':`${totStrings} stringhe, ciascuna su MPPT dedicato`):`x = ${x} ≤ ${Math.floor(kRev/1.25)+1} · I inversa ≤ ${nf(kRev,1)}·ISC`,ref:'IEC 62548',ok:true,val:''});
@@ -2119,7 +2121,7 @@ function compute(){
   $('dcSwOut').innerHTML=ro([
     ['U<sub>e</sub> ≥ 1,2·U<sub>OC</sub>',nf(UeAbb,0)+' V DC','Tensione d\'impiego ≥ 1,2·UOC del generatore (criterio cautelativo, IEC 62548).'],
     ['U<sub>e</sub> ≥ N·V<sub>OC</sub>(Tmin)',nf(UeTemp,0)+' V DC','Criterio alternativo con la VOC corretta in temperatura.'],
-    ['I<sub>e</sub> ≥ 1,25·x·I<sub>SC</sub>',nf(Ie,1)+' A DC','x = stringhe // sull\'MPPT più carico.'],
+    ['I<sub>e</sub> ≥ 1,25·x·I<sub>SC</sub>',nf(Ie,1)+' A DC','x = stringhe in parallelo sull\'MPPT più carico.'],
     ['Tipo','sez. sotto carico','Sezionatore o interruttore-sezionatore azionabile sotto carico lato DC.'],
   ]);
 
@@ -2135,7 +2137,7 @@ function compute(){
   const pocMcb=nextStd(TIac*1.05,stdMcb);
   $('acProtOut').innerHTML=ro([
     ['Interruttore AC sistema I<sub>n</sub>',ni(mcbIn)+' A curva C','Del sistema attivo: Iac ≤ In ≤ Iz cavo (CEI 64-8 §433).'],
-    ['Interruttore generale POC',ni(pocMcb)+' A'+(nSys>1?' ('+nSys+' inverter //)':''),'Dimensionato sulla corrente AC totale al POC: Σ I_AC = '+nf(TIac,1)+' A.'],
+    ['Interruttore generale POC',ni(pocMcb)+' A'+(nSys>1?' ('+nSys+' inverter in parallelo)':''),'Dimensionato sulla corrente AC totale al POC: Σ I_AC = '+nf(TIac,1)+' A.'],
     ['RCD',grid==='mt'?'—':'tipo A (con RCMU) / B','Differenziale: tipo A se l\'inverter integra RCMU, altrimenti tipo B.'],
     ['Protez. interfaccia',grid==='mt'?'CEI 0-16':'CEI 0-21 (SPI)','Sistema di protezione di interfaccia richiesto dalla norma di connessione.'],
   ]);
